@@ -5,19 +5,16 @@
 // Project Name: The Legend of Zelda - Rift In Spacetime
 
 // Project Desription:
-// The exploration game redone to be a turn-based Legend of Zelda fangame, featuring the base game with extra randomization, features, and secrets.
+// The exploration game redone to be a Legend of Zelda fangame, featuring the base game reimagined to be a turn-based RPG with extra randomization, features, and secrets.
 
 // Overworld Controls:
 // Use the WSAD or arrow keys to move Link.
 // Click the screen, or tap the space bar to attack.
-// Tap the E key to open your inventory. Use WSAD or the mouse to navigate the inventory menus.
+// Tap the E key to open your inventory. Use WSAD, arrow keys, or the mouse to navigate the inventory menus.
 
 // Battle Controls
-// Use the WSAD, arrow keys, or the mouse to select an action. Tap the space bar or click to use the action you selected.
+// Use the WSAD, arrow keys, or hover with the mouse to select an action. Tap the space bar or click to use the action you have selected.
 // Tap the space bar to move through battle dialogue.
-
-// Extras for Experts:
-// 
 
 // Notes:
 // Many "states" are present in the code, but for right now only "start" and "explore" will trigger.
@@ -31,7 +28,7 @@ let exitScale = 3; // tells how much grid slots an exit takes up
 const GRID_SIZE = 12; // how wide/tall the grid will be, game still functions if changed though will break if extremely small value
 let cellSize; // will turn into a x/y value for scaling later
 
-let loadedRoom; // will turn into a 2D array later
+let loadedRoom; // will turn into a 2D array
 
 let playerAbleToMove = true; // variable used to check if player should be able to move, used for cutscenes/fades
 let playerMovementTime = 0; // time in millis() when player last moved
@@ -179,82 +176,86 @@ const eliteData = {
   // the enemies appearing in the second half on the above list will probably be scrapped but the first few should be accomplishable in time
   // for enemies not from zelda, they will have their own special battle UI, sound effects, background music, and more
   // for most enemies here, player will be warned they are nearby in some fashion, possibly audio cues
-  aquamentus: {
+  aquamentus: { // spawns in 1st and 7th dungeon
     eID: 10,
-    restrict: [0,0],
+    restrict: [2,2],
   },
-  dodongo: {
+  dodongo: { // spawns in 2nd dungeon 
     eID: 11,
-    restrict: [0,0],
+    restrict: [2,2],
   },
-  manhandla: {
+  manhandla: { // spawns in 3rd dungeon
     eID: 12,
-    restrict: [0,0],
+    restrict: [3,3],
   },
-  gleeok: {
+  gleeok: { // spawns in 4th dungeon with 2 heads, and 8th dungeon with 4 heads
     eID: 13,
-    restrict: [0,0],
+    restrict: [2,3],
   },
-  digdogger: {
+  digdogger: { // spawns in 5th dungeon
     eID: 14,
-    restrict: [0,0],
+    restrict: [2,2],
   },
-  gohma: {
+  gohma: { // spawns in 6th dungeon
     eID: 15,
-    restrict: [0,0],
+    restrict: [3,1],
   },
-  ganon: {
+  ganon: { // spawns in 9th (final) dungeon
     eID: 16,
-    restrict: [0,0],
+    restrict: [2,2],
   },
-  mario: {
+  mario: { // spawns in mushroom kingdom
     eID: 20,
     restrict: [1,2],
   },
-  luigi: {
+  luigi: { // spawns in mushroom kingdom
     eID: 21,
     restrict: [1,2],
   },
-  bowser: {
+  bowser: { // spawns in bowser's castle
     eID: 22,
-    restrict: [0,0],
+    restrict: [4,4],
   },
-  papermario: {
+  papermario: { // spawns in battle stage
     eID: 30,
-    restrict: [0,0],
+    restrict: [1,1],
   },
-  kris: {
+  kris: { // spawns in castle town
     eID: 40,
-    restrict: [0,0],
+    restrict: [1,2],
   },
-  susie: {
+  susie: { // spawns in castle town
     eID: 41,
-    restrict: [0,0],
+    restrict: [1,3],
   },
-  ralsei: {
+  ralsei: { // spawns in castle town
     eID: 42,
-    restrict: [0,0],
+    restrict: [1,3],
   },
-  red: {
+  red: { // spawns in mt. silver summit
     eID: 50,
-    restrict: [0,0],
+    restrict: [1,1],
   },
-  yu: {
+  yu: { // spawns in tv world
     eID: 60,
     restrict: [0,0],
   },
-  omori: {
+  omori: { // spawns in white space
     eID: 70,
     restrict: [0,0],
   },
-  frisk: {
+  frisk: { // spawns in the void
     eID: 80,
     restrict: [0,0],
   },
-  chara: {
+  chara: { // spawns in asgore's flower bed
     eID: 81,
     restrict: [0,0],
   },
+  toriel: { // spawns in toriel's home
+    eID: 82,
+    restrict: [0,0],
+  }
 };
 
 const roomObjects = { // for future update
