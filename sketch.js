@@ -39,212 +39,253 @@ let player = { // player values
   battleY: 0, // y value during combat
 };
 
-const enemyData = {
+const enemies = [
   // enemies themselves will not show up on the grid
   // however when checking if running into an enemy, it will look at the player and enemy x/y values
-  // eID = enemy ID
+  // id = enemy ID
   // enemy ID's first digit tells which section of the game they belong in
   // 1 = overworld, 2 = dungeon, 3 = water, 4 = mario
   // for enemies not from zelda, they will have their own special battle UI, sound effects, background music, and more
-  // restrict are the width and height of the object in relevance to the grid; [3,1] means 3 grid blocks long and 1 grid block tall
-  armos: {
-    eID: 100,
-    restrict: [1,1],
+  // size are the width and height of the object in relevance to the grid; [3,1] means 3 grid blocks long and 1 grid block tall
+  {
+    name: "armos",
+    id: 100,
+    size: [1,1],
   },
-  ghini: {
-    eID: 101,
-    restrict: [1,1],
+  {
+    name: "ghini",
+    id: 101,
+    size: [1,1],
   },
-  leever: {
-    eID: 102,
-    restrict: [1,1],
+  {
+    name: "leever",
+    id: 102,
+    size: [1,1],
     color: null,
   },
-  lynel: {
-    eID: 103,
-    restrict: [1,1],
+  {
+    name: "lynel",
+    id: 103,
+    size: [1,1],
     color: null,
   },
-  moblin: {
-    eID: 104,
-    restrict: [1,1],
+  {
+    name: "moblin",
+    id: 104,
+    size: [1,1],
     color: null,
   },
-  octorok: {
-    eID: 105, 
-    restrict: [1,1],
+  {
+    name: "octorok",
+    id: 105, 
+    size: [1,1],
     color: null,
   },
-  peahat: {
-    eID: 106,
-    restrict: [1,1],
+  {
+    name: "peahat",
+    id: 106,
+    size: [1,1],
   },
-  tektite: {
-    eID: 107,
-    restrict: [1,1],
+  {
+    name: "tektite",
+    id: 107,
+    size: [1,1],
   },
-  darknut: {
-    eID: 200,
-    restrict: [1,1],
+  {
+    name: "darknut",
+    id: 200,
+    size: [1,1],
     color: null,
   },
-  gel: {
-    eID: 201,
-    restrict: [1,1],
+  {
+    name: "gel",
+    id: 201,
+    size: [1,1],
   },
-  gibdo: {
-    eID: 202,
-    restrict: [1,1],
+  {
+    name: "gibdo",
+    id: 202,
+    size: [1,1],
   },
-  goriya: {
-    eID: 203,
-    restrict: [1,1],
+  {
+    name: "goriya",
+    id: 203,
+    size: [1,1],
   },
-  keese: {
-    eID: 204,
-    restrict: [1,1],
+  {
+    name: "keese",
+    id: 204,
+    size: [1,1],
     color: null,
   },
-  lanmola: {
-    eID: 205,
-    restrict: [3,3], // not very efficient as it is a large snake-like enemy
+  {
+    name: "lanmola",
+    id: 205,
+    size: [3,3], // not very efficient as it is a large snake-like enemy
     color: null,
   },
-  likelike: {
-    eID: 206,
-    restrict: [2,2],
+  {
+    name: "likelike",
+    id: 206,
+    size: [2,2],
   },
-  moldorm: {
-    eID: 207,
-    restrict: [3,3], // not very efficient as it is a large snake-like enemy
+  {
+    name: "moldorm",
+    id: 207,
+    size: [3,3], // not very efficient as it is a large snake-like enemy
   },
-  patra: {
-    eID: 208,
-    restrict: [1,1],
+  {
+    name: "patra",
+    id: 208,
+    size: [1,1],
   },
-  patramini: {
-    eID: 209,
-    restrict: [1,1],
+  {
+    name: "patramini",
+    id: 209,
+    size: [1,1],
   },
-  polsvoice: {
-    eID: 210,
-    restrict: [1,1],
+  {
+    name: "polsvoice",
+    id: 210,
+    size: [1,1],
   },
-  rope: {
-    eID: 211,
-    restrict: [1,1],
+  {
+    name: "rope",
+    id: 211,
+    size: [1,1],
   },
-  stalfos: {
-    eID: 212,
-    restrict: [1,1],
+  {
+    name: "stalfos",
+    id: 212,
+    size: [1,1],
   },
-  vire: {
-    eID: 213,
-    restrict: [1,1],
+  {
+    name: "vire",
+    id: 213,
+    size: [1,1],
   },
-  wallmaster: {
-    eID: 214,
-    restrict: [1,1],
+  {
+    name: "walmaster",
+    id: 214,
+    size: [1,1],
   },
-  wizzrobe: {
-    eID: 215,
-    restrict: [1,1],
+  {
+    name: "wizzrobe",
+    id: 215,
+    size: [1,1],
     color: null,
   },
-  zol: {
-    eID: 216,
-    restrict: [1,1],
+  {
+    name: "zol",
+    id: 216,
+    size: [1,1],
   },
-  zora: { // zora only spawn in water, not sure how this one will get handled
-    eID: 300,
-    restrict: [1,1],
+  { // zora only spawn in water, not sure how this one will get handled
+    name: "zora",
+    id: 300,
+    size: [1,1],
   },
-  goomba: {
-    eID: 400,
-    restrict: [1,1],
+  {
+    name: "Goomba",
+    id: 400,
+    size: [1,1],
   },
-};
+];
 
-const bossData = {
+const bosses = [
   // bosses will be much stronger than normal enemies
   // may very rarely spawn in the overworld, most often found in designated areas (dungeons)
   // enemy ID's first digit tells which game they come from
   // 1 = zelda, 2 = mario, 3 = pokemon, 4 = deltarune
   // for enemies not from zelda, they will have their own special battle UI, sound effects, background music, and more
   // the player will be warned non-zelda bosses are nearby in some fashion, possibly audio cues
-  aquamentus: { // spawns in 1st and 7th dungeon
-    eID: 10,
-    restrict: [2,2],
+  { // spawns in 1st and 7th dungeon
+    name: "Aquamentus",
+    id: 10,
+    size: [2,2],
     powerlv: 1, // 1 or 2 depending on dungeon
   },
-  dodongo: { // spawns in 2nd dungeon 
-    eID: 11,
-    restrict: [2,2],
+  { // spawns in 2nd dungeon 
+    name: "Dodongo",
+    id: 11,
+    size: [2,2],
   },
-  manhandla: { // spawns in 3rd dungeon
-    eID: 12,
-    restrict: [3,3],
+  { // spawns in 3rd dungeon
+    name: "Manhandla",
+    id: 12,
+    size: [3,3],
   },
-  gleeok: { // spawns in 4th dungeon with 2 heads, and 8th dungeon with 4 heads
-    eID: 13,
-    restrict: [2,3],
+  { // spawns in 4th dungeon with 2 heads, and 8th dungeon with 4 heads
+    name: "Gleeok",
+    id: 13,
+    size: [2,3],
     powerlv: 1, // 1 or 2 depending on dungeon
   },
-  digdogger: { // spawns in 5th dungeon
-    eID: 14,
-    restrict: [2,2],
+  { // spawns in 5th dungeon
+    name: "Digdogger",
+    id: 14,
+    size: [2,2],
   },
-  gohma: { // spawns in 6th dungeon
-    eID: 15,
-    restrict: [3,1],
+  { // spawns in 6th dungeon
+    name: "Gohma",
+    id: 15,
+    size: [3,1],
   },
-  ganon: { // spawns in 9th (final) dungeon
-    eID: 16,
-    restrict: [2,2],
+  { // spawns in 9th (final) dungeon
+    name: "Ganon",
+    id: 16,
+    size: [2,2],
   },
-  mario: { // spawns in peach's castle
-    eID: 20,
-    restrict: [1,2],
+  { // mario, spawns in peach's castle
+    name: "Red Plumber",
+    id: 20,
+    size: [1,2],
   },
-  luigi: { // spawns in peach's castle
-    eID: 21,
-    restrict: [1,2],
+  { // luigi, spawns in peach's castle
+    name: "Green Plumber",
+    id: 21,
+    size: [1,2],
   },
-  bowser: { // spawns in bowser's castle
-    eID: 22,
-    restrict: [3,3],
+  { // bowser, spawns in bowser's castle
+    name: "King of the Koopas",
+    id: 22,
+    size: [3,3],
   },
-  red: { // spawns in mt. silver summit
-    eID: 30,
-    restrict: [1,1],
+  { // red, spawns in mt. silver summit
+    name: "Pocket Monster Champion",
+    id: 30,
+    size: [1,1],
   },
-  kris: { // spawns in castle town
-    eID: 40,
-    restrict: [1,2],
+  { // kris, spawns in castle town
+    name: "Emotionless Boy",
+    id: 40,
+    size: [1,2],
   },
-  susie: { // spawns in castle town
-    eID: 41,
-    restrict: [1,3],
+  { // susie, spawns in castle town
+    name: "Rowdy Horse Monster",
+    id: 41,
+    size: [1,3],
   },
-  ralsei: { // spawns in castle town
-    eID: 42,
-    restrict: [1,3],
+  { // ralsei, spawns in castle town
+    name: "Kind Goat Creature",
+    id: 42,
+    size: [1,3],
   },
-};
+];
 
 const roomObjects = {
   // other objects in the game that can be used at different times
   treasureChest: {
     ID: 5,
-    restrict: [1,1],
+    size: [1,1],
   },
   speedBooster: {
     ID: 6,
-    restrict: [1,1],
+    size: [1,1],
   },
   safeChest: {
     ID: 9,
-    restrict: [1,1]
+    size: [1,1]
   }
 };
 
@@ -336,7 +377,7 @@ function draw() {
     loadStartScreen();
   }
   else if (state === "save") {
-    // If picking a save file (future update)
+    // If picking a save file
     
   } 
   else if (state === "explore") {
@@ -345,12 +386,11 @@ function draw() {
     overworldControls();
   } 
   else if (state === "menu") {
-    // If in the player menu (future update)
+    // If in the player menu
 
   } 
   else if (state === "battle") {
-    // If entered a battle (future update)
-    loadBattle();
+    // If entered a battle
   }
 }
 
@@ -605,6 +645,56 @@ function mousePressed() {
   }
   else if (state === "battle"){
     // activate some battle button, depending on where clicked
+  }
+}
+
+function buildEnemy(id, task){ // searches through enemy ids to retrieve information
+  // for (let enemy of enemies){
+  //   if (enemy.id === id){
+      
+  //   }
+  // }
+}
+
+class Room {
+  constructor(x, y, layout, enemies, objects){
+    this.x = x;
+    this.y = y;
+    this.layout = layout;
+    this.enemies = enemies;
+    this.objects = objects;
+  }
+  display(){
+
+  }
+}
+
+class Enemy {
+  constructor(x, y, roomX, roomY, id){
+    this.x = x;
+    this.y = y;
+    this.roomX = roomX;
+    this.roomY = roomY;
+    this.id = id;
+    this.name = buildEnemy(id, "name");
+    this.size = buildEnemy(id, "size");
+    this.movementType = buildEnemy(id, "movementType"); // walk, run, hop, idle, etc
+    this.stats = buildEnemy(id, "stats");
+    this.moves = buildEnemy(id, "moves");
+    this.canSeePlayer = false;
+    this.bonuses = []; // stat bonuses, like temporary attack/defense buffs
+  }
+  display(){
+
+  }
+  canSeePlayer(){
+
+  }
+  move(){
+
+  }
+  attack(){
+
   }
 }
 
