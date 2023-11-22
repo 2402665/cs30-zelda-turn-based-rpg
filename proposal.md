@@ -19,7 +19,7 @@ This Major Project is a randomized turn-based RPG using resources from the Legen
 - "Safe Chests". These special interactable objects can spawn in rooms and act like checkpoints, and can also hold items you'd rather not lose in combat. All safe chests are connected to each other, so any items you put in one chest can be retrieved from any other safe chest.
 - Pre-generated areas that have the chance of generating instead of normal randomized rooms. Can hold puzzles, shops, and many secrets.
 - Underground dungeons and secret entrances to said dungeons in the overworld that hold enemies, bosses, treasures, and other secrets to be found.
-- Shards of the Triforce that can be collected, with entering all Zelda dungeons (not secret dungeons) and conquering the bosses at the end of each one will form the full Triforce and beat the game.
+- Shards of the Triforce that can be collected, with entering all Zelda dungeons (not secret dungeons) and conquering the bosses at the end of each one will form the full Triforce and unlock the final dungeon so you may beat the game.
 - Secret enemies and dungeons from other games and styles with their own special mechanics, music, sound effects, and more.
 - An online mode that saves the data of players. The specific user's profile will be accessible by a keycode/username only the player will have, and then a display name for an online leaderboard that shows the stats of the top players, depending on the category selected. Player data can be saved locally or globally.
 - A co-op mode that allows for two or more players to explore the same world. Each player will play as a different colored Link with a max of four players in one world.

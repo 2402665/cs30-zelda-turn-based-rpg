@@ -5,7 +5,7 @@
 // Project Name: The Legend of Zelda - Rift In Spacetime
 
 // Project Desription:
-// The exploration game redone to be a Legend of Zelda fangame, featuring the base game reimagined to be a turn-based RPG with extra randomization, features, and secrets.
+// The original exploration game redone to be a Legend of Zelda fangame, featuring the base game reimagined to be a turn-based RPG with extra randomization, features, and secrets.
 
 // Overworld Controls:
 // Use the WSAD or arrow keys to move Link.
@@ -16,8 +16,6 @@
 // Use the WSAD, arrow keys, or hover with the mouse to select an action. Tap the space bar or click to use the action you have selected.
 // Tap the space bar to move through battle dialogue.
 
-// Notes:
-// Many "states" are present in the code, but for right now only "start" and "explore" will trigger.
 // north = 0, west = 1, south = 2, east = 3
 
 // Code:
@@ -34,8 +32,6 @@ let playerAbleToMove = true; // variable used to check if player should be able 
 let playerMovementTime = 0; // time in millis() when player last moved
 let movementCooldown = 200; // cooldown in milliseconds for player movement
 
-let fadeScale = 200; // time in millis() that fade in/out room happens
-
 let player = { // player values
   x: GRID_SIZE/2, // x value in relevance to grid
   y: GRID_SIZE/2, // y value in relevance to grid
@@ -48,7 +44,7 @@ const enemyData = {
   // however when checking if running into an enemy, it will look at the player and enemy x/y values
   // eID = enemy ID
   // enemy ID's first digit tells which section of the game they belong in
-  // 1 = overworld, 2 = dungeon, 3 = mario
+  // 1 = overworld, 2 = dungeon, 3 = water, 4 = mario
   // for enemies not from zelda, they will have their own special battle UI, sound effects, background music, and more
   // restrict are the width and height of the object in relevance to the grid; [3,1] means 3 grid blocks long and 1 grid block tall
   armos: {
@@ -83,12 +79,8 @@ const enemyData = {
     eID: 106,
     restrict: [1,1],
   },
-  zora: {
-    eID: 107,
-    restrict: [1,1],
-  },
   tektite: {
-    eID: 108,
+    eID: 107,
     restrict: [1,1],
   },
   darknut: {
@@ -115,15 +107,16 @@ const enemyData = {
   },
   lanmola: {
     eID: 205,
-    restrict: [1,1],
+    restrict: [3,3], // not very efficient as it is a large snake-like enemy
+    color: null,
   },
   likelike: {
     eID: 206,
-    restrict: [1,1],
+    restrict: [2,2],
   },
   moldorm: {
     eID: 207,
-    restrict: [1,1],
+    restrict: [3,3], // not very efficient as it is a large snake-like enemy
   },
   patra: {
     eID: 208,
@@ -162,23 +155,27 @@ const enemyData = {
     eID: 216,
     restrict: [1,1],
   },
-  goomba: {
+  zora: { // zora only spawn in water, not sure how this one will get handled
     eID: 300,
+    restrict: [1,1],
+  },
+  goomba: {
+    eID: 400,
     restrict: [1,1],
   },
 };
 
-const eliteData = {
-  // elites are special enemies, will be much stronger than normal enemies
-  // may very rarely spawn in the overworld, most often found in designated dungeons
-  // elite ID's first digit tells which game they come from
-  // 1 = zelda, 2 = mario, 3 = paper mario, 4 = deltarune, 5 = pokemon, 6 = persona 4, 7 = omori, 8 = undertale
-  // the enemies appearing in the second half on the above list will probably be scrapped but the first few should be accomplishable in time
+const bossData = {
+  // bosses will be much stronger than normal enemies
+  // may very rarely spawn in the overworld, most often found in designated areas (dungeons)
+  // enemy ID's first digit tells which game they come from
+  // 1 = zelda, 2 = mario, 3 = pokemon, 4 = deltarune
   // for enemies not from zelda, they will have their own special battle UI, sound effects, background music, and more
-  // for most enemies here, player will be warned they are nearby in some fashion, possibly audio cues
+  // the player will be warned non-zelda bosses are nearby in some fashion, possibly audio cues
   aquamentus: { // spawns in 1st and 7th dungeon
     eID: 10,
     restrict: [2,2],
+    powerlv: 1, // 1 or 2 depending on dungeon
   },
   dodongo: { // spawns in 2nd dungeon 
     eID: 11,
@@ -191,6 +188,7 @@ const eliteData = {
   gleeok: { // spawns in 4th dungeon with 2 heads, and 8th dungeon with 4 heads
     eID: 13,
     restrict: [2,3],
+    powerlv: 1, // 1 or 2 depending on dungeon
   },
   digdogger: { // spawns in 5th dungeon
     eID: 14,
@@ -204,19 +202,19 @@ const eliteData = {
     eID: 16,
     restrict: [2,2],
   },
-  mario: { // spawns in mushroom kingdom
+  mario: { // spawns in peach's castle
     eID: 20,
     restrict: [1,2],
   },
-  luigi: { // spawns in mushroom kingdom
+  luigi: { // spawns in peach's castle
     eID: 21,
     restrict: [1,2],
   },
   bowser: { // spawns in bowser's castle
     eID: 22,
-    restrict: [4,4],
+    restrict: [3,3],
   },
-  papermario: { // spawns in battle stage
+  red: { // spawns in mt. silver summit
     eID: 30,
     restrict: [1,1],
   },
@@ -232,33 +230,9 @@ const eliteData = {
     eID: 42,
     restrict: [1,3],
   },
-  red: { // spawns in mt. silver summit
-    eID: 50,
-    restrict: [1,1],
-  },
-  yu: { // spawns in tv world
-    eID: 60,
-    restrict: [0,0],
-  },
-  omori: { // spawns in white space
-    eID: 70,
-    restrict: [0,0],
-  },
-  frisk: { // spawns in the void
-    eID: 80,
-    restrict: [0,0],
-  },
-  chara: { // spawns in asgore's flower bed
-    eID: 81,
-    restrict: [0,0],
-  },
-  toriel: { // spawns in toriel's home
-    eID: 82,
-    restrict: [0,0],
-  }
 };
 
-const roomObjects = { // for future update
+const roomObjects = {
   // other objects in the game that can be used at different times
   treasureChest: {
     ID: 5,
@@ -268,14 +242,10 @@ const roomObjects = { // for future update
     ID: 6,
     restrict: [1,1],
   },
-  something: {
-    ID: 7,
-    restrict: [1,3],
-  }, 
-  message: {
-    ID: 8,
-    restrict: [3,1],
-  }, 
+  safeChest: {
+    ID: 9,
+    restrict: [1,1]
+  }
 };
 
 let imageAssets = { // list of all sprites/spritesheets in the game
@@ -416,10 +386,10 @@ function displayBorders() {
   for (let i=0; i<GRID_SIZE; i++){
     for (let j=0; j<GRID_SIZE; j++){
       if (loadedRoom[i][j]===0){
-        image(imageAssets.floor, cellSize*j+cellSize/2, cellSize*i+cellSize/2, cellSize, cellSize);
+        image(imageAssets.floor, cellSize*j, cellSize*i, cellSize, cellSize);
       }
       else if (loadedRoom[i][j]===1){
-        image(imageAssets.wall, cellSize*j+cellSize/2, cellSize*i+cellSize/2, cellSize, cellSize);
+        image(imageAssets.wall, cellSize*j, cellSize*i, cellSize, cellSize);
       }
     }
   }
@@ -476,7 +446,7 @@ function loadEntities() {
 }
 
 function loadPlayer() {
-  image(imageAssets.player, cellSize*player.x+cellSize/2, cellSize*player.y+cellSize/2, cellSize, cellSize);
+  image(imageAssets.player, cellSize*player.x, cellSize*player.y, cellSize, cellSize);
 }
 
 function overworldControls() {
@@ -621,6 +591,7 @@ function mousePressed() {
     bgm.title.stop();
     bgm.overworld.loop();
     state = "explore";
+    imageMode(CORNER);
   }
   else if (state === "explore"){
     // teleports player to location on the grid
@@ -651,31 +622,3 @@ window.onresize = function() { // if the window gets resized
     cellSize = width/GRID_SIZE;
   }
 };
-
-function randomizeObjPos(objectTable){ // future function
-  // a function that would randomize where objects are positioned given a table of object IDs, returns a table of positions
-}
-
-function loadBattle(){ // future function
-  text("How are you seeing this?",0,0,width,height/5);
-}
-
-function loadEnemies(){ // future function
-  text("How are you seeing this?",0,0,width,height/5);
-}
-
-function createEnemy(){ // future function
-  text("How are you seeing this?",0,0,width,height/5);
-}
-
-function battleControls(){ // future function
-  text("How are you seeing this?",0,0,width,height/5);
-}
-
-function battleUI(){ // future function
-  text("How are you seeing this?",0,0,width,height/5);
-}
-
-function battleButton(button){ // future function
-  text("How are you seeing this?",0,0,width,height/5);
-}
