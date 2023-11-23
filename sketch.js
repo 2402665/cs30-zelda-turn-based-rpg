@@ -23,7 +23,8 @@
 let exits = [0,0,0,0];
 let exitScale = 3; // tells how much grid slots an exit takes up
 
-const GRID_SIZE = 12; // how wide/tall the grid will be, game still functions if changed though will break if extremely small value
+const GRID_X = 16; // how wide the grid will be
+const GRID_Y = 11; // how tall the grid will be
 let cellSize; // will turn into a x/y value for scaling later
 
 let loadedRoom; // will turn into a 2D array
@@ -33,8 +34,8 @@ let playerMovementTime = 0; // time in millis() when player last moved
 let movementCooldown = 200; // cooldown in milliseconds for player movement
 
 let player = { // player values
-  x: GRID_SIZE/2, // x value in relevance to grid
-  y: GRID_SIZE/2, // y value in relevance to grid
+  x: 8, // x value in relevance to grid
+  y: 5, // y value in relevance to grid
   battleX: 0, // x value during combat
   battleY: 0, // y value during combat
 };
@@ -45,143 +46,143 @@ const enemies = [
   // id = enemy ID
   // enemy ID's first digit tells which section of the game they belong in
   // 1 = overworld, 2 = dungeon, 3 = water, 4 = mario
-  // for enemies not from zelda, they will have their own special battle UI, sound effects, background music, and more
+  // for enemies and bosses not from zelda, they will have their own special battle UI, sound effects, background music, and more
   // size are the width and height of the object in relevance to the grid; [3,1] means 3 grid blocks long and 1 grid block tall
   {
-    name: "armos",
+    name: "Armos",
     id: 100,
     size: [1,1],
   },
   {
-    name: "ghini",
+    name: "Ghini",
     id: 101,
     size: [1,1],
   },
   {
-    name: "leever",
+    name: "Leever",
     id: 102,
     size: [1,1],
     color: null,
   },
   {
-    name: "lynel",
+    name: "Lynel",
     id: 103,
     size: [1,1],
     color: null,
   },
   {
-    name: "moblin",
+    name: "Moblin",
     id: 104,
     size: [1,1],
     color: null,
   },
   {
-    name: "octorok",
+    name: "Octorok",
     id: 105, 
     size: [1,1],
     color: null,
   },
   {
-    name: "peahat",
+    name: "Peahat",
     id: 106,
     size: [1,1],
   },
   {
-    name: "tektite",
+    name: "Tektite",
     id: 107,
     size: [1,1],
   },
   {
-    name: "darknut",
+    name: "Darknut",
     id: 200,
     size: [1,1],
     color: null,
   },
   {
-    name: "gel",
+    name: "Gel",
     id: 201,
     size: [1,1],
   },
   {
-    name: "gibdo",
+    name: "Gibdo",
     id: 202,
     size: [1,1],
   },
   {
-    name: "goriya",
+    name: "Goriya",
     id: 203,
     size: [1,1],
   },
   {
-    name: "keese",
+    name: "Keese",
     id: 204,
     size: [1,1],
     color: null,
   },
   {
-    name: "lanmola",
+    name: "Lanmola",
     id: 205,
     size: [3,3], // not very efficient as it is a large snake-like enemy
     color: null,
   },
   {
-    name: "likelike",
+    name: "Likelike",
     id: 206,
     size: [2,2],
   },
   {
-    name: "moldorm",
+    name: "Moldorm",
     id: 207,
     size: [3,3], // not very efficient as it is a large snake-like enemy
   },
   {
-    name: "patra",
+    name: "Patra",
     id: 208,
     size: [1,1],
   },
   {
-    name: "patramini",
+    name: "Mini Patra",
     id: 209,
     size: [1,1],
   },
   {
-    name: "polsvoice",
+    name: "Pol's Voice",
     id: 210,
     size: [1,1],
   },
   {
-    name: "rope",
+    name: "Rope",
     id: 211,
     size: [1,1],
   },
   {
-    name: "stalfos",
+    name: "Stalfos",
     id: 212,
     size: [1,1],
   },
   {
-    name: "vire",
+    name: "Vire",
     id: 213,
     size: [1,1],
   },
   {
-    name: "walmaster",
+    name: "Wallmaster",
     id: 214,
     size: [1,1],
   },
   {
-    name: "wizzrobe",
+    name: "Wizzrobe",
     id: 215,
     size: [1,1],
     color: null,
   },
   {
-    name: "zol",
+    name: "Zol",
     id: 216,
     size: [1,1],
   },
   { // zora only spawn in water, not sure how this one will get handled
-    name: "zora",
+    name: "Zora",
     id: 300,
     size: [1,1],
   },
@@ -257,17 +258,17 @@ const bosses = [
     size: [1,1],
   },
   { // kris, spawns in castle town
-    name: "Emotionless Boy",
+    name: "Empty Boy",
     id: 40,
     size: [1,2],
   },
   { // susie, spawns in castle town
-    name: "Rowdy Horse Monster",
+    name: "Rowdy Horse",
     id: 41,
     size: [1,3],
   },
   { // ralsei, spawns in castle town
-    name: "Kind Goat Creature",
+    name: "Kind Goat",
     id: 42,
     size: [1,3],
   },
@@ -345,17 +346,12 @@ function preload(){
 
 function setup() {
   if (windowWidth>windowHeight){
-    canvas = createCanvas(windowHeight, windowHeight);
-    cellSize = height/GRID_SIZE;
-  } 
-  else if (windowWidth<windowHeight){
-    canvas = createCanvas(windowWidth, windowWidth);
-    cellSize = width/GRID_SIZE;
-  } 
-  else {
-    canvas = createCanvas(windowWidth, windowHeight);
-    cellSize = width/GRID_SIZE;
+    cellSize = windowHeight/GRID_Y;
   }
+  else {
+    cellSize = windowWidth/GRID_X;
+  }
+  canvas = createCanvas(cellSize*GRID_X, cellSize*GRID_Y);
 
   imageMode(CENTER);
   rectMode(CENTER);
@@ -401,15 +397,15 @@ function loadStartScreen(){
 }
 
 function createEmptyRoom() {
-  let table = new Array(GRID_SIZE);
-  for(let i=0; i<GRID_SIZE; i++){
-    if(i===0 || i===GRID_SIZE-1){
-      table[i] = new Array(GRID_SIZE).fill(1);
+  let table = new Array(GRID_Y);
+  for(let i=0; i<GRID_Y; i++){
+    if(i===0 || i===GRID_Y-1){
+      table[i] = new Array(GRID_X).fill(1);
     }
     else {
-      table[i] = new Array(GRID_SIZE).fill(0);
+      table[i] = new Array(GRID_X).fill(0);
       table[i][0] = 1;
-      table[i][GRID_SIZE-1] = 1;
+      table[i][GRID_X-1] = 1;
     }
   }
   console.log(table);
@@ -423,8 +419,8 @@ function displayRoom() {
 }
 
 function displayBorders() {
-  for (let i=0; i<GRID_SIZE; i++){
-    for (let j=0; j<GRID_SIZE; j++){
+  for (let i=0; i<GRID_Y; i++){
+    for (let j=0; j<GRID_X; j++){
       if (loadedRoom[i][j]===0){
         image(imageAssets.floor, cellSize*j, cellSize*i, cellSize, cellSize);
       }
@@ -442,32 +438,36 @@ function findExits(table) { // for each exit, uses addExits
 }
 
 function addExits(direction,table){ // adds an "exit" to a given 2D array
-  // creates a random position for the exit to exist in on the grid
-  let randomExitPos = round(random(1,GRID_SIZE-exitScale-1));
+  // creates a random position variable for the exit to exist in on the grid
+  let randomExitPos;
   
   // depending on direction of exit, use randomExitPos to create the exit on the grid
-  if (direction === 0){
+  if (direction === 0){ //north
+    randomExitPos = round(random(1,GRID_X-exitScale-1));
     // adds 0s in table to create the exit
     for (let k=0; k<exitScale; k++){
       table[randomExitPos+k][0] = 0;
     }
   }
-  else if (direction === 1){
+  else if (direction === 1){ //east
+    randomExitPos = round(random(1,GRID_Y-exitScale-1));
     // adds 0s in table to create the exit
     for (let k=0; k<exitScale; k++){
       table[0][randomExitPos+k] = 0;
     }
   }
-  else if (direction === 2){
+  else if (direction === 2){ //south
+    randomExitPos = round(random(1,GRID_X-exitScale-1));
     // adds 0s in table to create the exit
     for (let k=0; k<exitScale; k++){
-      table[randomExitPos+k][GRID_SIZE-1] = 0;
+      table[randomExitPos+k][GRID_X-1] = 0;
     }
   }
-  else if (direction === 3){
+  else if (direction === 3){ //west
+    randomExitPos = round(random(1,GRID_Y-exitScale-1));
     // adds 0s in table to create the exit
     for (let k=0; k<exitScale; k++){
-      table[GRID_SIZE-1][randomExitPos+k] = 0;
+      table[GRID_Y-1][randomExitPos+k] = 0;
     }
   }
 }
@@ -528,13 +528,13 @@ function movePlayer(addedPos) {
   if (player.y + addedPos.y < 0){ // if going into north exit
     changeRoom("north");
   }
-  else if (player.y + addedPos.y >= GRID_SIZE){ // if going to south exit
+  else if (player.y + addedPos.y >= GRID_Y){ // if going to south exit
     changeRoom("south");
   }
   else if (player.x + addedPos.x < 0){ // if going to west exit
     changeRoom("west");
   }
-  else if (player.x + addedPos.x >= GRID_SIZE){ // if going to east exit
+  else if (player.x + addedPos.x >= GRID_X){ // if going to east exit
     changeRoom("east");
   }
   else if (loadedRoom[player.y + addedPos.y][player.x + addedPos.x] === 0){ // if not running into something
@@ -556,40 +556,40 @@ function changeRoom(direction){
     oppositeExit = 2; //south
     randomExits();
     exits[0] = oppositeExit;
-    for (let i=0; i<GRID_SIZE; i++){
+    for (let i=0; i<GRID_X; i++){
       oldExitPos.push(oldRoom[0][i]);
     }
     loadedRoom = createEmptyRoom();
     findExits(loadedRoom);
-    for (let i=0; i<GRID_SIZE; i++){
-      loadedRoom[GRID_SIZE-1][i] = oldExitPos[i];
+    for (let i=0; i<GRID_X; i++){
+      loadedRoom[GRID_Y-1][i] = oldExitPos[i];
     }
-    player.y = GRID_SIZE-1;
+    player.y = GRID_Y-1;
   } 
   else if (direction === "west") {
     oppositeExit = 3; //east
     randomExits();
     exits[0] = oppositeExit;
-    for (let i=0; i<GRID_SIZE; i++){
+    for (let i=0; i<GRID_Y; i++){
       oldExitPos.push(oldRoom[i][0]);
     }
     loadedRoom = createEmptyRoom();
     findExits(loadedRoom);
-    for (let i=0; i<GRID_SIZE; i++){
-      loadedRoom[i][GRID_SIZE-1] = oldExitPos[i];
+    for (let i=0; i<GRID_X; i++){
+      loadedRoom[i][GRID_X-1] = oldExitPos[i];
     }
-    player.x = GRID_SIZE-1;
+    player.x = GRID_X-1;
   } 
   else if (direction === "south") {
     oppositeExit = 0; //north
     randomExits();
     exits[0] = oppositeExit;
-    for (let i=0; i<GRID_SIZE; i++){
-      oldExitPos.push(oldRoom[GRID_SIZE-1][i]);
+    for (let i=0; i<GRID_Y; i++){
+      oldExitPos.push(oldRoom[GRID_Y-1][i]);
     }
     loadedRoom = createEmptyRoom();
     findExits(loadedRoom);
-    for (let i=0; i<GRID_SIZE; i++){
+    for (let i=0; i<GRID_X; i++){
       loadedRoom[0][i] = oldExitPos[i];
     }
     player.y = 0;
@@ -598,12 +598,12 @@ function changeRoom(direction){
     oppositeExit = 1; //west
     randomExits();
     exits[0] = oppositeExit;
-    for (let i=0; i<GRID_SIZE; i++){
-      oldExitPos.push(oldRoom[i][GRID_SIZE-1]);
+    for (let i=0; i<GRID_X; i++){
+      oldExitPos.push(oldRoom[i][GRID_X-1]);
     }
     loadedRoom = createEmptyRoom();
     findExits(loadedRoom);
-    for (let i=0; i<GRID_SIZE; i++){
+    for (let i=0; i<GRID_Y; i++){
       loadedRoom[i][0] = oldExitPos[i];
     }
     player.x = 0;
@@ -648,7 +648,7 @@ function mousePressed() {
   }
 }
 
-function buildEnemy(id, task){ // searches through enemy ids to retrieve information
+function buildEnemy(id, task){ // searches through enemy table to retrieve information
   // for (let enemy of enemies){
   //   if (enemy.id === id){
       
@@ -700,15 +700,10 @@ class Enemy {
 
 window.onresize = function() { // if the window gets resized
   if (windowWidth>windowHeight){
-    canvas = createCanvas(windowHeight, windowHeight);
-    cellSize = height/GRID_SIZE;
-  } 
-  else if (windowWidth<windowHeight){
-    canvas = createCanvas(windowWidth, windowWidth);
-    cellSize = width/GRID_SIZE;
-  } 
-  else {
-    canvas = createCanvas(windowWidth, windowHeight);
-    cellSize = width/GRID_SIZE;
+    cellSize = windowHeight/GRID_Y;
   }
+  else {
+    cellSize = windowWidth/GRID_X;
+  }
+  canvas = createCanvas(cellSize*GRID_X, cellSize*GRID_Y);
 };
