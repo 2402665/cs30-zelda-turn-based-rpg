@@ -23,7 +23,7 @@
 let exitMax = 4; // tells how many exits can be in a room at once
 let exitScale = [2,5]; // tells how much grid slots an exit takes up, [min, max]
 
-let exits = [0,0,0,0]
+let exits = [0,0,0,0];
 
 const GRID_X = 16; // how wide the grid will be
 const GRID_Y = 11; // how tall the grid will be
@@ -47,6 +47,476 @@ let player = { // player values
   battleX: 0, // x value during combat
   battleY: 0, // y value during combat
 };
+
+
+
+let imageAssets = { // list of all sprites/spritesheets in the game
+  fadeBlack: null,
+  floor: null,
+  wall: null,
+  player: null,
+  octorok: null,
+  mario: null,
+  luigi: null,
+  title: null,
+  clicktostart: null,
+  treasureChest: null,
+  speedBooster: null,
+  something: null,
+  message: null,
+};
+
+let bgm = { // list of all background music in the game
+  title: null,
+  overworld: null,
+};
+
+let sfx = { // list of all sound effects in the game
+  click: null,
+  footstep: null,
+  hit_wall: null,
+};
+
+let state = "start"; // current state of game
+
+function preload(){
+  // load images
+  imageAssets.fadeBlack = loadImage("assets/images/fadeblack.png");
+  imageAssets.floor = loadImage("assets/images/floor-temp.png");
+  imageAssets.wall = loadImage("assets/images/wall-temp.png");
+  imageAssets.player = loadImage("assets/images/link_temporary.png");
+  imageAssets.title = loadImage("assets/images/title.png");
+  imageAssets.clicktostart = loadImage("assets/images/click-to-start.png");
+
+  // set up sound formats to be used
+  soundFormats("mp3", "wav");
+
+  // load background music
+  bgm.title = loadSound("assets/bgm/title.mp3");
+  bgm.title.setVolume(0.5);
+  bgm.overworld = loadSound("assets/bgm/overworld.mp3");
+  bgm.overworld.setVolume(0.5);
+
+
+  // load sound effects
+  sfx.click = loadSound("assets/sfx/click.wav");
+  sfx.footstep = loadSound("assets/sfx/footstep.wav");
+  sfx.hit_wall = loadSound("assets/sfx/hit_wall.wav");
+}
+
+function setup() {
+  if (windowWidth>windowHeight){
+    cellSize = windowHeight/GRID_Y;
+  }
+  else {
+    cellSize = windowWidth/GRID_X;
+  }
+  canvas = createCanvas(cellSize*GRID_X, cellSize*GRID_Y);
+
+  imageMode(CENTER);
+  rectMode(CENTER);
+
+  let startingRoom = new Room(0, 0, createEmptyRoom(), null, null, null);
+  startingRoom.addExits();
+  rooms.push(startingRoom);
+
+  bgm.title.loop();
+
+  sfx.footstep.playMode("sustain");
+}
+
+function draw() {
+  if (state === "start"){
+    // If on the start screen
+    loadStartScreen();
+  }
+  else if (state === "save") {
+    // If picking a save file
+    
+  } 
+  else if (state === "explore") {
+    // If exploring
+    for (let room of rooms){
+      if (room.x === player.roomX && room.y === player.roomY){
+        room.display();
+      }
+    }
+    overworldControls();
+    loadPlayer();
+  } 
+  else if (state === "menu") {
+    // If in the player menu
+
+  } 
+  else if (state === "battle") {
+    // If entered a battle
+  }
+}
+
+function loadStartScreen(){
+  background(0);
+  image(imageAssets.title, width/2, height/2, width-cellSize, cellSize/1.5);
+  image(imageAssets.clicktostart, width/2, height-cellSize, width/2.5, cellSize/2.5);
+}
+
+function createEmptyRoom() {
+  let table = new Array(GRID_Y);
+  for(let i=0; i<GRID_Y; i++){
+    if(i===0 || i===GRID_Y-1){
+      table[i] = new Array(GRID_X).fill(1);
+    }
+    else {
+      table[i] = new Array(GRID_X).fill(0);
+      table[i][0] = 1;
+      table[i][GRID_X-1] = 1;
+    }
+  }
+  console.log(table);
+  return table;
+}
+
+function loadPlayer() {
+  image(imageAssets.player, cellSize*player.x, cellSize*player.y, cellSize, cellSize);
+}
+
+function overworldControls() {
+  let addedPos = {x: 0, y: 0};
+  if (state === "explore") {
+    if (millis() > playerMovementTime + movementCooldown && playerAbleToMove){
+      if (keyIsDown(87) || keyIsDown(38) ) {
+        // w or up arrow
+        addedPos.y = -1;
+        playerMovementTime = millis();
+        sfx.footstep.play();
+      } 
+      else if (keyIsDown(83) || keyIsDown(40)  ) {
+        // s or down arrow
+        addedPos.y = 1;
+        playerMovementTime = millis();
+        sfx.footstep.play();
+      } 
+      else if (keyIsDown(65) || keyIsDown(37)  ) {
+        // a or left arrow
+        addedPos.x = -1;
+        playerMovementTime = millis();
+        sfx.footstep.play();
+      } 
+      else if (keyIsDown(68) || keyIsDown(39)  ) {
+        // d or right arrow
+        addedPos.x = 1;
+        playerMovementTime = millis();
+        sfx.footstep.play();
+      }
+    }
+  }
+  movePlayer(addedPos);
+}
+
+function movePlayer(addedPos) {
+  // moves the player
+  // moves into a new room given if player left the room
+  for (let room of rooms){
+    if (player.y + addedPos.y < 0){ // if going into north exit
+      changeRoom("north", player);
+    }
+    else if (player.y + addedPos.y >= GRID_Y){ // if going to south exit
+      changeRoom("south", player);
+    }
+    else if (player.x + addedPos.x < 0){ // if going to west exit
+      changeRoom("west", player);
+    }
+    else if (player.x + addedPos.x >= GRID_X){ // if going to east exit
+      changeRoom("east", player);
+    }
+    else if (room[player.y + addedPos.y][player.x + addedPos.x] === 0){ // if not running into something
+      player.y += addedPos.y;
+      player.x += addedPos.x;
+    }
+    else if (room[player.y + addedPos.y][player.x + addedPos.x] === 1){ // if running into a wall
+      sfx.hit_wall.play();
+    }
+  }
+}
+
+function changeRoom(direction, player){
+  // creates a new room based on which exit the player took
+  let addedPos = [0,0];
+  if (direction === "north"){
+    addedPos[1] = -1;
+    player.y = GRID_Y-1;
+    player.roomY -= 1;
+  }
+  else if (direction === "south"){
+    addedPos[1] = 1;
+    player.y = 0;
+    player.roomY += 1;
+  }
+  else if (direction === "west"){
+    addedPos[0] = -1;
+    player.x = GRID_X-1;
+    player.roomX -= 1;
+  }
+  else if (direction === "east"){
+    addedPos[0] = 1;
+    player.x = 0;
+    player.roomX += 1;
+  }
+  let newRoom = new Room(player.roomX + addedPos[0], player.roomY + addedPos[1], createEmptyRoom(), null, null, null);
+  newRoom.addExits();
+  rooms.push(newRoom);
+}
+
+// function fadeIntoBlack(){
+//   for (let i=0; i>256; i++){
+//     push();
+//     tint(255, i);
+//     image(imageAssets.fadeBlack, 0, 0, width, height);
+//   }
+// }
+
+// function fadeOutBlack(){
+//   for (let i=255; i<=0; i++){
+//     push();
+//     tint(255, i);
+//     image(imageAssets.fadeBlack, 0, 0, width, height);
+//   }
+// }
+
+function mousePressed() { 
+  if (state === "start"){
+    bgm.title.stop();
+    bgm.overworld.loop();
+    state = "explore";
+    imageMode(CORNER);
+  }
+  else if (state === "explore"){
+    // teleports player to location on the grid
+    let mouseGridX = floor(mouseX / cellSize);
+    let mouseGridY = floor(mouseY / cellSize);
+    for (let room of rooms){
+      if (room.x === player.roomX && room.y === player.roomY){
+        if (room[mouseGridY][mouseGridX] === 0){
+          player.x = mouseGridX;
+          player.y = mouseGridY;
+          sfx.click.play();
+        }
+      }
+    }
+    
+  }
+  else if (state === "battle"){
+    // activate some battle button, depending on where clicked
+  }
+}
+
+function buildEnemy(id, task){ // searches through enemy table to retrieve information
+  // for (let enemy of enemies){
+  //   if (enemy.id === id){
+      
+  //   }
+  // }
+}
+
+function newExit(direction, position, size){
+  return {
+    direction: direction,
+    position: position,
+    size: size,
+  };
+}
+
+class Room {
+  constructor(x, y, layout, preset, biome, exits){
+    this.x = x;
+    this.y = y;
+    this.layout = layout;
+    this.preset = preset;
+    this.biome = biome;
+    if (exits !== null){
+      this.exits = exits;
+    }
+    else{
+      this.exits = [];
+    }
+    this.enemies = null;
+    this.objects = null;
+  }
+  addExits(){
+    // before adding exits, add banned direction table so you can't exit into another room's wall
+    let bannedDirections = [];
+    // first, check for exits in surrounding rooms if they exist
+    for (let room of rooms){
+      //checking north side
+      if (room.y === this.y - 1){
+        let isBannedDirection = true;
+        for (let exit of room.exits){
+          if (exit.direction === "south"){
+            this.exits.push(newExit("north", exit.position, exit.size));
+            isBannedDirection = false;
+          }
+        }
+        // if no south exit, make banned direction
+        if (isBannedDirection){
+          bannedDirections.push("north");
+        }
+      }
+      //checking south side
+      else if (room.y === this.y + 1){
+        let isBannedDirection = true;
+        for (let exit of room.exits){
+          if (exit.direction === "north"){
+            this.exits.push(newExit("south", exit.position, exit.size));
+            isBannedDirection = false;
+          }
+        }
+        // if no north exit, make banned direction
+        if (isBannedDirection){
+          bannedDirections.push("south");
+        }
+      }
+      //checking west side
+      else if (room.x === this.x - 1){
+        let isBannedDirection = true;
+        for (let exit of room.exits){
+          if (exit.direction === "east"){
+            this.exits.push(newExit("west", exit.position, exit.size));
+            isBannedDirection = false;
+          }
+        }
+        // if no east exit, make banned direction
+        if (isBannedDirection){
+          bannedDirections.push("west");
+        }
+      }
+      //checking east side
+      else if (room.x === this.x + 1){
+        let isBannedDirection = true;
+        for (let exit of room.exits){
+          if (exit.direction === "west"){
+            this.exits.push(newExit("east", exit.position, exit.size));
+            isBannedDirection = false;
+          }
+        }
+        // if no west exit, make banned direction
+        if (isBannedDirection){
+          bannedDirections.push("east");
+        }
+      }
+    }
+    // add random exits until hit exit maximum
+    while(this.exits.length < exitMax){
+      let newExitDirection = round(random(0,3));
+      let newExitSize = round(random(exitScale[0], exitScale[1]));
+      let isBanned = false;
+
+      if (newExitDirection === 0){ //north
+        for (let ban of bannedDirections){
+          if (ban === "north"){
+            isBanned = true;
+          }
+        }
+        if (!isBanned){
+          this.exits.push(newExit("north", round(random(1,GRID_X-newExitSize-1)), newExitSize));
+        }
+      }
+      else if (newExitDirection === 1){ //south
+        for (let ban of bannedDirections){
+          if (ban === "south"){
+            isBanned = true;
+          }
+        }
+        if (!isBanned){
+          this.exits.push(newExit("south", round(random(1,GRID_X-newExitSize-1)), newExitSize));
+        }
+      }
+      else if (newExitDirection === 2){ //west
+        for (let ban of bannedDirections){
+          if (ban === "west"){
+            isBanned = true;
+          }
+        }
+        if (!isBanned){
+          this.exits.push(newExit("west", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
+        }
+      }
+      else if (newExitDirection === 3){ //east
+        for (let ban of bannedDirections){
+          if (ban === "east"){
+            isBanned = true;
+          }
+        }
+        if (!isBanned){
+          this.exits.push(newExit("north", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
+        }
+      }
+    }
+    //put the exits on the layout
+    for (let exit of this.exits){
+      if (exit.direction === "north"){
+        for (let i=0; i<exit.size; i++){
+          this.layout[0][exit.position+i] = 0;
+        }
+      }
+      else if (exit.direction === "south"){
+        for (let i=0; i<exit.size; i++){
+          this.layout[GRID_Y-1][exit.position+i] = 0;
+        }
+      }
+      else if (exit.direction === "west"){
+        for (let i=0; i<exit.size; i++){
+          this.layout[exit.position+i][0] = 0;
+        }
+      }
+      else if (exit.direction === "east"){
+        for (let i=0; i<exit.size; i++){
+          this.layout[exit.position+i][GRID_X-1] = 0;
+        }
+      }
+    }
+  }
+  display(){
+    // display room borders
+    for (let i=0; i<GRID_Y; i++){
+      for (let j=0; j<GRID_X; j++){
+        if (this.layout[i][j]===0){
+          image(imageAssets.floor, cellSize*j, cellSize*i, cellSize, cellSize);
+        }
+        else if (this.layout[i][j]===1){
+          image(imageAssets.wall, cellSize*j, cellSize*i, cellSize, cellSize);
+        }
+      }
+    }
+  }
+}
+
+class Enemy {
+  constructor(x, y, roomX, roomY, id){
+    this.x = x;
+    this.y = y;
+    this.roomX = roomX;
+    this.roomY = roomY;
+    this.id = id;
+    this.name = buildEnemy(id, "name");
+    this.size = buildEnemy(id, "size");
+    this.movementType = buildEnemy(id, "movementType"); // walk, run, hop, idle, etc
+    this.stats = buildEnemy(id, "stats");
+    this.moves = buildEnemy(id, "moves");
+    this.canSeePlayer = false;
+    this.bonuses = []; // stat bonuses, like temporary attack/defense buffs
+  }
+  display(){
+
+  }
+  canSeePlayer(){
+
+  }
+  move(){
+
+  }
+  attack(){
+
+  }
+}
 
 const enemies = [
   // enemies themselves will not show up on the grid
@@ -297,566 +767,6 @@ const roomObjects = {
     size: [1,1]
   }
 };
-
-let imageAssets = { // list of all sprites/spritesheets in the game
-  fadeBlack: null,
-  floor: null,
-  wall: null,
-  player: null,
-  octorok: null,
-  mario: null,
-  luigi: null,
-  title: null,
-  clicktostart: null,
-  treasureChest: null,
-  speedBooster: null,
-  something: null,
-  message: null,
-};
-
-let bgm = { // list of all background music in the game
-  title: null,
-  overworld: null,
-};
-
-let sfx = { // list of all sound effects in the game
-  click: null,
-  footstep: null,
-  hit_wall: null,
-};
-
-let state = "start"; // current state of game
-
-function preload(){
-  // load images
-  imageAssets.fadeBlack = loadImage("assets/images/fadeblack.png");
-  imageAssets.floor = loadImage("assets/images/floor-temp.png");
-  imageAssets.wall = loadImage("assets/images/wall-temp.png");
-  imageAssets.player = loadImage("assets/images/link_temporary.png");
-  imageAssets.title = loadImage("assets/images/title.png");
-  imageAssets.clicktostart = loadImage("assets/images/click-to-start.png");
-
-  // set up sound formats to be used
-  soundFormats("mp3", "wav");
-
-  // load background music
-  bgm.title = loadSound("assets/bgm/title.mp3");
-  bgm.title.setVolume(0.5);
-  bgm.overworld = loadSound("assets/bgm/overworld.mp3");
-  bgm.overworld.setVolume(0.5);
-
-
-  // load sound effects
-  sfx.click = loadSound("assets/sfx/click.wav");
-  sfx.footstep = loadSound("assets/sfx/footstep.wav");
-  sfx.hit_wall = loadSound("assets/sfx/hit_wall.wav");
-}
-
-function setup() {
-  if (windowWidth>windowHeight){
-    cellSize = windowHeight/GRID_Y;
-  }
-  else {
-    cellSize = windowWidth/GRID_X;
-  }
-  canvas = createCanvas(cellSize*GRID_X, cellSize*GRID_Y);
-
-  imageMode(CENTER);
-  rectMode(CENTER);
-
-  let startingRoom = new Room(0, 0, createEmptyRoom(), null, null, null);
-
-  loadedRoom = createEmptyRoom();
-
-  randomExits();
-
-  findExits(loadedRoom);
-
-  bgm.title.loop();
-
-  sfx.footstep.playMode("sustain");
-}
-
-function draw() {
-  if (state === "start"){
-    // If on the start screen
-    loadStartScreen();
-  }
-  else if (state === "save") {
-    // If picking a save file
-    
-  } 
-  else if (state === "explore") {
-    // If exploring
-    displayRoom();
-    overworldControls();
-  } 
-  else if (state === "menu") {
-    // If in the player menu
-
-  } 
-  else if (state === "battle") {
-    // If entered a battle
-  }
-}
-
-function loadStartScreen(){
-  background(0);
-  image(imageAssets.title, width/2, height/2, width-cellSize, cellSize/1.5);
-  image(imageAssets.clicktostart, width/2, height-cellSize, width/2.5, cellSize/2.5);
-}
-
-function createEmptyRoom() {
-  let table = new Array(GRID_Y);
-  for(let i=0; i<GRID_Y; i++){
-    if(i===0 || i===GRID_Y-1){
-      table[i] = new Array(GRID_X).fill(1);
-    }
-    else {
-      table[i] = new Array(GRID_X).fill(0);
-      table[i][0] = 1;
-      table[i][GRID_X-1] = 1;
-    }
-  }
-  console.log(table);
-  return table;
-}
-
-function displayRoom() {
-  noStroke();
-  displayBorders();
-  loadEntities();
-}
-
-function displayBorders() {
-  for (let i=0; i<GRID_Y; i++){
-    for (let j=0; j<GRID_X; j++){
-      if (loadedRoom[i][j]===0){
-        image(imageAssets.floor, cellSize*j, cellSize*i, cellSize, cellSize);
-      }
-      else if (loadedRoom[i][j]===1){
-        image(imageAssets.wall, cellSize*j, cellSize*i, cellSize, cellSize);
-      }
-    }
-  }
-}
-
-function findExits(table) { // for each exit, uses addExits
-  for (let exit of exits){
-    addExits(exit,table);
-  }
-}
-
-function addExits(direction,table){ // adds an "exit" to a given 2D array
-  // creates a random position variable for the exit to exist in on the grid
-  let randomExitPos;
-  let exitScalar = round(random(exitScale[0], exitScale[1]));
-  
-  // depending on direction of exit, use randomExitPos to create the exit on the grid
-  if (direction === 0){ //north
-    randomExitPos = round(random(1,GRID_Y-exitScalar-1));
-    // adds 0s in table to create the exit
-    for (let k=0; k<exitScalar; k++){
-      table[randomExitPos+k][0] = 0;
-    }
-  }
-  else if (direction === 1){ //east
-    randomExitPos = round(random(1,GRID_X-exitScalar-1));
-    // adds 0s in table to create the exit
-    for (let k=0; k<exitScalar; k++){
-      table[0][randomExitPos+k] = 0;
-    }
-  }
-  else if (direction === 2){ //south
-    randomExitPos = round(random(1,GRID_Y-exitScalar-1));
-    // adds 0s in table to create the exit
-    for (let k=0; k<exitScalar; k++){
-      table[randomExitPos+k][GRID_X-1] = 0;
-    }
-  }
-  else if (direction === 3){ //west
-    randomExitPos = round(random(1,GRID_X-exitScalar-1));
-    // adds 0s in table to create the exit
-    for (let k=0; k<exitScalar; k++){
-      table[GRID_Y-1][randomExitPos+k] = 0;
-    }
-  }
-}
-
-function randomExits() {
-  // returns a table of exit values (0-3)
-  for (let i=0; i<exits.length; i++){
-    exits[i] = floor(random(4));
-  }
-}
-
-function loadEntities() {
-  // if there were multiple entities, for example a treasure chest or enemy, they would have their seperate functions loaded here.
-  loadPlayer();
-
-}
-
-function loadPlayer() {
-  image(imageAssets.player, cellSize*player.x, cellSize*player.y, cellSize, cellSize);
-}
-
-function overworldControls() {
-  let addedPos = {x: 0, y: 0};
-  if (state === "explore") {
-    if (millis() > playerMovementTime + movementCooldown && playerAbleToMove){
-      if (keyIsDown(87) || keyIsDown(38) ) {
-        // w or up arrow
-        addedPos.y = -1;
-        playerMovementTime = millis();
-        sfx.footstep.play();
-      } 
-      else if (keyIsDown(83) || keyIsDown(40)  ) {
-        // s or down arrow
-        addedPos.y = 1;
-        playerMovementTime = millis();
-        sfx.footstep.play();
-      } 
-      else if (keyIsDown(65) || keyIsDown(37)  ) {
-        // a or left arrow
-        addedPos.x = -1;
-        playerMovementTime = millis();
-        sfx.footstep.play();
-      } 
-      else if (keyIsDown(68) || keyIsDown(39)  ) {
-        // d or right arrow
-        addedPos.x = 1;
-        playerMovementTime = millis();
-        sfx.footstep.play();
-      }
-    }
-  }
-  movePlayer(addedPos);
-}
-
-function movePlayer(addedPos) {
-  // moves the player
-  // moves into a new room given if player left the room
-  if (player.y + addedPos.y < 0){ // if going into north exit
-    changeRoom("north");
-  }
-  else if (player.y + addedPos.y >= GRID_Y){ // if going to south exit
-    changeRoom("south");
-  }
-  else if (player.x + addedPos.x < 0){ // if going to west exit
-    changeRoom("west");
-  }
-  else if (player.x + addedPos.x >= GRID_X){ // if going to east exit
-    changeRoom("east");
-  }
-  else if (loadedRoom[player.y + addedPos.y][player.x + addedPos.x] === 0){ // if not running into something
-    player.y += addedPos.y;
-    player.x += addedPos.x;
-  }
-  else if (loadedRoom[player.y + addedPos.y][player.x + addedPos.x] === 1){ // if running into a wall
-    sfx.hit_wall.play();
-  }
-}
-
-function changeRoom(direction){
-  // creates a new room based on which exit the player took
-  // done by copying the row/column of the exit taken, then placing that same row/column on the other side of a newly generated room
-  let oppositeExit;
-  let oldRoom = structuredClone(loadedRoom);
-  let oldExitPos = [];
-  if (direction === "north") {
-    oppositeExit = 2; //south
-    randomExits();
-    exits[0] = oppositeExit;
-    for (let i=0; i<GRID_X; i++){
-      oldExitPos.push(oldRoom[0][i]);
-    }
-    loadedRoom = createEmptyRoom();
-    findExits(loadedRoom);
-    for (let i=0; i<GRID_X; i++){
-      loadedRoom[GRID_Y-1][i] = oldExitPos[i];
-    }
-    player.y = GRID_Y-1;
-  } 
-  else if (direction === "west") {
-    oppositeExit = 3; //east
-    randomExits();
-    exits[0] = oppositeExit;
-    for (let i=0; i<GRID_Y; i++){
-      oldExitPos.push(oldRoom[i][0]);
-    }
-    loadedRoom = createEmptyRoom();
-    findExits(loadedRoom);
-    for (let i=0; i<GRID_Y; i++){
-      loadedRoom[i][GRID_X-1] = oldExitPos[i];
-    }
-    player.x = GRID_X-1;
-  } 
-  else if (direction === "south") {
-    oppositeExit = 0; //north
-    randomExits();
-    exits[0] = oppositeExit;
-    for (let i=0; i<GRID_X; i++){
-      oldExitPos.push(oldRoom[GRID_Y-1][i]); 
-    }
-    loadedRoom = createEmptyRoom();
-    findExits(loadedRoom);
-    for (let i=0; i<GRID_X; i++){
-      loadedRoom[0][i] = oldExitPos[i];
-    }
-    player.y = 0;
-  } 
-  else if (direction === "east") {
-    oppositeExit = 1; //west
-    randomExits();
-    exits[0] = oppositeExit;
-    for (let i=0; i<GRID_Y; i++){
-      oldExitPos.push(oldRoom[i][GRID_X-1]);
-    }
-    loadedRoom = createEmptyRoom();
-    findExits(loadedRoom);
-    for (let i=0; i<GRID_Y; i++){
-      loadedRoom[i][0] = oldExitPos[i];
-    }
-    player.x = 0;
-  }
-}
-
-// function fadeIntoBlack(){
-//   for (let i=0; i>256; i++){
-//     push();
-//     tint(255, i);
-//     image(imageAssets.fadeBlack, 0, 0, width, height);
-//   }
-// }
-
-// function fadeOutBlack(){
-//   for (let i=255; i<=0; i++){
-//     push();
-//     tint(255, i);
-//     image(imageAssets.fadeBlack, 0, 0, width, height);
-//   }
-// }
-
-function mousePressed() { 
-  if (state === "start"){
-    bgm.title.stop();
-    bgm.overworld.loop();
-    state = "explore";
-    imageMode(CORNER);
-  }
-  else if (state === "explore"){
-    // teleports player to location on the grid
-    let mouseGridX = floor(mouseX / cellSize);
-    let mouseGridY = floor(mouseY / cellSize);
-    if (loadedRoom[mouseGridY][mouseGridX] === 0){
-      player.x = mouseGridX;
-      player.y = mouseGridY;
-      sfx.click.play();
-    }
-  }
-  else if (state === "battle"){
-    // activate some battle button, depending on where clicked
-  }
-}
-
-function buildEnemy(id, task){ // searches through enemy table to retrieve information
-  // for (let enemy of enemies){
-  //   if (enemy.id === id){
-      
-  //   }
-  // }
-}
-
-function newExit(direction, position, size){
-  return {
-    direction: direction,
-    position: position,
-    size: size,
-  }
-}
-
-class Room {
-  constructor(x, y, layout, preset, biome, exits){
-    this.x = x;
-    this.y = y;
-    this.layout = layout;
-    this.preset = preset;
-    this.biome = biome;
-    if (exits !== null){
-      this.exits = exits
-    }
-    else{
-      this.exits = [];
-    }
-    this.enemies = null;
-    this.objects = null;
-  }
-  addExits(){
-    // before adding exits, add banned direction table so you can't exit into another room's wall
-    let bannedDirections = [];
-    // first, check for exits in surrounding rooms if they exist
-    for (let room of rooms){
-      //checking north side
-      if (room.y === this.y - 1){
-        let isBannedDirection = true;
-        for (let exit of room.exits){
-          if (exit.direction === "south"){
-            this.exits.push(newExit("north", exit.position, exit.size));
-            isBannedDirection = false;
-          }
-        }
-        // if no south exit, make banned direction
-        if (isBannedDirection){
-          bannedDirections.push("north");
-        }
-      }
-      //checking south side
-      else if (room.y === this.y + 1){
-        let isBannedDirection = true;
-        for (let exit of room.exits){
-          if (exit.direction === "north"){
-            this.exits.push(newExit("south", exit.position, exit.size));
-            isBannedDirection = false;
-          }
-        }
-        // if no north exit, make banned direction
-        if (isBannedDirection){
-          bannedDirections.push("south");
-        }
-      }
-      //checking west side
-      else if (room.x === this.x - 1){
-        let isBannedDirection = true;
-        for (let exit of room.exits){
-          if (exit.direction === "east"){
-            this.exits.push(newExit("west", exit.position, exit.size));
-            isBannedDirection = false;
-          }
-        }
-        // if no east exit, make banned direction
-        if (isBannedDirection){
-          bannedDirections.push("west");
-        }
-      }
-      //checking east side
-      else if (room.x === this.x + 1){
-        let isBannedDirection = true;
-        for (let exit of room.exits){
-          if (exit.direction === "west"){
-            this.exits.push(newExit("east", exit.position, exit.size))
-            isBannedDirection = false;
-          }
-        }
-        // if no west exit, make banned direction
-        if (isBannedDirection){
-          bannedDirections.push("east");
-        }
-      }
-    }
-    // add random exits until hit exit maximum
-    while(this.exits.length < exitMax){
-      let newExitDirection = round(random(0,3));
-      let newExitSize = round(random(exitScale[0], exitScale[1]));
-      let isBanned = false;
-
-      if (newExitDirection === 0){ //north
-        for (let ban of bannedDirections){
-          if (ban === "north"){
-            isBanned = true;
-          }
-        }
-        if (!isBanned){
-          this.exits.push(newExit("north", round(random(1,GRID_X-newExitSize-1)), newExitSize));
-        }
-      }
-      else if (newExitDirection === 1){ //south
-        for (let ban of bannedDirections){
-          if (ban === "south"){
-            isBanned = true;
-          }
-        }
-        if (!isBanned){
-          this.exits.push(newExit("south", round(random(1,GRID_X-newExitSize-1)), newExitSize));
-        }
-      }
-      else if (newExitDirection === 2){ //west
-        for (let ban of bannedDirections){
-          if (ban === "west"){
-            isBanned = true;
-          }
-        }
-        if (!isBanned){
-          this.exits.push(newExit("west", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
-        }
-      }
-      else if (newExitDirection === 3){ //east
-        for (let ban of bannedDirections){
-          if (ban === "east"){
-            isBanned = true;
-          }
-        }
-        if (!isBanned){
-          this.exits.push(newExit("north", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
-        }
-      }
-    }
-    //put the exits on the layout
-    for (let exit of this.exits){
-      if (exit.direction === "north"){
-        for (let i=0; i<exit.size; i++){
-          this.layout[0][exit.position+i] = 0;
-        }
-      }
-      else if (exit.direction === "south"){
-        for (let i=0; i<exit.size; i++){
-          this.layout[GRID_Y-1][exit.position+i] = 0;
-        }
-      }
-      else if (exit.direction === "west"){
-        for (let i=0; i<exit.size; i++){
-          this.layout[exit.position+i][0] = 0;
-        }
-      }
-      else if (exit.direction === "east"){
-        for (let i=0; i<exit.size; i++){
-          this.layout[exit.position+i][GRID_X-1] = 0;
-        }
-      }
-    }
-  }
-  display(){
-
-  }
-}
-
-class Enemy {
-  constructor(x, y, roomX, roomY, id){
-    this.x = x;
-    this.y = y;
-    this.roomX = roomX;
-    this.roomY = roomY;
-    this.id = id;
-    this.name = buildEnemy(id, "name");
-    this.size = buildEnemy(id, "size");
-    this.movementType = buildEnemy(id, "movementType"); // walk, run, hop, idle, etc
-    this.stats = buildEnemy(id, "stats");
-    this.moves = buildEnemy(id, "moves");
-    this.canSeePlayer = false;
-    this.bonuses = []; // stat bonuses, like temporary attack/defense buffs
-  }
-  display(){
-
-  }
-  canSeePlayer(){
-
-  }
-  move(){
-
-  }
-  attack(){
-
-  }
-}
 
 window.onresize = function() { // if the window gets resized
   if (windowWidth>windowHeight){
