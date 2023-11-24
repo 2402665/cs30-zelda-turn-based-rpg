@@ -20,14 +20,22 @@
 
 // Code:
 
-let exits = [0,0,0,0];
-let exitScale = 3; // tells how much grid slots an exit takes up
+let exitMax = 4; // tells how many exits can be in a room at once
+let exitScale = [2,5]; // tells how much grid slots an exit takes up, [min, max]
+
+let exits = [0,0,0,0]
 
 const GRID_X = 16; // how wide the grid will be
 const GRID_Y = 11; // how tall the grid will be
+
+const DUNGEON_X = 11; // how wide the dungeon grid will be
+const DUNGEON_Y = 7; // how tall the dungeon grid will be
+
+let loadedRoom;
+
 let cellSize; // will turn into a x/y value for scaling later
 
-let loadedRoom; // will turn into a 2D array
+let rooms = []; // the holy array of every room
 
 let playerAbleToMove = true; // variable used to check if player should be able to move, used for cutscenes/fades
 let playerMovementTime = 0; // time in millis() when player last moved
@@ -265,12 +273,12 @@ const bosses = [
   { // susie, spawns in castle town
     name: "Rowdy Horse",
     id: 41,
-    size: [1,3],
+    size: [1,2],
   },
   { // ralsei, spawns in castle town
-    name: "Kind Goat",
+    name: "Gentle Goat",
     id: 42,
-    size: [1,3],
+    size: [1,2],
   },
 ];
 
@@ -356,6 +364,8 @@ function setup() {
   imageMode(CENTER);
   rectMode(CENTER);
 
+  let startingRoom = new Room(0, 0, createEmptyRoom(), null, null, null);
+
   loadedRoom = createEmptyRoom();
 
   randomExits();
@@ -440,40 +450,41 @@ function findExits(table) { // for each exit, uses addExits
 function addExits(direction,table){ // adds an "exit" to a given 2D array
   // creates a random position variable for the exit to exist in on the grid
   let randomExitPos;
+  let exitScalar = round(random(exitScale[0], exitScale[1]));
   
   // depending on direction of exit, use randomExitPos to create the exit on the grid
   if (direction === 0){ //north
-    randomExitPos = round(random(1,GRID_X-exitScale-1));
+    randomExitPos = round(random(1,GRID_Y-exitScalar-1));
     // adds 0s in table to create the exit
-    for (let k=0; k<exitScale; k++){
+    for (let k=0; k<exitScalar; k++){
       table[randomExitPos+k][0] = 0;
     }
   }
   else if (direction === 1){ //east
-    randomExitPos = round(random(1,GRID_Y-exitScale-1));
+    randomExitPos = round(random(1,GRID_X-exitScalar-1));
     // adds 0s in table to create the exit
-    for (let k=0; k<exitScale; k++){
+    for (let k=0; k<exitScalar; k++){
       table[0][randomExitPos+k] = 0;
     }
   }
   else if (direction === 2){ //south
-    randomExitPos = round(random(1,GRID_X-exitScale-1));
+    randomExitPos = round(random(1,GRID_Y-exitScalar-1));
     // adds 0s in table to create the exit
-    for (let k=0; k<exitScale; k++){
+    for (let k=0; k<exitScalar; k++){
       table[randomExitPos+k][GRID_X-1] = 0;
     }
   }
   else if (direction === 3){ //west
-    randomExitPos = round(random(1,GRID_Y-exitScale-1));
+    randomExitPos = round(random(1,GRID_X-exitScalar-1));
     // adds 0s in table to create the exit
-    for (let k=0; k<exitScale; k++){
+    for (let k=0; k<exitScalar; k++){
       table[GRID_Y-1][randomExitPos+k] = 0;
     }
   }
 }
 
 function randomExits() {
-  // randomizes exits
+  // returns a table of exit values (0-3)
   for (let i=0; i<exits.length; i++){
     exits[i] = floor(random(4));
   }
@@ -575,7 +586,7 @@ function changeRoom(direction){
     }
     loadedRoom = createEmptyRoom();
     findExits(loadedRoom);
-    for (let i=0; i<GRID_X; i++){
+    for (let i=0; i<GRID_Y; i++){
       loadedRoom[i][GRID_X-1] = oldExitPos[i];
     }
     player.x = GRID_X-1;
@@ -584,8 +595,8 @@ function changeRoom(direction){
     oppositeExit = 0; //north
     randomExits();
     exits[0] = oppositeExit;
-    for (let i=0; i<GRID_Y; i++){
-      oldExitPos.push(oldRoom[GRID_Y-1][i]);
+    for (let i=0; i<GRID_X; i++){
+      oldExitPos.push(oldRoom[GRID_Y-1][i]); 
     }
     loadedRoom = createEmptyRoom();
     findExits(loadedRoom);
@@ -598,7 +609,7 @@ function changeRoom(direction){
     oppositeExit = 1; //west
     randomExits();
     exits[0] = oppositeExit;
-    for (let i=0; i<GRID_X; i++){
+    for (let i=0; i<GRID_Y; i++){
       oldExitPos.push(oldRoom[i][GRID_X-1]);
     }
     loadedRoom = createEmptyRoom();
@@ -656,13 +667,162 @@ function buildEnemy(id, task){ // searches through enemy table to retrieve infor
   // }
 }
 
+function newExit(direction, position, size){
+  return {
+    direction: direction,
+    position: position,
+    size: size,
+  }
+}
+
 class Room {
-  constructor(x, y, layout, enemies, objects){
+  constructor(x, y, layout, preset, biome, exits){
     this.x = x;
     this.y = y;
     this.layout = layout;
-    this.enemies = enemies;
-    this.objects = objects;
+    this.preset = preset;
+    this.biome = biome;
+    if (exits !== null){
+      this.exits = exits
+    }
+    else{
+      this.exits = [];
+    }
+    this.enemies = null;
+    this.objects = null;
+  }
+  addExits(){
+    // before adding exits, add banned direction table so you can't exit into another room's wall
+    let bannedDirections = [];
+    // first, check for exits in surrounding rooms if they exist
+    for (let room of rooms){
+      //checking north side
+      if (room.y === this.y - 1){
+        let isBannedDirection = true;
+        for (let exit of room.exits){
+          if (exit.direction === "south"){
+            this.exits.push(newExit("north", exit.position, exit.size));
+            isBannedDirection = false;
+          }
+        }
+        // if no south exit, make banned direction
+        if (isBannedDirection){
+          bannedDirections.push("north");
+        }
+      }
+      //checking south side
+      else if (room.y === this.y + 1){
+        let isBannedDirection = true;
+        for (let exit of room.exits){
+          if (exit.direction === "north"){
+            this.exits.push(newExit("south", exit.position, exit.size));
+            isBannedDirection = false;
+          }
+        }
+        // if no north exit, make banned direction
+        if (isBannedDirection){
+          bannedDirections.push("south");
+        }
+      }
+      //checking west side
+      else if (room.x === this.x - 1){
+        let isBannedDirection = true;
+        for (let exit of room.exits){
+          if (exit.direction === "east"){
+            this.exits.push(newExit("west", exit.position, exit.size));
+            isBannedDirection = false;
+          }
+        }
+        // if no east exit, make banned direction
+        if (isBannedDirection){
+          bannedDirections.push("west");
+        }
+      }
+      //checking east side
+      else if (room.x === this.x + 1){
+        let isBannedDirection = true;
+        for (let exit of room.exits){
+          if (exit.direction === "west"){
+            this.exits.push(newExit("east", exit.position, exit.size))
+            isBannedDirection = false;
+          }
+        }
+        // if no west exit, make banned direction
+        if (isBannedDirection){
+          bannedDirections.push("east");
+        }
+      }
+    }
+    // add random exits until hit exit maximum
+    while(this.exits.length < exitMax){
+      let newExitDirection = round(random(0,3));
+      let newExitSize = round(random(exitScale[0], exitScale[1]));
+      let isBanned = false;
+
+      if (newExitDirection === 0){ //north
+        for (let ban of bannedDirections){
+          if (ban === "north"){
+            isBanned = true;
+          }
+        }
+        if (!isBanned){
+          this.exits.push(newExit("north", round(random(1,GRID_X-newExitSize-1)), newExitSize));
+        }
+      }
+      else if (newExitDirection === 1){ //south
+        for (let ban of bannedDirections){
+          if (ban === "south"){
+            isBanned = true;
+          }
+        }
+        if (!isBanned){
+          this.exits.push(newExit("south", round(random(1,GRID_X-newExitSize-1)), newExitSize));
+        }
+      }
+      else if (newExitDirection === 2){ //west
+        for (let ban of bannedDirections){
+          if (ban === "west"){
+            isBanned = true;
+          }
+        }
+        if (!isBanned){
+          this.exits.push(newExit("west", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
+        }
+      }
+      else if (newExitDirection === 3){ //east
+        for (let ban of bannedDirections){
+          if (ban === "east"){
+            isBanned = true;
+          }
+        }
+        if (!isBanned){
+          this.exits.push(newExit("north", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
+        }
+      }
+    }
+    //put the exits on the layout
+    for (let exit of this.exits){
+      if (exit.direction === "north"){
+        for (let i=0; i<exit.size; i++){
+          this.layout[0][exit.position+i] = 0;
+        }
+      }
+      else if (exit.direction === "south"){
+        for (let i=0; i<exit.size; i++){
+          this.layout[GRID_Y-1][exit.position+i] = 0;
+        }
+      }
+      else if (exit.direction === "west"){
+        for (let i=0; i<exit.size; i++){
+          this.layout[exit.position+i][0] = 0;
+        }
+      }
+      else if (exit.direction === "east"){
+        for (let i=0; i<exit.size; i++){
+          this.layout[exit.position+i][GRID_X-1] = 0;
+        }
+      }
+    }
   }
   display(){
 
