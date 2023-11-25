@@ -23,8 +23,6 @@
 let exitMax = 4; // tells how many exits can be in a room at once
 let exitScale = [2,5]; // tells how much grid slots an exit takes up, [min, max]
 
-let exits = [0,0,0,0];
-
 const GRID_X = 16; // how wide the grid will be
 const GRID_Y = 11; // how tall the grid will be
 
@@ -44,6 +42,8 @@ let movementCooldown = 200; // cooldown in milliseconds for player movement
 let player = { // player values
   x: 8, // x value in relevance to grid
   y: 5, // y value in relevance to grid
+  roomX: 0,
+  roomY: 0,
   battleX: 0, // x value during combat
   battleY: 0, // y value during combat
 };
@@ -215,55 +215,64 @@ function overworldControls() {
 function movePlayer(addedPos) {
   // moves the player
   // moves into a new room given if player left the room
+  let currentRoom;
   for (let room of rooms){
-    if (player.y + addedPos.y < 0){ // if going into north exit
-      changeRoom("north", player);
+    if (player.roomX === room.x && player.roomY === room.y){
+      currentRoom = room;
+      break;
     }
-    else if (player.y + addedPos.y >= GRID_Y){ // if going to south exit
-      changeRoom("south", player);
-    }
-    else if (player.x + addedPos.x < 0){ // if going to west exit
-      changeRoom("west", player);
-    }
-    else if (player.x + addedPos.x >= GRID_X){ // if going to east exit
-      changeRoom("east", player);
-    }
-    else if (room[player.y + addedPos.y][player.x + addedPos.x] === 0){ // if not running into something
-      player.y += addedPos.y;
-      player.x += addedPos.x;
-    }
-    else if (room[player.y + addedPos.y][player.x + addedPos.x] === 1){ // if running into a wall
-      sfx.hit_wall.play();
-    }
+  }
+  if (player.y + addedPos.y < 0){ // if going into north exit
+    changeRoom("north", player);
+  }
+  else if (player.y + addedPos.y >= GRID_Y){ // if going to south exit
+    changeRoom("south", player);
+  }
+  else if (player.x + addedPos.x < 0){ // if going to west exit
+    changeRoom("west", player);
+  }
+  else if (player.x + addedPos.x >= GRID_X){ // if going to east exit
+    changeRoom("east", player);
+  }
+  else if (currentRoom.layout[player.y + addedPos.y][player.x + addedPos.x] === 0){ // if not running into something
+    player.y += addedPos.y;
+    player.x += addedPos.x;
+  }
+  else if (currentRoom.layout[player.y + addedPos.y][player.x + addedPos.x] === 1){ // if running into a wall
+    sfx.hit_wall.play();
   }
 }
 
 function changeRoom(direction, player){
-  // creates a new room based on which exit the player took
-  let addedPos = [0,0];
+  // changes the player position based on which exit the player took
   if (direction === "north"){
-    addedPos[1] = -1;
     player.y = GRID_Y-1;
     player.roomY -= 1;
   }
   else if (direction === "south"){
-    addedPos[1] = 1;
     player.y = 0;
     player.roomY += 1;
   }
   else if (direction === "west"){
-    addedPos[0] = -1;
     player.x = GRID_X-1;
     player.roomX -= 1;
   }
   else if (direction === "east"){
-    addedPos[0] = 1;
     player.x = 0;
     player.roomX += 1;
   }
-  let newRoom = new Room(player.roomX + addedPos[0], player.roomY + addedPos[1], createEmptyRoom(), null, null, null);
-  newRoom.addExits();
-  rooms.push(newRoom);
+  // check to see if another room needs to be generated
+  let roomNeedsGenerating = true;
+  for (let room of rooms){
+    if (player.roomX === room.x && player.roomY === room.y){
+      roomNeedsGenerating = false;
+    }
+  }
+  if (roomNeedsGenerating){
+    let newRoom = new Room(player.roomX, player.roomY, createEmptyRoom(), null, null, null);
+    newRoom.addExits();
+    rooms.push(newRoom);
+  }
 }
 
 // function fadeIntoBlack(){
@@ -295,7 +304,7 @@ function mousePressed() {
     let mouseGridY = floor(mouseY / cellSize);
     for (let room of rooms){
       if (room.x === player.roomX && room.y === player.roomY){
-        if (room[mouseGridY][mouseGridX] === 0){
+        if (room.layout[mouseGridY][mouseGridX] === 0){
           player.x = mouseGridX;
           player.y = mouseGridY;
           sfx.click.play();
@@ -348,59 +357,43 @@ class Room {
     for (let room of rooms){
       //checking north side
       if (room.y === this.y - 1){
-        let isBannedDirection = true;
         for (let exit of room.exits){
           if (exit.direction === "south"){
             this.exits.push(newExit("north", exit.position, exit.size));
-            isBannedDirection = false;
           }
         }
-        // if no south exit, make banned direction
-        if (isBannedDirection){
-          bannedDirections.push("north");
-        }
+        // make banned direction so no weird exits get placed in that direction
+        bannedDirections.push("north");
       }
       //checking south side
       else if (room.y === this.y + 1){
-        let isBannedDirection = true;
         for (let exit of room.exits){
           if (exit.direction === "north"){
             this.exits.push(newExit("south", exit.position, exit.size));
-            isBannedDirection = false;
           }
         }
-        // if no north exit, make banned direction
-        if (isBannedDirection){
-          bannedDirections.push("south");
-        }
+        // make banned direction so no weird exits get placed in that direction
+        bannedDirections.push("south");
       }
       //checking west side
       else if (room.x === this.x - 1){
-        let isBannedDirection = true;
         for (let exit of room.exits){
           if (exit.direction === "east"){
             this.exits.push(newExit("west", exit.position, exit.size));
-            isBannedDirection = false;
           }
         }
-        // if no east exit, make banned direction
-        if (isBannedDirection){
-          bannedDirections.push("west");
-        }
+        // make banned direction so no weird exits get placed in that direction
+        bannedDirections.push("west");
       }
       //checking east side
       else if (room.x === this.x + 1){
-        let isBannedDirection = true;
         for (let exit of room.exits){
           if (exit.direction === "west"){
             this.exits.push(newExit("east", exit.position, exit.size));
-            isBannedDirection = false;
           }
         }
-        // if no west exit, make banned direction
-        if (isBannedDirection){
-          bannedDirections.push("east");
-        }
+        // make banned direction so no weird exits get placed in that direction
+        bannedDirections.push("east");
       }
     }
     // add random exits until hit exit maximum
@@ -446,7 +439,7 @@ class Room {
           }
         }
         if (!isBanned){
-          this.exits.push(newExit("north", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
+          this.exits.push(newExit("east", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
         }
       }
     }
