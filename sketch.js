@@ -36,14 +36,15 @@ let cellSize; // will turn into a x/y value for scaling later
 let rooms = []; // the holy array of every room
 
 let playerAbleToMove = true; // variable used to check if player should be able to move, used for cutscenes/fades
-let playerMovementTime = 0; // time in millis() when player last moved
-let movementCooldown = 200; // cooldown in milliseconds for player movement
 
 let player = { // player values
   x: 8, // x value in relevance to grid
-  y: 5, // y value in relevance to grid
-  roomX: 0,
-  roomY: 0,
+  y: 5.5, // y value in relevance to grid
+  spdBase: 0.075, // speed without boosts
+  spdBoost: 0, // extra boost to speed
+  spd: 0, //total speed
+  roomX: 0, // x value in relevance to room grid
+  roomY: 0, // y value in relevance to room grid
   battleX: 0, // x value during combat
   battleY: 0, // y value during combat
 };
@@ -113,6 +114,8 @@ function setup() {
   }
   canvas = createCanvas(cellSize*GRID_X, cellSize*GRID_Y);
 
+  player.spd = player.spdBase + player.spdBoost;
+
   imageMode(CENTER);
   rectMode(CENTER);
 
@@ -123,6 +126,7 @@ function setup() {
   bgm.title.loop();
 
   sfx.footstep.playMode("sustain");
+  sfx.hit_wall.playMode("untilDone")
 }
 
 function draw() {
@@ -171,7 +175,6 @@ function createEmptyRoom() {
       table[i][GRID_X-1] = 1;
     }
   }
-  console.log(table);
   return table;
 }
 
@@ -180,33 +183,27 @@ function loadPlayer() {
 }
 
 function overworldControls() {
-  let addedPos = {x: 0, y: 0};
+  let addedPos = {x: 0, y: 0, xSign: 0, ySign: 0};
   if (state === "explore") {
-    if (millis() > playerMovementTime + movementCooldown && playerAbleToMove){
-      if (keyIsDown(87) || keyIsDown(38) ) {
-        // w or up arrow
-        addedPos.y = -1;
-        playerMovementTime = millis();
-        sfx.footstep.play();
-      } 
-      else if (keyIsDown(83) || keyIsDown(40)  ) {
-        // s or down arrow
-        addedPos.y = 1;
-        playerMovementTime = millis();
-        sfx.footstep.play();
-      } 
-      else if (keyIsDown(65) || keyIsDown(37)  ) {
-        // a or left arrow
-        addedPos.x = -1;
-        playerMovementTime = millis();
-        sfx.footstep.play();
-      } 
-      else if (keyIsDown(68) || keyIsDown(39)  ) {
-        // d or right arrow
-        addedPos.x = 1;
-        playerMovementTime = millis();
-        sfx.footstep.play();
-      }
+    if (keyIsDown(87) || keyIsDown(38) ) {
+      // w or up arrow
+      addedPos.y = player.spd * -1;
+      addedPos.ySign = -0.5
+    } 
+    else if (keyIsDown(83) || keyIsDown(40)  ) {
+      // s or down arrow
+      addedPos.y = player.spd;
+      addedPos.ySign = 0.5
+    } 
+    else if (keyIsDown(65) || keyIsDown(37)  ) {
+      // a or left arrow
+      addedPos.x = player.spd * -1;
+      addedPos.xSign = -0.5
+    } 
+    else if (keyIsDown(68) || keyIsDown(39)  ) {
+      // d or right arrow
+      addedPos.x = player.spd;
+      addedPos.xSign = 0.5
     }
   }
   movePlayer(addedPos);
@@ -222,23 +219,23 @@ function movePlayer(addedPos) {
       break;
     }
   }
-  if (player.y + addedPos.y < 0){ // if going into north exit
+  if (player.y + addedPos.y < -0.5 + player.spd){ // if going into north exit
     changeRoom("north", player);
   }
-  else if (player.y + addedPos.y >= GRID_Y){ // if going to south exit
+  else if (player.y + addedPos.y > GRID_Y - player.spd){ // if going to south exit
     changeRoom("south", player);
   }
-  else if (player.x + addedPos.x < 0){ // if going to west exit
+  else if (player.x + addedPos.x < -0.5 + player.spd){ // if going to west exit
     changeRoom("west", player);
   }
-  else if (player.x + addedPos.x >= GRID_X){ // if going to east exit
+  else if (player.x + addedPos.x > GRID_X + player.spd){ // if going to east exit
     changeRoom("east", player);
   }
-  else if (currentRoom.layout[player.y + addedPos.y][player.x + addedPos.x] === 0){ // if not running into something
+  else if (currentRoom.layout[round(player.y + addedPos.ySign)][round(player.x + addedPos.xSign)] === 0){ // if not running into something
     player.y += addedPos.y;
     player.x += addedPos.x;
   }
-  else if (currentRoom.layout[player.y + addedPos.y][player.x + addedPos.x] === 1){ // if running into a wall
+  else if (currentRoom.layout[round(player.y + addedPos.ySign)][round(player.x + addedPos.xSign)] === 1){ // if running into a wall
     sfx.hit_wall.play();
   }
 }
@@ -246,19 +243,19 @@ function movePlayer(addedPos) {
 function changeRoom(direction, player){
   // changes the player position based on which exit the player took
   if (direction === "north"){
-    player.y = GRID_Y-1;
+    player.y = GRID_Y-0.5;
     player.roomY -= 1;
   }
   else if (direction === "south"){
-    player.y = 0;
+    player.y = 0.5;
     player.roomY += 1;
   }
   else if (direction === "west"){
-    player.x = GRID_X-1;
+    player.x = GRID_X-0.5;
     player.roomX -= 1;
   }
   else if (direction === "east"){
-    player.x = 0;
+    player.x = 0.5;
     player.roomX += 1;
   }
   // check to see if another room needs to be generated
@@ -356,7 +353,7 @@ class Room {
     // first, check for exits in surrounding rooms if they exist
     for (let room of rooms){
       //checking north side
-      if (room.y === this.y - 1){
+      if (room.x === this.x && room.y === this.y - 1){
         for (let exit of room.exits){
           if (exit.direction === "south"){
             this.exits.push(newExit("north", exit.position, exit.size));
@@ -366,7 +363,7 @@ class Room {
         bannedDirections.push("north");
       }
       //checking south side
-      else if (room.y === this.y + 1){
+      else if (room.x === this.x && room.y === this.y + 1){
         for (let exit of room.exits){
           if (exit.direction === "north"){
             this.exits.push(newExit("south", exit.position, exit.size));
@@ -376,7 +373,7 @@ class Room {
         bannedDirections.push("south");
       }
       //checking west side
-      else if (room.x === this.x - 1){
+      else if (room.x === this.x - 1 && room.y === this.y){
         for (let exit of room.exits){
           if (exit.direction === "east"){
             this.exits.push(newExit("west", exit.position, exit.size));
@@ -386,7 +383,7 @@ class Room {
         bannedDirections.push("west");
       }
       //checking east side
-      else if (room.x === this.x + 1){
+      else if (room.x === this.x + 1 && room.y === this.y){
         for (let exit of room.exits){
           if (exit.direction === "west"){
             this.exits.push(newExit("east", exit.position, exit.size));
@@ -400,45 +397,45 @@ class Room {
     while(this.exits.length < exitMax){
       let newExitDirection = round(random(0,3));
       let newExitSize = round(random(exitScale[0], exitScale[1]));
-      let isBanned = false;
+      let notBanned = true;
 
       if (newExitDirection === 0){ //north
         for (let ban of bannedDirections){
           if (ban === "north"){
-            isBanned = true;
+            notBanned = false;
           }
         }
-        if (!isBanned){
+        if (notBanned){
           this.exits.push(newExit("north", round(random(1,GRID_X-newExitSize-1)), newExitSize));
         }
       }
       else if (newExitDirection === 1){ //south
         for (let ban of bannedDirections){
           if (ban === "south"){
-            isBanned = true;
+            notBanned = false;
           }
         }
-        if (!isBanned){
+        if (notBanned){
           this.exits.push(newExit("south", round(random(1,GRID_X-newExitSize-1)), newExitSize));
         }
       }
       else if (newExitDirection === 2){ //west
         for (let ban of bannedDirections){
           if (ban === "west"){
-            isBanned = true;
+            notBanned = false;
           }
         }
-        if (!isBanned){
+        if (notBanned){
           this.exits.push(newExit("west", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
         }
       }
       else if (newExitDirection === 3){ //east
         for (let ban of bannedDirections){
           if (ban === "east"){
-            isBanned = true;
+            notBanned = false;
           }
         }
-        if (!isBanned){
+        if (notBanned){
           this.exits.push(newExit("east", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
         }
       }
