@@ -315,12 +315,12 @@ function mousePressed() {
   }
 }
 
-function buildEnemy(id, task){ // searches through enemy table to retrieve information
-  // for (let enemy of enemies){
-  //   if (enemy.id === id){
-      
-  //   }
-  // }
+function findEnemy(id){ // searches through enemy table to retrieve information
+  for (let enemy of enemies){
+    if (enemy.id === id){
+      return enemy;
+    }
+  }
 }
 
 function newExit(direction, position, size){
@@ -394,52 +394,55 @@ class Room {
       }
     }
     // add random exits until hit exit maximum
-    while(this.exits.length < exitMax){
-      let newExitDirection = round(random(0,3));
-      let newExitSize = round(random(exitScale[0], exitScale[1]));
-      let notBanned = true;
+    if (bannedDirections.length < 4){ // makes sure that more exits can actually be placed
+      while(this.exits.length < exitMax){
+        let newExitDirection = round(random(0,3));
+        let newExitSize = round(random(exitScale[0], exitScale[1]));
+        let notBanned = true;
 
-      if (newExitDirection === 0){ //north
-        for (let ban of bannedDirections){
-          if (ban === "north"){
-            notBanned = false;
+        if (newExitDirection === 0){ //north
+          for (let ban of bannedDirections){
+            if (ban === "north"){
+              notBanned = false;
+            }
+          }
+          if (notBanned){
+            this.exits.push(newExit("north", round(random(1,GRID_X-newExitSize-1)), newExitSize));
           }
         }
-        if (notBanned){
-          this.exits.push(newExit("north", round(random(1,GRID_X-newExitSize-1)), newExitSize));
-        }
-      }
-      else if (newExitDirection === 1){ //south
-        for (let ban of bannedDirections){
-          if (ban === "south"){
-            notBanned = false;
+        else if (newExitDirection === 1){ //south
+          for (let ban of bannedDirections){
+            if (ban === "south"){
+              notBanned = false;
+            }
+          }
+          if (notBanned){
+            this.exits.push(newExit("south", round(random(1,GRID_X-newExitSize-1)), newExitSize));
           }
         }
-        if (notBanned){
-          this.exits.push(newExit("south", round(random(1,GRID_X-newExitSize-1)), newExitSize));
-        }
-      }
-      else if (newExitDirection === 2){ //west
-        for (let ban of bannedDirections){
-          if (ban === "west"){
-            notBanned = false;
+        else if (newExitDirection === 2){ //west
+          for (let ban of bannedDirections){
+            if (ban === "west"){
+              notBanned = false;
+            }
+          }
+          if (notBanned){
+            this.exits.push(newExit("west", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
           }
         }
-        if (notBanned){
-          this.exits.push(newExit("west", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
-        }
-      }
-      else if (newExitDirection === 3){ //east
-        for (let ban of bannedDirections){
-          if (ban === "east"){
-            notBanned = false;
+        else if (newExitDirection === 3){ //east
+          for (let ban of bannedDirections){
+            if (ban === "east"){
+              notBanned = false;
+            }
           }
-        }
-        if (notBanned){
-          this.exits.push(newExit("east", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
+          if (notBanned){
+            this.exits.push(newExit("east", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
+          }
         }
       }
     }
+    
     //put the exits on the layout
     for (let exit of this.exits){
       if (exit.direction === "north"){
@@ -480,17 +483,22 @@ class Room {
 }
 
 class Enemy {
-  constructor(x, y, roomX, roomY, id){
+  constructor(x, y, id, level){
     this.x = x;
     this.y = y;
-    this.roomX = roomX;
-    this.roomY = roomY;
-    this.id = id;
-    this.name = buildEnemy(id, "name");
-    this.size = buildEnemy(id, "size");
-    this.movementType = buildEnemy(id, "movementType"); // walk, run, hop, idle, etc
-    this.stats = buildEnemy(id, "stats");
-    this.moves = buildEnemy(id, "moves");
+    try{
+      let currentEnemy = findEnemy(id);
+      this.id = currentEnemy.id;
+      this.name = currentEnemy.name;
+      this.size = currentEnemy.size;
+      this.movementType = currentEnemy.movementType; // walk, normal (between walk and run), run, hop, idle, etc
+      this.baseStats = currentEnemy.baseStats;
+      this.moves = currentEnemy.moves;
+    }
+    catch{
+      console.log("Enemy does not exist/is unfinished!")
+    }
+    this.level = level;
     this.canSeePlayer = false;
     this.bonuses = []; // stat bonuses, like temporary attack/defense buffs
   }
@@ -520,11 +528,13 @@ const enemies = [
     name: "Armos",
     id: 100,
     size: [1,1],
+    movementType: "walk",
   },
   {
     name: "Ghini",
     id: 101,
     size: [1,1],
+    movementType: "normal",
   },
   {
     name: "Leever",
@@ -549,6 +559,7 @@ const enemies = [
     id: 105, 
     size: [1,1],
     color: null,
+    movementType: "normal",
   },
   {
     name: "Peahat",
@@ -658,6 +669,7 @@ const enemies = [
     name: "Goomba",
     id: 400,
     size: [1,1],
+    movementType: "normal",
   },
 ];
 
@@ -673,11 +685,13 @@ const bosses = [
     id: 10,
     size: [2,2],
     powerlv: 1, // 1 or 2 depending on dungeon
+    movementType: "idle",
   },
   { // spawns in 2nd dungeon 
     name: "Dodongo",
     id: 11,
     size: [2,2],
+    movementType: "normal",
   },
   { // spawns in 3rd dungeon
     name: "Manhandla",
@@ -689,6 +703,7 @@ const bosses = [
     id: 13,
     size: [2,3],
     powerlv: 1, // 1 or 2 depending on dungeon
+    movementType: "idle",
   },
   { // spawns in 5th dungeon
     name: "Digdogger",
@@ -704,59 +719,70 @@ const bosses = [
     name: "Ganon",
     id: 16,
     size: [2,2],
+    movementType: "idle",
   },
   { // mario, spawns in peach's castle
     name: "Red Plumber",
     id: 20,
     size: [1,2],
+    movementType: "idle",
   },
   { // luigi, spawns in peach's castle
     name: "Green Plumber",
     id: 21,
     size: [1,2],
+    movementType: "idle",
   },
   { // bowser, spawns in bowser's castle
     name: "King of the Koopas",
     id: 22,
     size: [3,3],
+    movementType: "idle",
   },
   { // red, spawns in mt. silver summit
     name: "Pocket Monster Champion",
     id: 30,
     size: [1,1],
+    movementType: "idle",
   },
   { // kris, spawns in castle town
     name: "Empty Boy",
     id: 40,
     size: [1,2],
+    movementType: "idle",
   },
   { // susie, spawns in castle town
     name: "Rowdy Horse",
     id: 41,
     size: [1,2],
+    movementType: "idle",
   },
   { // ralsei, spawns in castle town
     name: "Gentle Goat",
     id: 42,
     size: [1,2],
+    movementType: "idle",
   },
 ];
 
-const roomObjects = {
+const roomObjects = [
   // other objects in the game that can be used at different times
-  treasureChest: {
-    ID: 5,
+  {
+    name: "Treasure Chest",
+    id: 0,
     size: [1,1],
   },
-  speedBooster: {
-    ID: 6,
+  {
+    name: "Speed Booster",
+    ID: 1,
     size: [1,1],
   },
-  safeChest: {
+  {
+    name: "Safe Chest",
     ID: 9,
     size: [1,1]
   }
-};
+];
 
 window.onresize = function() { // if the window gets resized
   if (windowWidth>windowHeight){
