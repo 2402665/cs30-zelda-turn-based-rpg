@@ -126,7 +126,7 @@ function setup() {
   bgm.title.loop();
 
   sfx.footstep.playMode("sustain");
-  sfx.hit_wall.playMode("untilDone")
+  sfx.hit_wall.playMode("untilDone");
 }
 
 function draw() {
@@ -188,22 +188,22 @@ function overworldControls() {
     if (keyIsDown(87) || keyIsDown(38) ) {
       // w or up arrow
       addedPos.y = player.spd * -1;
-      addedPos.ySign = -0.5
+      addedPos.ySign = -0.5;
     } 
     else if (keyIsDown(83) || keyIsDown(40)  ) {
       // s or down arrow
       addedPos.y = player.spd;
-      addedPos.ySign = 0.5
+      addedPos.ySign = 0.5;
     } 
     else if (keyIsDown(65) || keyIsDown(37)  ) {
       // a or left arrow
       addedPos.x = player.spd * -1;
-      addedPos.xSign = -0.5
+      addedPos.xSign = -0.5;
     } 
     else if (keyIsDown(68) || keyIsDown(39)  ) {
       // d or right arrow
       addedPos.x = player.spd;
-      addedPos.xSign = 0.5
+      addedPos.xSign = 0.5;
     }
   }
   movePlayer(addedPos);
@@ -219,43 +219,48 @@ function movePlayer(addedPos) {
       break;
     }
   }
-  if (player.y + addedPos.y < -0.5 + player.spd){ // if going into north exit
-    changeRoom("north", player);
+  try{ //checking for room movement
+    if (currentRoom.layout[round(player.y + addedPos.ySign)][round(player.x + addedPos.xSign)] === 0){ // if not running into something
+      player.y += addedPos.y;
+      player.x += addedPos.x;
+    }
+    else if (currentRoom.layout[round(player.y + addedPos.ySign)][round(player.x + addedPos.xSign)] === 1){ // if running into a wall
+      sfx.hit_wall.play();
+    }
   }
-  else if (player.y + addedPos.y > GRID_Y - player.spd){ // if going to south exit
-    changeRoom("south", player);
+  catch{ // in case of error (AKA player leaving the room in north/south directions)
+    if (player.y < player.spd){ // if going into north exit
+      changeRoom("north", player);
+    }
+    else if (player.y > GRID_Y - 1 - player.spd*2){ // if going to south exit
+      changeRoom("south", player);
+    }
   }
-  else if (player.x + addedPos.x < -0.5 + player.spd){ // if going to west exit
+  // game does not error in case of west/east exits, so check them here
+  if (player.x < 0){ // if going to west exit
     changeRoom("west", player);
   }
-  else if (player.x + addedPos.x > GRID_X + player.spd){ // if going to east exit
+  else if (player.x > GRID_X - 1 - player.spd){ // if going to east exit
     changeRoom("east", player);
-  }
-  else if (currentRoom.layout[round(player.y + addedPos.ySign)][round(player.x + addedPos.xSign)] === 0){ // if not running into something
-    player.y += addedPos.y;
-    player.x += addedPos.x;
-  }
-  else if (currentRoom.layout[round(player.y + addedPos.ySign)][round(player.x + addedPos.xSign)] === 1){ // if running into a wall
-    sfx.hit_wall.play();
   }
 }
 
 function changeRoom(direction, player){
   // changes the player position based on which exit the player took
   if (direction === "north"){
-    player.y = GRID_Y-0.5;
+    player.y = GRID_Y-1;
     player.roomY -= 1;
   }
   else if (direction === "south"){
-    player.y = 0.5;
+    player.y = 0;
     player.roomY += 1;
   }
   else if (direction === "west"){
-    player.x = GRID_X-0.5;
+    player.x = GRID_X-1;
     player.roomX -= 1;
   }
   else if (direction === "east"){
-    player.x = 0.5;
+    player.x = 0;
     player.roomX += 1;
   }
   // check to see if another room needs to be generated
@@ -496,7 +501,7 @@ class Enemy {
       this.moves = currentEnemy.moves;
     }
     catch{
-      console.log("Enemy does not exist/is unfinished!")
+      console.log("Enemy does not exist!");
     }
     this.level = level;
     this.canSeePlayer = false;
