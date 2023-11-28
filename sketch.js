@@ -521,6 +521,169 @@ class Enemy {
   }
 }
 
+const equipment = [
+  {
+    name: "Sword", // starter sword
+    attacks: [ // the attacks usable in combat with this weapon
+      {
+        name: "Slash", // name of attack
+        atkSpeed: "normal", // the speed of the attack; slower speeds gives the enemy more turns, higher speeds gives Link more turns
+        atkType: "melee", // melee weapons can only hit things on the ground; flying enemies cannot be hit with them
+        atkAff: "slash", // attack affinity determines what kind of attack it is; some enemies are weak/resistant to certain attacks
+        baseDMG: 0, // base damage of specific attack
+      },
+    ],
+  },
+  {
+    name: "White Sword",
+    attacks: [ // the attacks usable in combat with this weapon
+      {
+        name: "Slash",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "slash",
+        baseDMG: 0,
+      },
+      {
+        name: "Stab",
+        atkSpeed: "slow",
+        atkType: "melee",
+        atkAff: "slash",
+        baseDMG: 0,
+      },
+    ],
+  },
+  {
+    name: "Magical Sword",
+    attacks: [ // the attacks usable in combat with this weapon
+      {
+        name: "Slash",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "slash",
+        baseDMG: 0,
+      },
+      {
+        name: "Hone",
+        atkSpeed: "fast",
+        atkType: "buff",
+        atkAff: "support",
+        buffType: "Attack", // skill buff Link's attack stat
+        buffMultiplier: 3, // how much Link's attack will be multiplied
+        buffDuration: 2, // how many of Link's turns the buff will last for
+      },
+    ],
+  },
+  {
+    name: "Bombs",
+    explodeTime: 3, // in seconds
+    canCarryInitial: 8, // limit to how much bombs Link can hold, however can be upgraded
+    inInventory: 0, // how much Link actually has in his inventory
+    attacks: [ // the attacks usable in combat with this weapon
+      {
+        name: "Set Bomb",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "explosion",
+        baseDMG: 0,
+      },
+    ],
+  },
+  {
+    name: "Food", // can be used as an enemy distraction or as a healing item
+    distractionTime: 20, // how many seconds enemies can eat the food before it disappears and starts noticing Link again
+    canCarryInitial: 3, // limit to how much food Link can hold
+    inInventory: 0, // heals 50HP to player in combat / if selected to use the healing function instead via the menu
+  },
+  {
+    name: "Boomerang",
+    screenDist: 0.5, // how far the boomerang can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel half the screen
+    atkType: "ranged", // ranged attacks can hit all enemies
+    atkAff: "slash",
+  },
+  {
+    name: "Magical Boomerang",
+    screenDist: 1, // how far the boomerang can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel half the screen
+    atkType: "ranged",
+    atkAff: "slash",
+  },
+  {
+    name: "Bow", // attacks change depending on what arrow Link has, silver arrow has priority over regular arrow, only usable if Link has any arrow types
+    screenDist: 1, // how far the boomerang can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel the full screen
+    atkType: "ranged",
+    atkAff: "slash",
+  },
+  {
+    name: "Blue Candle", // emits fire forward, can hurt both player and enemy. One use per room entry
+    screenDist: 0.1, // how far the candle fire can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel a tenth of the screen
+    atkType: "melee",
+    atkAff: "fire",
+  },
+  {
+    name: "Red Candle", // emits fire forward, can hurt both player and enemy. Infinite use
+    screenDist: 0.1, // how far the candle fire can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel a tenth of the screen
+    atkType: "melee",
+    atkAff: "fire",
+  },
+  {
+    name: "Recorder", // has a few uses
+    // use 1: teleports to last completed dungeon's entrance if used in the overworld
+    // use 2: reveals the entrance to dungeon 7 if used in the room where the entrance is
+    // use 3: usable in the Digdogger fight to shrink him, so he is no longer invincible
+  },
+  {
+    name: "Magical Rod",
+    screenDist: 1, // how far the rod projectiles can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel the whole screen
+    atkType: "ranged",
+    atkAff: "slash", // will be changed to fire should the player own the Book of Magic
+  },
+];
+
+const shields = [ // shields are different from equipment as they are equipped at all times; cannot be swapped out for another weapon as guarding is always an option in battle
+  {
+    name: "Wooden Shield",
+    type: "shield",
+    defMultiplier: 1, // how much defense the shield gives in general
+    guardMultiplier: 2.5, // how much defense the shield gives when guarding
+  },
+  {
+    name: "Magical Shield",
+    type: "shield",
+    defMultiplier: 1.5,
+    guardMultiplier: 5,
+  },
+];
+
+const items = [
+  {
+    name: "Life Potion",
+    canbeUsed: true, // asks if this item is usable in combat. If false, it is limited to the player menu in the overworld
+    heals: "full", // if item has "full" as the heal value, it fully heals the player upon use
+    uses: 1, // how many times this item can be used before it disappears
+  },
+  {
+    name: "2nd Potion", // difference is that it can be used twice before disappearing
+    canbeUsed: true,
+    heals: "full",
+    uses: 2,
+  },
+  {
+    name: "Raft", // is used to cross water
+    canbeUsed: false,
+    uses: "inf", // if "inf", it has infinite usage
+  },
+  {
+    name: "Raft", // is used to cross gaps
+    canbeUsed: false,
+    uses: "inf",
+  },
+  {
+    name: "Escape Rope", // only can be used within dungeons; is used to escape the current dungeon and teleport to its entrance 
+    canbeUsed: false,
+    uses: 1,
+  },
+];
+
 const enemies = [
   // enemies themselves will not show up on the grid
   // however when checking if running into an enemy, it will look at the player and enemy x/y values
@@ -771,7 +934,7 @@ const bosses = [
 ];
 
 const roomObjects = [
-  // other objects in the game that can be used at different times
+  // other objects in the game that have different uses and functionality
   {
     name: "Treasure Chest",
     id: 0,
@@ -780,6 +943,27 @@ const roomObjects = [
   {
     name: "Speed Booster",
     ID: 1,
+    size: [1,1],
+  },
+  {
+    name: "Spikes",
+    ID: 2,
+    size: [1,1],
+  },
+  {
+    name: "Boulder",
+    ID: 3,
+    size: [1,1],
+  },
+  {
+    name: "Breakable Object",
+    ID: 4,
+    type: null,
+    size: [1,1],
+  },
+  {
+    name: "Movable Rock",
+    ID: 5,
     size: [1,1],
   },
   {
