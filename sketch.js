@@ -26,27 +26,32 @@ let exitScale = [2,5]; // tells how much grid slots an exit takes up, [min, max]
 const GRID_X = 16; // how wide the grid will be
 const GRID_Y = 11; // how tall the grid will be
 
-const DUNGEON_X = 11; // how wide the dungeon grid will be
+const DUNGEON_X = 12; // how wide the dungeon grid will be
 const DUNGEON_Y = 7; // how tall the dungeon grid will be
 
-let loadedRoom;
-
-let cellSize; // will turn into a x/y value for scaling later
+let cellSize; // will turn into a x/y value for scaling stuff later
 
 let rooms = []; // the holy array of every room
+
+
 
 let playerAbleToMove = true; // variable used to check if player should be able to move, used for cutscenes/fades
 
 let player = { // player values
   x: 8, // x value in relevance to grid
   y: 5.5, // y value in relevance to grid
-  spdBase: 0.075, // speed without boosts
-  spdBoost: 0, // extra boost to speed
-  spd: 0, //total speed
+  walkSPDBase: 0.075, // overworld speed without boosts
+  walkSPDBoost: 0, // extra boost(s) to overworld speed
+  walkSPD: 0, // total overworld speed
   roomX: 0, // x value in relevance to room grid
   roomY: 0, // y value in relevance to room grid
   battleX: 0, // x value during combat
   battleY: 0, // y value during combat
+  atk: 0, // attack value during combat
+  def: 0, // defense value during combat
+  spd: 0, // speed value during combat
+  evasion: 0, // evasion value during combat (chance to dodge enemy attacks, is a percentage value)
+  actionVal: 0, // the turn value during combat for Link; will be used in formulas taken from Honkai: Star Rail's combat
 };
 
 
@@ -114,7 +119,7 @@ function setup() {
   }
   canvas = createCanvas(cellSize*GRID_X, cellSize*GRID_Y);
 
-  player.spd = player.spdBase + player.spdBoost;
+  player.walkSPD = player.walkSPDBase + player.walkSPDBoost;
 
   imageMode(CENTER);
   rectMode(CENTER);
@@ -187,22 +192,22 @@ function overworldControls() {
   if (state === "explore") {
     if (keyIsDown(87) || keyIsDown(38) ) {
       // w or up arrow
-      addedPos.y = player.spd * -1;
+      addedPos.y = player.walkSPD * -1;
       addedPos.ySign = -0.5;
     } 
     else if (keyIsDown(83) || keyIsDown(40)  ) {
       // s or down arrow
-      addedPos.y = player.spd;
+      addedPos.y = player.walkSPD;
       addedPos.ySign = 0.5;
     } 
     else if (keyIsDown(65) || keyIsDown(37)  ) {
       // a or left arrow
-      addedPos.x = player.spd * -1;
+      addedPos.x = player.walkSPD * -1;
       addedPos.xSign = -0.5;
     } 
     else if (keyIsDown(68) || keyIsDown(39)  ) {
       // d or right arrow
-      addedPos.x = player.spd;
+      addedPos.x = player.walkSPD;
       addedPos.xSign = 0.5;
     }
   }
@@ -229,10 +234,10 @@ function movePlayer(addedPos) {
     }
   }
   catch{ // in case of error (AKA player leaving the room in north/south directions)
-    if (player.y < player.spd){ // if going into north exit
+    if (player.y < player.walkSPD){ // if going into north exit
       changeRoom("north", player);
     }
-    else if (player.y > GRID_Y - 1 - player.spd*2){ // if going to south exit
+    else if (player.y > GRID_Y - 1 - player.walkSPD*2){ // if going to south exit
       changeRoom("south", player);
     }
   }
@@ -240,7 +245,7 @@ function movePlayer(addedPos) {
   if (player.x < 0){ // if going to west exit
     changeRoom("west", player);
   }
-  else if (player.x > GRID_X - 1 - player.spd){ // if going to east exit
+  else if (player.x > GRID_X - 1 - player.walkSPD){ // if going to east exit
     changeRoom("east", player);
   }
 }
@@ -524,43 +529,46 @@ class Enemy {
 const equipment = [
   {
     name: "Sword", // starter sword
+    overworldUse: { // what this does when used in the overworld
+
+    },
     attacks: [ // the attacks usable in combat with this weapon
       {
         name: "Slash", // name of attack
         atkSpeed: "normal", // the speed of the attack; slower speeds gives the enemy more turns, higher speeds gives Link more turns
         atkType: "melee", // melee weapons can only hit things on the ground; flying enemies cannot be hit with them
-        atkAff: "slash", // attack affinity determines what kind of attack it is; some enemies are weak/resistant to certain attacks
+        atkAff: "hit", // attack affinity determines what kind of attack it is; some enemies are weak/resistant to certain attacks
         baseDMG: 0, // base damage of specific attack
       },
     ],
   },
   {
     name: "White Sword",
-    attacks: [ // the attacks usable in combat with this weapon
+    attacks: [
       {
         name: "Slash",
         atkSpeed: "normal",
         atkType: "melee",
-        atkAff: "slash",
+        atkAff: "hit",
         baseDMG: 0,
       },
       {
         name: "Stab",
         atkSpeed: "slow",
         atkType: "melee",
-        atkAff: "slash",
+        atkAff: "hit",
         baseDMG: 0,
       },
     ],
   },
   {
     name: "Magical Sword",
-    attacks: [ // the attacks usable in combat with this weapon
+    attacks: [
       {
         name: "Slash",
         atkSpeed: "normal",
         atkType: "melee",
-        atkAff: "slash",
+        atkAff: "hit",
         baseDMG: 0,
       },
       {
@@ -579,63 +587,109 @@ const equipment = [
     explodeTime: 3, // in seconds
     canCarryInitial: 8, // limit to how much bombs Link can hold, however can be upgraded
     inInventory: 0, // how much Link actually has in his inventory
-    attacks: [ // the attacks usable in combat with this weapon
+    attacks: [
       {
-        name: "Set Bomb",
-        atkSpeed: "normal",
-        atkType: "melee",
+        name: "Place",
+        atkSpeed: "fast",
+        atkType: "bomb", // bomb can hit most enemies, specific ones might resist it though
         atkAff: "explosion",
+        baseDMG: 0,
+        bombDuration: 1, // how much turns it takes until the bomb explodes, will explode at the start of Link's next turn (since value is 1)
+      },
+    ],
+  },
+  {
+    name: "Boomerang",
+    screenDist: 0.5, // how far the boomerang can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel half the screen
+    attacks: [
+      {
+        name: "Throw",
+        atkSpeed: "normal",
+        atkType: "ranged",
+        atkAff: "hit",
         baseDMG: 0,
       },
     ],
   },
   {
-    name: "Food", // can be used as an enemy distraction or as a healing item
-    distractionTime: 20, // how many seconds enemies can eat the food before it disappears and starts noticing Link again
-    canCarryInitial: 3, // limit to how much food Link can hold
-    inInventory: 0, // heals 50HP to player in combat / if selected to use the healing function instead via the menu
-  },
-  {
-    name: "Boomerang",
-    screenDist: 0.5, // how far the boomerang can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel half the screen
-    atkType: "ranged", // ranged attacks can hit all enemies
-    atkAff: "slash",
-  },
-  {
     name: "Magical Boomerang",
-    screenDist: 1, // how far the boomerang can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel half the screen
-    atkType: "ranged",
-    atkAff: "slash",
+    screenDist: 1, // how far the boomerang can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel the full screen
+    attacks: [
+      {
+        name: "Throw",
+        atkSpeed: "fast",
+        atkType: "ranged",
+        atkAff: "hit",
+        baseDMG: 0,
+      },
+    ],
   },
   {
     name: "Bow", // attacks change depending on what arrow Link has, silver arrow has priority over regular arrow, only usable if Link has any arrow types
     screenDist: 1, // how far the boomerang can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel the full screen
-    atkType: "ranged",
-    atkAff: "slash",
+    attacks: [
+      {
+        name: "Shoot",
+        atkSpeed: "normal",
+        atkType: "ranged",
+        atkAff: "hit",
+        baseDMG: 0,
+      },
+    ],
   },
   {
     name: "Blue Candle", // emits fire forward, can hurt both player and enemy. One use per room entry
     screenDist: 0.1, // how far the candle fire can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel a tenth of the screen
-    atkType: "melee",
-    atkAff: "fire",
+    attacks: [
+      {
+        name: "Light Up",
+        atkSpeed: "slow",
+        atkType: "melee",
+        atkAff: "fire",
+        baseDMG: 0,
+      },
+    ],
   },
   {
     name: "Red Candle", // emits fire forward, can hurt both player and enemy. Infinite use
     screenDist: 0.1, // how far the candle fire can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel a tenth of the screen
-    atkType: "melee",
-    atkAff: "fire",
+    attacks: [
+      {
+        name: "Light Up",
+        atkSpeed: "slow",
+        atkType: "melee",
+        atkAff: "fire",
+        baseDMG: 0,
+      },
+    ],
   },
   {
     name: "Recorder", // has a few uses
     // use 1: teleports to last completed dungeon's entrance if used in the overworld
     // use 2: reveals the entrance to dungeon 7 if used in the room where the entrance is
     // use 3: usable in the Digdogger fight to shrink him, so he is no longer invincible
+    attacks: [
+      {
+        name: "Light Up",
+        atkSpeed: "slow",
+        atkType: "debuff",
+        atkAff: "support",
+        baseDMG: 0,
+      },
+    ],
   },
   {
     name: "Magical Rod",
     screenDist: 1, // how far the rod projectiles can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel the whole screen
-    atkType: "ranged",
-    atkAff: "slash", // will be changed to fire should the player own the Book of Magic
+    attacks: [
+      {
+        name: "Light Up",
+        atkSpeed: "slow",
+        atkType: "ranged",
+        atkAff: "hit", // will be changed to fire should the player own the Book of Magic
+        baseDMG: 0,
+      },
+    ],
   },
 ];
 
@@ -643,13 +697,11 @@ const shields = [ // shields are different from equipment as they are equipped a
   {
     name: "Wooden Shield",
     type: "shield",
-    defMultiplier: 1, // how much defense the shield gives in general
     guardMultiplier: 2.5, // how much defense the shield gives when guarding
   },
   {
     name: "Magical Shield",
     type: "shield",
-    defMultiplier: 1.5,
     guardMultiplier: 5,
   },
 ];
@@ -659,13 +711,22 @@ const items = [
     name: "Life Potion",
     canbeUsed: true, // asks if this item is usable in combat. If false, it is limited to the player menu in the overworld
     heals: "full", // if item has "full" as the heal value, it fully heals the player upon use
+    inInventory: 0, // how much is in Link's inventory
     uses: 1, // how many times this item can be used before it disappears
   },
   {
-    name: "2nd Potion", // difference is that it can be used twice before disappearing
+    name: "2nd Potion", // difference from Life Potion is that it can be used twice before disappearing
     canbeUsed: true,
     heals: "full",
+    inInventory: 0,
     uses: 2,
+  },
+  {
+    name: "Food", // can be used as an enemy distraction
+    canbeUsed: true,
+    distractionTime: 20, // how many seconds enemies can eat the food before it disappears and enemies start noticing Link again
+    inInventory: 0,
+    uses: 1,
   },
   {
     name: "Raft", // is used to cross water
@@ -673,7 +734,7 @@ const items = [
     uses: "inf", // if "inf", it has infinite usage
   },
   {
-    name: "Raft", // is used to cross gaps
+    name: "Stepladder", // is used to cross gaps
     canbeUsed: false,
     uses: "inf",
   },
