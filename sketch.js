@@ -47,11 +47,13 @@ let player = { // player values
   roomY: 0, // y value in relevance to room grid
   battleX: 0, // x value during combat
   battleY: 0, // y value during combat
+  level: 1, // player's level
+  exp: 0, // total experience points player has
   atk: 0, // attack value during combat
   def: 0, // defense value during combat
   spd: 0, // speed value during combat
-  evasion: 0, // evasion value during combat (chance to dodge enemy attacks, is a percentage value)
-  actionVal: 0, // the turn value during combat for Link; will be used in formulas taken from Honkai: Star Rail's combat
+  evasion: 10, // evasion value during combat (chance to dodge enemy attacks, is a percentage value)
+  actionVal: 0, // the turn value during combat for Link; will be used in formulas taken from Honkai: Star Rail's combat system
 };
 
 
@@ -539,6 +541,15 @@ const equipment = [
         atkType: "melee", // melee weapons can only hit things on the ground; flying enemies cannot be hit with them
         atkAff: "hit", // attack affinity determines what kind of attack it is; some enemies are weak/resistant to certain attacks
         baseDMG: 0, // base damage of specific attack
+        accuracy: 100, // base chance of attack actually hitting enemy; is in percentage, can be lowered by enemy's evasion stat
+      },
+      {
+        name: "Stab",
+        atkSpeed: "slow",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 70,
       },
     ],
   },
@@ -551,13 +562,15 @@ const equipment = [
         atkType: "melee",
         atkAff: "hit",
         baseDMG: 0,
+        accuracy: 100,
       },
       {
-        name: "Stab",
+        name: "Parry",
         atkSpeed: "slow",
-        atkType: "melee",
+        atkType: "counter",
         atkAff: "hit",
         baseDMG: 0,
+        accuracy: 200,
       },
     ],
   },
@@ -570,6 +583,7 @@ const equipment = [
         atkType: "melee",
         atkAff: "hit",
         baseDMG: 0,
+        accuracy: 100,
       },
       {
         name: "Hone",
@@ -586,7 +600,7 @@ const equipment = [
     name: "Bombs",
     explodeTime: 3, // in seconds
     canCarryInitial: 8, // limit to how much bombs Link can hold, however can be upgraded
-    inInventory: 0, // how much Link actually has in his inventory
+    holding: 0, // how much Link actually has in his inventory
     attacks: [
       {
         name: "Place",
@@ -594,6 +608,7 @@ const equipment = [
         atkType: "bomb", // bomb can hit most enemies, specific ones might resist it though
         atkAff: "explosion",
         baseDMG: 0,
+        accuracy: 85,
         bombDuration: 1, // how much turns it takes until the bomb explodes, will explode at the start of Link's next turn (since value is 1)
       },
     ],
@@ -608,6 +623,7 @@ const equipment = [
         atkType: "ranged",
         atkAff: "hit",
         baseDMG: 0,
+        accuracy: 80,
       },
     ],
   },
@@ -621,6 +637,7 @@ const equipment = [
         atkType: "ranged",
         atkAff: "hit",
         baseDMG: 0,
+        accuracy: 90,
       },
     ],
   },
@@ -634,6 +651,7 @@ const equipment = [
         atkType: "ranged",
         atkAff: "hit",
         baseDMG: 0,
+        accuracy: 95,
       },
     ],
   },
@@ -647,6 +665,7 @@ const equipment = [
         atkType: "melee",
         atkAff: "fire",
         baseDMG: 0,
+        accuracy: 70,
       },
     ],
   },
@@ -660,6 +679,7 @@ const equipment = [
         atkType: "melee",
         atkAff: "fire",
         baseDMG: 0,
+        accuracy: 70,
       },
     ],
   },
@@ -670,11 +690,10 @@ const equipment = [
     // use 3: usable in the Digdogger fight to shrink him, so he is no longer invincible
     attacks: [
       {
-        name: "Light Up",
+        name: "Play",
         atkSpeed: "slow",
-        atkType: "debuff",
+        atkType: "recorder",
         atkAff: "support",
-        baseDMG: 0,
       },
     ],
   },
@@ -683,11 +702,12 @@ const equipment = [
     screenDist: 1, // how far the rod projectiles can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel the whole screen
     attacks: [
       {
-        name: "Light Up",
+        name: "Beam Attack",
         atkSpeed: "slow",
         atkType: "ranged",
         atkAff: "hit", // will be changed to fire should the player own the Book of Magic
         baseDMG: 0,
+        accuracy: 90,
       },
     ],
   },
@@ -696,13 +716,11 @@ const equipment = [
 const shields = [ // shields are different from equipment as they are equipped at all times; cannot be swapped out for another weapon as guarding is always an option in battle
   {
     name: "Wooden Shield",
-    type: "shield",
-    guardMultiplier: 2.5, // how much defense the shield gives when guarding
+    guard: 2.5, // how much defense is multiplied by when guarding
   },
   {
     name: "Magical Shield",
-    type: "shield",
-    guardMultiplier: 5,
+    guard: 5,
   },
 ];
 
@@ -711,21 +729,21 @@ const items = [
     name: "Life Potion",
     canbeUsed: true, // asks if this item is usable in combat. If false, it is limited to the player menu in the overworld
     heals: "full", // if item has "full" as the heal value, it fully heals the player upon use
-    inInventory: 0, // how much is in Link's inventory
+    holding: 0, // how much is in Link's inventory
     uses: 1, // how many times this item can be used before it disappears
   },
   {
     name: "2nd Potion", // difference from Life Potion is that it can be used twice before disappearing
     canbeUsed: true,
     heals: "full",
-    inInventory: 0,
+    holding: 0,
     uses: 2,
   },
   {
     name: "Food", // can be used as an enemy distraction
     canbeUsed: true,
     distractionTime: 20, // how many seconds enemies can eat the food before it disappears and enemies start noticing Link again
-    inInventory: 0,
+    holding: 0,
     uses: 1,
   },
   {
@@ -745,6 +763,48 @@ const items = [
   },
 ];
 
+const keyItems = [
+  {
+    name: "Arrow",
+    baseDMG: 0,
+  },
+  {
+    name: "Silver Arrow",
+    baseDMG: 0,
+  },
+  {
+    name: "Small Key",
+    holding: 0,
+  },
+  {
+    name: "Magical Key",
+  },
+  {
+    name: "Letter",
+  },
+  {
+    name: "Book of Magic",
+  },
+  {
+    name: "Power Bracelet",
+  },
+  {
+    name: "Compass",
+    dungeon: 0,
+  },
+  {
+    name: "Dungeon Map",
+    dungeon: 0,
+  },
+  {
+    name: "Triforce Fragment",
+    holding: 0,
+  },
+  {
+    name: "Triforce of Wisdom",
+  },
+];
+
 const enemies = [
   // enemies themselves will not show up on the grid
   // however when checking if running into an enemy, it will look at the player and enemy x/y values
@@ -757,7 +817,13 @@ const enemies = [
     name: "Armos",
     id: 100,
     size: [1,1],
-    movementType: "walk",
+    movementType: "idle",
+    attacks: [
+      {
+        name: "Pierce",
+        
+      }
+    ]
   },
   {
     name: "Ghini",
