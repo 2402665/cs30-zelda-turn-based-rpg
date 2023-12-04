@@ -534,7 +534,7 @@ const equipment = [
   {
     name: "Sword", // starter sword
     overworldUse: { // what this does when used in the overworld
-
+      type: "sword",
     },
     attacks: [ // the attacks usable in combat with this weapon
       {
@@ -557,6 +557,9 @@ const equipment = [
   },
   {
     name: "White Sword",
+    overworldUse:{
+      type: "sword",
+    },
     attacks: [
       {
         name: "Slash",
@@ -578,6 +581,9 @@ const equipment = [
   },
   {
     name: "Magical Sword",
+    overworldUse:{
+      type: "sword",
+    },
     attacks: [
       {
         name: "Slash",
@@ -600,9 +606,11 @@ const equipment = [
   },
   {
     name: "Bombs",
-    explodeTime: 3, // in seconds
-    canCarryInitial: 8, // limit to how much bombs Link can hold, however can be upgraded
-    holding: 0, // how much Link actually has in his inventory
+    overworldUse:{
+      type: "bomb",
+      explodeTime: 3, // in seconds
+      maxInv: 8, // limit to how much bombs Link can hold, however can be upgraded
+    },
     attacks: [
       {
         name: "Place",
@@ -617,7 +625,10 @@ const equipment = [
   },
   {
     name: "Boomerang",
-    screenDist: 0.5, // how far the boomerang can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel half the screen
+    overworldUse:{
+      type: "boomerang",
+      screenDist: 0.5, // how far the projectile can travel in reference to grid in overworld: math is width (or height) * screenDist, basically 0.5 is saying that it can travel half the screen
+    },
     attacks: [
       {
         name: "Throw",
@@ -631,7 +642,10 @@ const equipment = [
   },
   {
     name: "Magical Boomerang",
-    screenDist: 1, // how far the boomerang can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel the full screen
+    overworldUse:{
+      type: "boomerang",
+      screenDist: 1,
+    },
     attacks: [
       {
         name: "Throw",
@@ -645,7 +659,10 @@ const equipment = [
   },
   {
     name: "Bow", // attacks change depending on what arrow Link has, silver arrow has priority over regular arrow, only usable if Link has any arrow types
-    screenDist: 1, // how far the boomerang can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel the full screen
+    overworldUse:{
+      type: "bow",
+      screenDist: 1,
+    },
     attacks: [
       {
         name: "Shoot",
@@ -659,7 +676,11 @@ const equipment = [
   },
   {
     name: "Blue Candle", // emits fire forward, can hurt both player and enemy. One use per room entry
-    screenDist: 0.1, // how far the candle fire can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel a tenth of the screen
+    overworldUse:{
+      type: "candle",
+      screenDist: 0.1,
+      limit: 1,
+    },
     attacks: [
       {
         name: "Light Up",
@@ -673,7 +694,11 @@ const equipment = [
   },
   {
     name: "Red Candle", // emits fire forward, can hurt both player and enemy. Infinite use
-    screenDist: 0.1, // how far the candle fire can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel a tenth of the screen
+    overworldUse:{
+      type: "candle",
+      screenDist: 0.1,
+      limit: "inf",
+    },
     attacks: [
       {
         name: "Light Up",
@@ -690,6 +715,9 @@ const equipment = [
     // use 1: teleports to last completed dungeon's entrance if used in the overworld
     // use 2: reveals the entrance to dungeon 7 if used in the room where the entrance is
     // use 3: usable in the Digdogger fight to shrink him, so he is no longer invincible
+    overworldUse:{
+      type: "recorder",
+    },
     attacks: [
       {
         name: "Play",
@@ -701,7 +729,10 @@ const equipment = [
   },
   {
     name: "Magical Rod",
-    screenDist: 1, // how far the rod projectiles can travel in reference to grid in overworld: math is width (or height) * screenDist, basically saying it can travel the whole screen
+    overworldUse:{
+      type: "rod",
+      screenDist: 1,
+    },
     attacks: [
       {
         name: "Beam Attack",
@@ -816,6 +847,7 @@ const enemies = [
     name: "Armos",
     id: 100,
     size: [1,1],
+    diffColor: false,
     movementType: "idle",
     enemyType: "normal",
     maxHP: 0,
@@ -838,6 +870,7 @@ const enemies = [
     name: "Ghini",
     id: 101,
     size: [1,1],
+    diffColor: false,
     movementType: "normal",
     enemyType: "normal",
     maxHP: 0,
@@ -860,7 +893,7 @@ const enemies = [
     name: "Leever",
     id: 102,
     size: [1,1],
-    color: null,
+    diffColor: true,
     movementType: "walk",
     enemyType: "normal",
     maxHP: 0,
@@ -883,7 +916,7 @@ const enemies = [
     name: "Lynel",
     id: 103,
     size: [1,1],
-    color: null,
+    diffColor: true,
     movementType: "walk",
     enemyType: "normal",
     maxHP: 0,
@@ -914,7 +947,7 @@ const enemies = [
     name: "Moblin",
     id: 104,
     size: [1,1],
-    color: null,
+    diffColor: true,
     movementType: "idle",
     enemyType: "normal",
     maxHP: 0,
@@ -945,7 +978,7 @@ const enemies = [
     name: "Octorok",
     id: 105, 
     size: [1,1],
-    color: null,
+    diffColor: true,
     movementType: "slow",
     enemyType: "normal",
     maxHP: 0,
@@ -968,6 +1001,7 @@ const enemies = [
     name: "Peahat",
     id: 106,
     size: [1,1],
+    diffColor: false,
     movementType: "hop",
     hopSpeed: 0,
     enemyType: "flying",
@@ -991,6 +1025,7 @@ const enemies = [
     name: "Tektite",
     id: 107,
     size: [1,1],
+    diffColor: false,
     movementType: "hop",
     hopSpeed: 0,
     enemyType: "normal",
@@ -1014,7 +1049,7 @@ const enemies = [
     name: "Darknut",
     id: 200,
     size: [1,1],
-    color: null,
+    diffColor: true,
     movementType: "idle",
     enemyType: "heavy",
     maxHP: 0,
@@ -1046,6 +1081,7 @@ const enemies = [
     name: "Gel",
     id: 201,
     size: [1,1],
+    diffColor: false,
     movementType: "hop",
     hopSpeed: 0,
     enemyType: "normal",
@@ -1069,9 +1105,10 @@ const enemies = [
     name: "Gibdo",
     id: 202,
     size: [1,1],
+    diffColor: false,
     movementType: "idle",
     enemyType: "normal",
-    hp: 0,
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
@@ -1091,9 +1128,10 @@ const enemies = [
     name: "Goriya",
     id: 203,
     size: [1,1],
+    diffColor: false,
     movementType: "idle",
     enemyType: "normal",
-    hp: 0,
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
@@ -1113,16 +1151,17 @@ const enemies = [
     name: "Keese",
     id: 204,
     size: [1,1],
-    color: null,
+    diffColor: true,
     movementType: "idle",
-    hp: 0,
+    enemyType: "flying",
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
-    evasion: 0,
+    evasion: 40,
     attacks: [
       {
-        name: "Pierce",
+        name: "Bash",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1135,21 +1174,31 @@ const enemies = [
     name: "Lanmola",
     id: 205,
     size: [3,3], // not very efficient as it is a large snake-like enemy
-    color: null,
+    diffColor: true,
     movementType: "idle",
-    hp: 0,
+    enemyType: "normal",
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
     evasion: 0,
     attacks: [
       {
-        name: "Pierce",
-        atkSpeed: "normal",
+        name: "Bite",
+        atkSpeed: "fast",
         atkType: "melee",
         atkAff: "hit",
         baseDMG: 0,
-        accuracy: 100,
+        accuracy: 80,
+      },
+      {
+        name: "Coil",
+        atkSpeed: "slow",
+        atkType: "buff",
+        atkAff: "support",
+        buffType: "Defense",
+        buffMultiplier: 2,
+        buffDuration: 2,
       },
     ],
   },
@@ -1157,20 +1206,32 @@ const enemies = [
     name: "Likelike",
     id: 206,
     size: [2,2],
+    diffColor: false,
     movementType: "idle",
-    hp: 0,
+    enemyType: "normal",
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
     evasion: 0,
     attacks: [
       {
-        name: "Pierce",
-        atkSpeed: "normal",
+        name: "Devour",
+        atkSpeed: "slow",
+        atkType: "debuff",
+        atkAff: "support",
+        buffType: "speed",
+        bullMultiplier: 2,
+        buffDuration: 3,
+        accuracy: 50,
+      },
+      {
+        name: "Chomp",
+        atkSpeed: "slow",
         atkType: "melee",
         atkAff: "hit",
         baseDMG: 0,
-        accuracy: 100,
+        accuracy: 80,
       },
     ],
   },
@@ -1178,15 +1239,17 @@ const enemies = [
     name: "Moldorm",
     id: 207,
     size: [3,3], // not very efficient as it is a large snake-like enemy
+    diffColor: false,
     movementType: "idle",
-    hp: 0,
+    enemyType: "normal",
+    maxHP: 5,
     atk: 0,
-    def: 0,
+    def: 999,
     spd: 0,
     evasion: 0,
     attacks: [
       {
-        name: "Pierce",
+        name: "Bash",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1199,15 +1262,17 @@ const enemies = [
     name: "Patra",
     id: 208,
     size: [1,1],
+    diffColor: false,
     movementType: "idle",
-    hp: 0,
+    enemyType: "normal",
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
     evasion: 0,
     attacks: [
       {
-        name: "Pierce",
+        name: "Bash",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1220,15 +1285,17 @@ const enemies = [
     name: "Mini Patra",
     id: 209,
     size: [1,1],
+    diffColor: false,
     movementType: "idle",
-    hp: 0,
+    enemyType: "spin",
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
     evasion: 0,
     attacks: [
       {
-        name: "Pierce",
+        name: "Bash",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1241,15 +1308,17 @@ const enemies = [
     name: "Pol's Voice",
     id: 210,
     size: [1,1],
-    movementType: "idle",
-    hp: 0,
+    diffColor: false,
+    movementType: "hop",
+    enemyType: "normal",
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
-    evasion: 0,
+    evasion: 40,
     attacks: [
       {
-        name: "Pierce",
+        name: "Bash",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1262,16 +1331,18 @@ const enemies = [
     name: "Rope",
     id: 211,
     size: [1,1],
-    movementType: "idle",
-    hp: 0,
+    diffColor: true,
+    movementType: "fast",
+    enemyType: "normal",
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
-    evasion: 0,
+    evasion: 20,
     attacks: [
       {
-        name: "Pierce",
-        atkSpeed: "normal",
+        name: "Quick Attack",
+        atkSpeed: "fast",
         atkType: "melee",
         atkAff: "hit",
         baseDMG: 0,
@@ -1283,15 +1354,17 @@ const enemies = [
     name: "Stalfos",
     id: 212,
     size: [1,1],
-    movementType: "idle",
-    hp: 0,
+    diffColor: false,
+    movementType: "walk",
+    enemyType: "normal",
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
-    evasion: 0,
+    evasion: 10,
     attacks: [
       {
-        name: "Pierce",
+        name: "Slash",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1304,15 +1377,17 @@ const enemies = [
     name: "Vire",
     id: 213,
     size: [1,1],
+    diffColor: false,
     movementType: "idle",
-    hp: 0,
+    enemyType: "normal",
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
     evasion: 0,
     attacks: [
       {
-        name: "Pierce",
+        name: "Bash",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1325,20 +1400,32 @@ const enemies = [
     name: "Wallmaster",
     id: 214,
     size: [1,1],
-    movementType: "idle",
-    hp: 0,
+    diffColor: false,
+    movementType: "walk",
+    enemyType: "normal",
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
-    evasion: 0,
+    evasion: 20,
     attacks: [
       {
-        name: "Pierce",
-        atkSpeed: "normal",
+        name: "Grab",
+        atkSpeed: "slow",
+        atkType: "debuff",
+        atkAff: "support",
+        buffType: "speed",
+        bullMultiplier: 3,
+        buffDuration: 3,
+        accuracy: 50,
+      },
+      {
+        name: "Squeeze",
+        atkSpeed: "slow",
         atkType: "melee",
         atkAff: "hit",
         baseDMG: 0,
-        accuracy: 100,
+        accuracy: 80,
       },
     ],
   },
@@ -1346,21 +1433,22 @@ const enemies = [
     name: "Wizzrobe",
     id: 215,
     size: [1,1],
-    color: null,
-    movementType: "idle",
-    hp: 0,
+    diffColor: true,
+    movementType: "normal", 
+    enemyType: "normal",
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
-    evasion: 0,
+    evasion: 10,
     attacks: [
       {
-        name: "Pierce",
-        atkSpeed: "normal",
-        atkType: "melee",
+        name: "Beam Attack",
+        atkSpeed: "slow",
+        atkType: "ranged",
         atkAff: "hit",
         baseDMG: 0,
-        accuracy: 100,
+        accuracy: 90,
       },
     ],
   },
@@ -1368,15 +1456,17 @@ const enemies = [
     name: "Zol",
     id: 216,
     size: [1,1],
-    movementType: "idle",
-    hp: 0,
+    diffColor: false,
+    movementType: "hop",
+    enemyType: "normal",
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
     evasion: 0,
     attacks: [
       {
-        name: "Pierce",
+        name: "Bash",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1389,18 +1479,19 @@ const enemies = [
     name: "Zora",
     id: 300,
     size: [1,1],
+    diffColor: false,
     movementType: "idle",
     enemyType: "water",
-    hp: 0,
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
     evasion: 0,
     attacks: [
       {
-        name: "Pierce",
-        atkSpeed: "normal",
-        atkType: "melee",
+        name: "Magic Ball",
+        atkSpeed: "slow",
+        atkType: "ranged",
         atkAff: "hit",
         baseDMG: 0,
         accuracy: 100,
@@ -1411,12 +1502,14 @@ const enemies = [
     name: "Goomba",
     id: 400,
     size: [1,1],
+    diffColor: false,
     movementType: "walk",
-    hp: 0,
+    enemyType: "normal",
+    maxHP: 0,
     atk: 0,
     def: 0,
     spd: 0,
-    evasion: 0,
+    evasion: 20,
     attacks: [
       {
         name: "Pierce",
@@ -1441,84 +1534,292 @@ const bosses = [
     name: "Aquamentus",
     id: 10,
     size: [2,2],
-    powerlv: 1, // 1 or 2 depending on dungeon
     movementType: "idle",
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
   { // spawns in 2nd dungeon 
     name: "Dodongo",
     id: 11,
     size: [2,2],
     movementType: "normal",
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
   { // spawns in 3rd dungeon
     name: "Manhandla",
     id: 12,
     size: [3,3],
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
   { // spawns in 4th dungeon with 2 heads, and 8th dungeon with 4 heads
     name: "Gleeok",
     id: 13,
     size: [2,3],
-    powerlv: 1, // 1 or 2 depending on dungeon
     movementType: "idle",
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
   { // spawns in 5th dungeon
     name: "Digdogger",
     id: 14,
     size: [2,2],
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
   { // spawns in 6th dungeon
     name: "Gohma",
     id: 15,
     size: [3,1],
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
   { // spawns in 9th (final) dungeon
     name: "Ganon",
     id: 16,
     size: [2,2],
     movementType: "idle",
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
   { // mario, spawns in peach's castle
     name: "Red Plumber",
     id: 20,
     size: [1,2],
     movementType: "idle",
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
   { // luigi, spawns in peach's castle
     name: "Green Plumber",
     id: 21,
     size: [1,2],
     movementType: "idle",
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
   { // bowser, spawns in bowser's castle
     name: "King of the Koopas",
     id: 22,
     size: [3,3],
     movementType: "idle",
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
   { // red, spawns in mt. silver summit
     name: "Pocket Monster Champion",
     id: 30,
     size: [1,1],
     movementType: "idle",
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
   { // kris, spawns in castle town
     name: "Empty Boy",
     id: 40,
     size: [1,2],
     movementType: "idle",
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
   { // susie, spawns in castle town
     name: "Rowdy Horse",
     id: 41,
     size: [1,2],
     movementType: "idle",
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
   { // ralsei, spawns in castle town
     name: "Gentle Goat",
     id: 42,
     size: [1,2],
     movementType: "idle",
+    maxHP: 0,
+    atk: 0,
+    def: 0,
+    spd: 0,
+    evasion: 0,
+    attacks: [
+      {
+        name: "Pierce",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+    ],
   },
 ];
 
