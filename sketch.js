@@ -415,7 +415,7 @@ class Room {
         let notBanned = true;
 
         if (newExitDirection === 0){ //north
-          for (let ban of bannedDirections){
+          for (let ban of bannedDirections){ //check for an exit ban
             if (ban === "north"){
               notBanned = false;
             }
@@ -425,7 +425,7 @@ class Room {
           }
         }
         else if (newExitDirection === 1){ //south
-          for (let ban of bannedDirections){
+          for (let ban of bannedDirections){ //check for an exit ban
             if (ban === "south"){
               notBanned = false;
             }
@@ -435,7 +435,7 @@ class Room {
           }
         }
         else if (newExitDirection === 2){ //west
-          for (let ban of bannedDirections){
+          for (let ban of bannedDirections){ //check for an exit ban
             if (ban === "west"){
               notBanned = false;
             }
@@ -445,7 +445,7 @@ class Room {
           }
         }
         else if (newExitDirection === 3){ //east
-          for (let ban of bannedDirections){
+          for (let ban of bannedDirections){ //check for an exit ban
             if (ban === "east"){
               notBanned = false;
             }
@@ -850,11 +850,13 @@ const enemies = [
     diffColor: false,
     movementType: "idle",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Pierce",
@@ -873,11 +875,13 @@ const enemies = [
     diffColor: false,
     movementType: "normal",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 20,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Bash",
@@ -896,11 +900,13 @@ const enemies = [
     diffColor: true,
     movementType: "walk",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 10,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Bash",
@@ -919,11 +925,13 @@ const enemies = [
     diffColor: true,
     movementType: "walk",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 30,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Slash",
@@ -950,11 +958,13 @@ const enemies = [
     diffColor: true,
     movementType: "idle",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Stab",
@@ -981,11 +991,13 @@ const enemies = [
     diffColor: true,
     movementType: "slow",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 10,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Shoot Rock",
@@ -1005,11 +1017,13 @@ const enemies = [
     movementType: "hop",
     hopSpeed: 0,
     enemyType: "flying",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 20,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Jump Attack",
@@ -1029,11 +1043,13 @@ const enemies = [
     movementType: "hop",
     hopSpeed: 0,
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 40,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Jump Attack",
@@ -1052,11 +1068,13 @@ const enemies = [
     diffColor: true,
     movementType: "idle",
     enemyType: "heavy",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Slash",
@@ -1085,11 +1103,13 @@ const enemies = [
     movementType: "hop",
     hopSpeed: 0,
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 20,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Jump Attack",
@@ -1108,11 +1128,13 @@ const enemies = [
     diffColor: false,
     movementType: "idle",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 10,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Claw",
@@ -1131,11 +1153,13 @@ const enemies = [
     diffColor: false,
     movementType: "idle",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Boomerang Throw",
@@ -1154,11 +1178,13 @@ const enemies = [
     diffColor: true,
     movementType: "idle",
     enemyType: "flying",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 40,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Bash",
@@ -1177,11 +1203,13 @@ const enemies = [
     diffColor: true,
     movementType: "idle",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Bite",
@@ -1209,11 +1237,13 @@ const enemies = [
     diffColor: false,
     movementType: "idle",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Devour",
@@ -1242,11 +1272,13 @@ const enemies = [
     diffColor: false,
     movementType: "idle",
     enemyType: "normal",
-    maxHP: 5,
-    atk: 0,
-    def: 999,
-    spd: 0,
-    evasion: 0,
+    baseStats: {
+      maxHP: 5,
+      atk: 0,
+      def: 999,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Bash",
@@ -1265,11 +1297,13 @@ const enemies = [
     diffColor: false,
     movementType: "idle",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Bash",
@@ -1288,11 +1322,13 @@ const enemies = [
     diffColor: false,
     movementType: "idle",
     enemyType: "spin",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Bash",
@@ -1311,11 +1347,13 @@ const enemies = [
     diffColor: false,
     movementType: "hop",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 40,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Bash",
@@ -1334,11 +1372,13 @@ const enemies = [
     diffColor: true,
     movementType: "fast",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 20,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Quick Attack",
@@ -1357,11 +1397,13 @@ const enemies = [
     diffColor: false,
     movementType: "walk",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 10,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Slash",
@@ -1380,11 +1422,13 @@ const enemies = [
     diffColor: false,
     movementType: "idle",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Bash",
@@ -1403,11 +1447,13 @@ const enemies = [
     diffColor: false,
     movementType: "walk",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 20,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Grab",
@@ -1436,11 +1482,13 @@ const enemies = [
     diffColor: true,
     movementType: "normal", 
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 10,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Beam Attack",
@@ -1459,11 +1507,13 @@ const enemies = [
     diffColor: false,
     movementType: "hop",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Bash",
@@ -1482,11 +1532,13 @@ const enemies = [
     diffColor: false,
     movementType: "idle",
     enemyType: "water",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Magic Ball",
@@ -1505,11 +1557,13 @@ const enemies = [
     diffColor: false,
     movementType: "walk",
     enemyType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 20,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
         name: "Pierce",
@@ -1535,35 +1589,41 @@ const bosses = [
     id: 10,
     size: [2,2],
     movementType: "idle",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    enemyType: "normal",
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
-        name: "Pierce",
+        name: "Triple Fireball",
         atkSpeed: "normal",
-        atkType: "melee",
+        atkType: "ranged",
         atkAff: "hit",
         baseDMG: 0,
         accuracy: 100,
       },
     ],
   },
-  { // spawns in 2nd dungeon 
+  { // spawns in 2nd dungeon, is a miniboss in 5th/7th dungeon
     name: "Dodongo",
     id: 11,
     size: [2,2],
     movementType: "normal",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    enemyType: "dodongo",
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
-        name: "Pierce",
+        name: "Bash",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1572,59 +1632,70 @@ const bosses = [
       },
     ],
   },
-  { // spawns in 3rd dungeon
+  { // spawns in 3rd dungeon, is a miniboss in 4th/8th dungeon
     name: "Manhandla",
     id: 12,
     size: [3,3],
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    movementType: "normal",
+    enemyType: "normal",
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
-        name: "Pierce",
-        atkSpeed: "normal",
-        atkType: "melee",
+        name: "Icicle Shard",
+        atkSpeed: "slow",
+        atkType: "ranged",
         atkAff: "hit",
         baseDMG: 0,
         accuracy: 100,
       },
     ],
   },
-  { // spawns in 4th dungeon with 2 heads, and 8th dungeon with 4 heads
+  { // spawns in 4th dungeon with 2 heads. Is a miniboss in 6th dungeon with 3 heads and in 8th dungeon with 4 heads
     name: "Gleeok",
     id: 13,
     size: [2,3],
     movementType: "idle",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    enemyType: "normal",
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
-        name: "Pierce",
+        name: "Ice Breath",
         atkSpeed: "normal",
-        atkType: "melee",
+        atkType: "ranged",
         atkAff: "hit",
         baseDMG: 0,
         accuracy: 100,
       },
     ],
   },
-  { // spawns in 5th dungeon
+  { // spawns in 5th dungeon, is a miniboss in 7th dungeon
     name: "Digdogger",
     id: 14,
     size: [2,2],
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    movementType: "normal",
+    enemyType: "digdogger",
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
-        name: "Pierce",
+        name: "Bash",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1633,20 +1704,45 @@ const bosses = [
       },
     ],
   },
-  { // spawns in 6th dungeon
+  { // spawns in 6th dungeon, is a miniboss in 8th dungeon
     name: "Gohma",
     id: 15,
     size: [3,1],
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    movementType: "hop",
+    enemyType: "gohma",
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
-        name: "Pierce",
+        name: "Close Eye",
+        atkSpeed: "fast",
+        atkType: "buff",
+        atkAff: "support",
+      },
+      {
+        name: "Open Eye",
+        atkSpeed: "fast",
+        atkType: "debuff",
+        atkAff: "support",
+      },
+      {
+        name: "Sticky Web",
         atkSpeed: "normal",
-        atkType: "melee",
+        atkType: "debuff",
+        atkAff: "support",
+        buffType: "speed",
+        buffMultiplier: 2,
+        buffDuration: 3,
+      },
+      {
+        name: "Fireball",
+        atkSpeed: "fast",
+        atkType: "ranged",
         atkAff: "hit",
         baseDMG: 0,
         accuracy: 100,
@@ -1658,16 +1754,25 @@ const bosses = [
     id: 16,
     size: [2,2],
     movementType: "idle",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    enemyType: "normal",
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
-        name: "Pierce",
+        name: "Invisibility",
+        atkSpeed: "fast",
+        atkType: "buff",
+        atkAff: "support",
+      },
+      {
+        name: "Fireball",
         atkSpeed: "normal",
-        atkType: "melee",
+        atkType: "ranged",
         atkAff: "hit",
         baseDMG: 0,
         accuracy: 100,
@@ -1679,14 +1784,41 @@ const bosses = [
     id: 20,
     size: [1,2],
     movementType: "idle",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    enemyType: "normal",
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
-        name: "Pierce",
+        name: "Jump",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Hammer",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Bros' Attack",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Item",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1700,14 +1832,41 @@ const bosses = [
     id: 21,
     size: [1,2],
     movementType: "idle",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    enemyType: "normal",
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
-        name: "Pierce",
+        name: "Jump",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Hammer",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Bros' Attack",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Item",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1721,14 +1880,39 @@ const bosses = [
     id: 22,
     size: [3,3],
     movementType: "idle",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    enemyType: "normal",
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
-        name: "Pierce",
+        name: "Punch",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Flame",
+        atkSpeed: "normal",
+        atkType: "ranged",
+        atkAff: "fire",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Vacuum",
+        atkSpeed: "normal",
+        atkType: "debuff",
+        atkAff: "support",
+      },
+      {
+        name: "Item",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1742,14 +1926,19 @@ const bosses = [
     id: 30,
     size: [1,1],
     movementType: "idle",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    enemyType: "normal",
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
+    team: ["Pikachu", "Espeon", "Snorlax", "Venusaur", "Charizard", "Blastoise"],
+    currentPKMN: "Pikachu",
     attacks: [
       {
-        name: "Pierce",
+        name: "Send Out PKMN",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1763,14 +1952,49 @@ const bosses = [
     id: 40,
     size: [1,2],
     movementType: "idle",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    enemyType: "normal",
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
-        name: "Pierce",
+        name: "Fight",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Act",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Item",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Mercy",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Guard",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1784,14 +2008,49 @@ const bosses = [
     id: 41,
     size: [1,2],
     movementType: "idle",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    enemyType: "normal",
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
-        name: "Pierce",
+        name: "Fight",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Magic",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Item",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Mercy",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Guard",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -1805,14 +2064,48 @@ const bosses = [
     id: 42,
     size: [1,2],
     movementType: "idle",
-    maxHP: 0,
-    atk: 0,
-    def: 0,
-    spd: 0,
-    evasion: 0,
+    baseStats: {
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+    },
     attacks: [
       {
-        name: "Pierce",
+        name: "Fight",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Magic",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Item",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Mercy",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Guard",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
