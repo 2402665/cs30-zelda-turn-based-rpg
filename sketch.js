@@ -60,58 +60,52 @@ let player = { // player values
 
 
 
-let imageAssets = { // list of all sprites/spritesheets in the game
-  fadeBlack: null,
-  floor: null,
-  wall: null,
-  player: null,
-  octorok: null,
-  mario: null,
-  luigi: null,
-  title: null,
-  clicktostart: null,
-  treasureChest: null,
-  speedBooster: null,
-  something: null,
-  message: null,
-};
+let imageAssets = [ // list of all sprites/spritesheets in the game
+  "assets/images/fadeblack.png",
+  "assets/images/floor-temp.png",
+  "assets/images/wall-temp.png",
+  "assets/images/link_temporary.png",
+  "assets/images/title.png",
+  "assets/images/click-to-start.png",
+];
 
-let bgm = { // list of all background music in the game
-  title: null,
-  overworld: null,
-};
+let bgm = [ // list of all background music in the game
+  "assets/bgm/title.mp3",
+  "assets/bgm/overworld.mp3",
+];
 
-let sfx = { // list of all sound effects in the game
-  click: null,
-  footstep: null,
-  hit_wall: null,
-};
+let sfx = [ // list of all sound effects in the game
+  "assets/sfx/click.wav",
+  "assets/sfx/footstep.wav",
+  "assets/sfx/hit_wall.wav",
+];
 
 let state = "start"; // current state of game
 
 function preload(){
   // load images
-  imageAssets.fadeBlack = loadImage("assets/images/fadeblack.png");
-  imageAssets.floor = loadImage("assets/images/floor-temp.png");
-  imageAssets.wall = loadImage("assets/images/wall-temp.png");
-  imageAssets.player = loadImage("assets/images/link_temporary.png");
-  imageAssets.title = loadImage("assets/images/title.png");
-  imageAssets.clicktostart = loadImage("assets/images/click-to-start.png");
+  for (let image of imageAssets){
+    image = loadImage(image);
+  }
 
   // set up sound formats to be used
   soundFormats("mp3", "wav");
 
   // load background music
-  bgm.title = loadSound("assets/bgm/title.mp3");
-  bgm.title.setVolume(0.5);
-  bgm.overworld = loadSound("assets/bgm/overworld.mp3");
-  bgm.overworld.setVolume(0.5);
-
+  for (let music of bgm){
+    music = loadSound(music);
+  }
 
   // load sound effects
-  sfx.click = loadSound("assets/sfx/click.wav");
-  sfx.footstep = loadSound("assets/sfx/footstep.wav");
-  sfx.hit_wall = loadSound("assets/sfx/hit_wall.wav");
+  for (let sound of sfx){
+    sound = loadSound(sound);
+    if (sound === "assets/sfx/hit_wall.wav"){
+      sound.playMode("untilDone");
+    }
+    else if (sound === "assets/sfx/footstep.wav"){
+      sound.playMode("sustain");
+    }
+  }
 }
 
 function setup() {
@@ -125,6 +119,8 @@ function setup() {
 
   player.walkSPD = player.walkSPDBase + player.walkSPDBoost;
 
+  console.log(new Enemy(0,0,100,1));
+
   imageMode(CENTER);
   rectMode(CENTER);
 
@@ -132,10 +128,7 @@ function setup() {
   startingRoom.addExits();
   rooms.push(startingRoom);
 
-  bgm.title.loop();
-
-  sfx.footstep.playMode("sustain");
-  sfx.hit_wall.playMode("untilDone");
+  bgm[findArrayIndex("assets/bgm/title.mp3", bgm)].loop();
 }
 
 function draw() {
@@ -163,6 +156,14 @@ function draw() {
   } 
   else if (state === "battle") {
     // If entered a battle
+  }
+}
+
+function findArrayIndex(itemToFind, theArray){
+  for (let i=0; i<theArray.length; i++){
+    if (theArray[i] === itemToFind){
+      return i;
+    }
   }
 }
 
@@ -329,10 +330,19 @@ function mousePressed() {
   }
 }
 
-function findEnemy(id){ // searches through enemy table to retrieve information
-  for (let enemy of enemies){
-    if (enemy.id === id){
-      return enemy;
+function findEnemy(id, type){ // searches through enemy or boss table to retrieve information
+  if (type === "enemy"){
+    for (let enemy of enemies){
+      if (enemy.id === id){
+        return enemy;
+      }
+    }
+  }
+  else if (type === "boss"){
+    for (let boss of bosses){
+      if (boss.id === id){
+        return boss;
+      }
     }
   }
 }
@@ -500,18 +510,26 @@ class Enemy {
   constructor(x, y, id, level){
     this.x = x;
     this.y = y;
+    let currentEnemy;
     try{
-      let currentEnemy = findEnemy(id);
-      this.id = currentEnemy.id;
-      this.name = currentEnemy.name;
-      this.size = currentEnemy.size;
-      this.movementType = currentEnemy.movementType; // walk, normal (between walk and run), run, hop, idle, etc
-      this.baseStats = currentEnemy.baseStats;
-      this.moves = currentEnemy.moves;
+      currentEnemy = findEnemy(id, "enemy");
     }
     catch{
       console.log("Enemy does not exist!");
+      currentEnemy = findEnemy(100, "enemy"); // defaults to spawning Armos if enemy ID does not exist
     }
+    this.id = currentEnemy.id;
+    this.name = currentEnemy.name;
+    this.size = currentEnemy.size;
+    this.diffColor = currentEnemy.diffColor;
+    this.movementType = currentEnemy.movementType; // walk, normal (between walk and run), run, hop, idle, etc
+    if (this.movementType === "hop"){
+      this.hopSpeed = currentEnemy.hopSpeed;
+    }
+    this.enemyType = currentEnemy.enemyType;
+    this.behavior = currentEnemy.behavior;
+    this.baseStats = currentEnemy.baseStats;
+    this.attacks = currentEnemy.attacks;
     this.level = level;
     this.canSeePlayer = false;
     this.bonuses = []; // stat bonuses, like temporary attack/defense buffs
@@ -530,314 +548,6 @@ class Enemy {
   }
 }
 
-const equipment = [
-  {
-    name: "Sword", // starter sword
-    overworldUse: { // what this does when used in the overworld
-      type: "sword",
-    },
-    attacks: [ // the attacks usable in combat with this weapon
-      {
-        name: "Slash", // name of attack
-        atkSpeed: "normal", // the speed of the attack; slower speeds gives the enemy more turns, higher speeds gives Link more turns
-        atkType: "melee", // melee weapons can only hit things on the ground; flying enemies cannot be hit with them
-        atkAff: "hit", // attack affinity determines what kind of attack it is; some enemies are weak/resistant to certain attacks
-        baseDMG: 0, // base damage of specific attack
-        accuracy: 100, // base chance of attack actually hitting enemy; is in percentage, can be lowered by enemy's evasion stat
-      },
-      {
-        name: "Stab",
-        atkSpeed: "slow",
-        atkType: "melee",
-        atkAff: "hit",
-        baseDMG: 0,
-        accuracy: 70,
-      },
-    ],
-  },
-  {
-    name: "White Sword",
-    overworldUse:{
-      type: "sword",
-    },
-    attacks: [
-      {
-        name: "Slash",
-        atkSpeed: "normal",
-        atkType: "melee",
-        atkAff: "hit",
-        baseDMG: 0,
-        accuracy: 100,
-      },
-      {
-        name: "Parry",
-        atkSpeed: "slow",
-        atkType: "counter",
-        atkAff: "hit",
-        baseDMG: 0,
-        accuracy: 200,
-      },
-    ],
-  },
-  {
-    name: "Magical Sword",
-    overworldUse:{
-      type: "sword",
-    },
-    attacks: [
-      {
-        name: "Slash",
-        atkSpeed: "normal",
-        atkType: "melee",
-        atkAff: "hit",
-        baseDMG: 0,
-        accuracy: 100,
-      },
-      {
-        name: "Hone",
-        atkSpeed: "fast",
-        atkType: "buff",
-        atkAff: "support",
-        buffType: "Attack", // skill buff Link's attack stat
-        buffMultiplier: 3, // how much Link's attack will be multiplied
-        buffDuration: 2, // how many of Link's turns the buff will last for
-      },
-    ],
-  },
-  {
-    name: "Bombs",
-    overworldUse:{
-      type: "bomb",
-      explodeTime: 3, // in seconds
-      maxInv: 8, // limit to how much bombs Link can hold, however can be upgraded
-    },
-    attacks: [
-      {
-        name: "Place",
-        atkSpeed: "fast",
-        atkType: "bomb", // bomb can hit most enemies, specific ones might resist it though
-        atkAff: "explosion",
-        baseDMG: 0,
-        accuracy: 85,
-        bombDuration: 1, // how much turns it takes until the bomb explodes, will explode at the start of Link's next turn (since value is 1)
-      },
-    ],
-  },
-  {
-    name: "Boomerang",
-    overworldUse:{
-      type: "boomerang",
-      screenDist: 0.5, // how far the projectile can travel in reference to grid in overworld: math is width (or height) * screenDist, basically 0.5 is saying that it can travel half the screen
-    },
-    attacks: [
-      {
-        name: "Throw",
-        atkSpeed: "normal",
-        atkType: "ranged",
-        atkAff: "hit",
-        baseDMG: 0,
-        accuracy: 80,
-      },
-    ],
-  },
-  {
-    name: "Magical Boomerang",
-    overworldUse:{
-      type: "boomerang",
-      screenDist: 1,
-    },
-    attacks: [
-      {
-        name: "Throw",
-        atkSpeed: "fast",
-        atkType: "ranged",
-        atkAff: "hit",
-        baseDMG: 0,
-        accuracy: 90,
-      },
-    ],
-  },
-  {
-    name: "Bow", // attacks change depending on what arrow Link has, silver arrow has priority over regular arrow, only usable if Link has any arrow types
-    overworldUse:{
-      type: "bow",
-      screenDist: 1,
-    },
-    attacks: [
-      {
-        name: "Shoot",
-        atkSpeed: "normal",
-        atkType: "ranged",
-        atkAff: "hit",
-        baseDMG: 0,
-        accuracy: 95,
-      },
-    ],
-  },
-  {
-    name: "Blue Candle", // emits fire forward, can hurt both player and enemy. One use per room entry
-    overworldUse:{
-      type: "candle",
-      screenDist: 0.1,
-      limit: 1,
-    },
-    attacks: [
-      {
-        name: "Light Up",
-        atkSpeed: "slow",
-        atkType: "melee",
-        atkAff: "fire",
-        baseDMG: 0,
-        accuracy: 70,
-      },
-    ],
-  },
-  {
-    name: "Red Candle", // emits fire forward, can hurt both player and enemy. Infinite use
-    overworldUse:{
-      type: "candle",
-      screenDist: 0.1,
-      limit: "inf",
-    },
-    attacks: [
-      {
-        name: "Light Up",
-        atkSpeed: "slow",
-        atkType: "melee",
-        atkAff: "fire",
-        baseDMG: 0,
-        accuracy: 70,
-      },
-    ],
-  },
-  {
-    name: "Recorder", // has a few uses
-    // use 1: teleports to last completed dungeon's entrance if used in the overworld
-    // use 2: reveals the entrance to dungeon 7 if used in the room where the entrance is
-    // use 3: usable in the Digdogger fight to shrink him, so he is no longer invincible
-    overworldUse:{
-      type: "recorder",
-    },
-    attacks: [
-      {
-        name: "Play",
-        atkSpeed: "slow",
-        atkType: "recorder",
-        atkAff: "support",
-      },
-    ],
-  },
-  {
-    name: "Magical Rod",
-    overworldUse:{
-      type: "rod",
-      screenDist: 1,
-    },
-    attacks: [
-      {
-        name: "Beam Attack",
-        atkSpeed: "slow",
-        atkType: "ranged",
-        atkAff: "hit", // will be changed to fire should the player own the Book of Magic
-        baseDMG: 0,
-        accuracy: 90,
-      },
-    ],
-  },
-];
-
-const shields = [ // shields are different from equipment as they are equipped at all times; cannot be swapped out for another weapon as guarding is always an option in battle
-  {
-    name: "Wooden Shield",
-    guard: 2.5, // how much defense is multiplied by when guarding
-  },
-  {
-    name: "Magical Shield",
-    guard: 5,
-  },
-];
-
-const items = [
-  {
-    name: "Life Potion",
-    canbeUsed: true, // asks if this item is usable in combat. If false, it is limited to the player menu in the overworld
-    heals: "full", // if item has "full" as the heal value, it fully heals the player upon use
-    holding: 0, // how much is in Link's inventory
-    uses: 1, // how many times this item can be used before it disappears
-  },
-  {
-    name: "2nd Potion", // difference from Life Potion is that it can be used twice before disappearing
-    canbeUsed: true,
-    heals: "full",
-    holding: 0,
-    uses: 2,
-  },
-  {
-    name: "Food", // can be used as an enemy distraction
-    canbeUsed: true,
-    distractionTime: 20, // how many seconds enemies can eat the food before it disappears and enemies start noticing Link again
-    holding: 0,
-    uses: 1,
-  },
-  {
-    name: "Raft", // is used to cross water
-    canbeUsed: false,
-    uses: "inf", // if "inf", it has infinite usage
-  },
-  {
-    name: "Stepladder", // is used to cross gaps
-    canbeUsed: false,
-    uses: "inf",
-  },
-  {
-    name: "Escape Rope", // only can be used within dungeons; is used to escape the current dungeon and teleport to its entrance 
-    canbeUsed: false,
-    uses: 1,
-  },
-];
-
-const keyItems = [
-  {
-    name: "Arrow",
-    baseDMG: 0,
-  },
-  {
-    name: "Silver Arrow",
-    baseDMG: 0,
-  },
-  {
-    name: "Small Key",
-    holding: 0,
-  },
-  {
-    name: "Magical Key",
-  },
-  {
-    name: "Letter",
-  },
-  {
-    name: "Book of Magic",
-  },
-  {
-    name: "Power Bracelet",
-  },
-  {
-    name: "Compass",
-    dungeon: 0,
-  },
-  {
-    name: "Dungeon Map",
-    dungeon: 0,
-  },
-  {
-    name: "Triforce Fragment",
-    holding: 0,
-  },
-  {
-    name: "Triforce of Wisdom",
-  },
-];
-
 const enemies = [
   // enemy ID's first digit tells which section of the game they belong in
   // 1 = overworld, 2 = dungeon, 3 = water, 4 = mario
@@ -848,8 +558,9 @@ const enemies = [
     id: 100,
     size: [1,1],
     diffColor: false,
-    movementType: "idle",
+    movementType: "updown",
     enemyType: "normal",
+    behavior: "lazy",
     baseStats: {
       maxHP: 0,
       atk: 0,
@@ -867,6 +578,7 @@ const enemies = [
         accuracy: 100,
       },
     ],
+    sprites: [],
   },
   {
     name: "Ghini",
@@ -1566,7 +1278,7 @@ const enemies = [
     },
     attacks: [
       {
-        name: "Pierce",
+        name: "Headbutt",
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
@@ -2113,6 +1825,314 @@ const bosses = [
         accuracy: 100,
       },
     ],
+  },
+];
+
+const equipment = [
+  {
+    name: "Sword", // starter sword
+    overworldUse: { // what this does when used in the overworld
+      type: "sword",
+    },
+    attacks: [ // the attacks usable in combat with this weapon
+      {
+        name: "Slash", // name of attack
+        atkSpeed: "normal", // the speed of the attack; slower speeds gives the enemy more turns, higher speeds gives Link more turns
+        atkType: "melee", // melee weapons can only hit things on the ground; flying enemies cannot be hit with them
+        atkAff: "hit", // attack affinity determines what kind of attack it is; some enemies are weak/resistant to certain attacks
+        baseDMG: 0, // base damage of specific attack
+        accuracy: 100, // base chance of attack actually hitting enemy; is in percentage, can be lowered by enemy's evasion stat
+      },
+      {
+        name: "Stab",
+        atkSpeed: "slow",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 70,
+      },
+    ],
+  },
+  {
+    name: "White Sword",
+    overworldUse:{
+      type: "sword",
+    },
+    attacks: [
+      {
+        name: "Slash",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Parry",
+        atkSpeed: "slow",
+        atkType: "counter",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 200,
+      },
+    ],
+  },
+  {
+    name: "Magical Sword",
+    overworldUse:{
+      type: "sword",
+    },
+    attacks: [
+      {
+        name: "Slash",
+        atkSpeed: "normal",
+        atkType: "melee",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 100,
+      },
+      {
+        name: "Hone",
+        atkSpeed: "fast",
+        atkType: "buff",
+        atkAff: "support",
+        buffType: "Attack", // skill buff Link's attack stat
+        buffMultiplier: 3, // how much Link's attack will be multiplied
+        buffDuration: 2, // how many of Link's turns the buff will last for
+      },
+    ],
+  },
+  {
+    name: "Bombs",
+    overworldUse:{
+      type: "bomb",
+      explodeTime: 3, // in seconds
+      maxInv: 8, // limit to how much bombs Link can hold, however can be upgraded
+    },
+    attacks: [
+      {
+        name: "Place",
+        atkSpeed: "fast",
+        atkType: "bomb", // bomb can hit most enemies, specific ones might resist it though
+        atkAff: "explosion",
+        baseDMG: 0,
+        accuracy: 85,
+        bombDuration: 1, // how much turns it takes until the bomb explodes, will explode at the start of Link's next turn (since value is 1)
+      },
+    ],
+  },
+  {
+    name: "Boomerang",
+    overworldUse:{
+      type: "boomerang",
+      screenDist: 0.5, // how far the projectile can travel in reference to grid in overworld: math is width (or height) * screenDist, basically 0.5 is saying that it can travel half the screen
+    },
+    attacks: [
+      {
+        name: "Throw",
+        atkSpeed: "normal",
+        atkType: "ranged",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 80,
+      },
+    ],
+  },
+  {
+    name: "Magical Boomerang",
+    overworldUse:{
+      type: "boomerang",
+      screenDist: 1,
+    },
+    attacks: [
+      {
+        name: "Throw",
+        atkSpeed: "fast",
+        atkType: "ranged",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 90,
+      },
+    ],
+  },
+  {
+    name: "Bow", // attacks change depending on what arrow Link has, silver arrow has priority over regular arrow, only usable if Link has any arrow types
+    overworldUse:{
+      type: "bow",
+      screenDist: 1,
+    },
+    attacks: [
+      {
+        name: "Shoot",
+        atkSpeed: "normal",
+        atkType: "ranged",
+        atkAff: "hit",
+        baseDMG: 0,
+        accuracy: 95,
+      },
+    ],
+  },
+  {
+    name: "Blue Candle", // emits fire forward, can hurt both player and enemy. One use per room entry
+    overworldUse:{
+      type: "candle",
+      screenDist: 0.1,
+      limit: 1,
+    },
+    attacks: [
+      {
+        name: "Light Up",
+        atkSpeed: "slow",
+        atkType: "melee",
+        atkAff: "fire",
+        baseDMG: 0,
+        accuracy: 70,
+      },
+    ],
+  },
+  {
+    name: "Red Candle", // emits fire forward, can hurt both player and enemy. Infinite use
+    overworldUse:{
+      type: "candle",
+      screenDist: 0.1,
+      limit: "inf",
+    },
+    attacks: [
+      {
+        name: "Light Up",
+        atkSpeed: "slow",
+        atkType: "melee",
+        atkAff: "fire",
+        baseDMG: 0,
+        accuracy: 70,
+      },
+    ],
+  },
+  {
+    name: "Recorder", // has a few uses
+    // use 1: teleports to last completed dungeon's entrance if used in the overworld
+    // use 2: reveals the entrance to dungeon 7 if used in the room where the entrance is
+    // use 3: usable in the Digdogger fight to shrink him, so he is no longer invincible
+    overworldUse:{
+      type: "recorder",
+    },
+    attacks: [
+      {
+        name: "Play",
+        atkSpeed: "slow",
+        atkType: "recorder",
+        atkAff: "support",
+      },
+    ],
+  },
+  {
+    name: "Magical Rod",
+    overworldUse:{
+      type: "rod",
+      screenDist: 1,
+    },
+    attacks: [
+      {
+        name: "Beam Attack",
+        atkSpeed: "slow",
+        atkType: "ranged",
+        atkAff: "hit", // will be changed to fire should the player own the Book of Magic
+        baseDMG: 0,
+        accuracy: 90,
+      },
+    ],
+  },
+];
+
+const shields = [ // shields are different from equipment as they are equipped at all times; cannot be swapped out for another weapon as guarding is always an option in battle
+  {
+    name: "Wooden Shield",
+    guard: 2.5, // how much defense is multiplied by when guarding
+  },
+  {
+    name: "Magical Shield",
+    guard: 5,
+  },
+];
+
+const items = [
+  {
+    name: "Life Potion",
+    canbeUsed: true, // asks if this item is usable in combat. If false, it is limited to the player menu in the overworld
+    heals: "full", // if item has "full" as the heal value, it fully heals the player upon use
+    holding: 0, // how much is in Link's inventory
+    uses: 1, // how many times this item can be used before it disappears
+  },
+  {
+    name: "2nd Potion", // difference from Life Potion is that it can be used twice before disappearing
+    canbeUsed: true,
+    heals: "full",
+    holding: 0,
+    uses: 2,
+  },
+  {
+    name: "Food", // can be used as an enemy distraction
+    canbeUsed: true,
+    distractionTime: 20, // how many seconds enemies can eat the food before it disappears and enemies start noticing Link again
+    holding: 0,
+    uses: 1,
+  },
+  {
+    name: "Raft", // is used to cross water
+    canbeUsed: false,
+    uses: "inf", // if "inf", it has infinite usage
+  },
+  {
+    name: "Stepladder", // is used to cross gaps
+    canbeUsed: false,
+    uses: "inf",
+  },
+  {
+    name: "Escape Rope", // only can be used within dungeons; is used to escape the current dungeon and teleport to its entrance 
+    canbeUsed: false,
+    uses: 1,
+  },
+];
+
+const keyItems = [
+  {
+    name: "Arrow",
+    baseDMG: 0,
+  },
+  {
+    name: "Silver Arrow",
+    baseDMG: 0,
+  },
+  {
+    name: "Small Key",
+    holding: 0,
+  },
+  {
+    name: "Magical Key",
+  },
+  {
+    name: "Letter",
+  },
+  {
+    name: "Book of Magic",
+  },
+  {
+    name: "Power Bracelet",
+  },
+  {
+    name: "Compass",
+    dungeon: 0,
+  },
+  {
+    name: "Dungeon Map",
+    dungeon: 0,
+  },
+  {
+    name: "Triforce Fragment",
+    holding: 0,
+  },
+  {
+    name: "Triforce of Wisdom",
   },
 ];
 
