@@ -58,52 +58,92 @@ let player = { // player values
   actionVal: 0, // the turn value during combat for Link; will be used in formulas taken from Honkai: Star Rail's combat system
 };
 
+let imageAssets = new Map();
+let bgmAssets = new Map();
+let sfxAssets = new Map();
 
-
-let imageAssets = [ // list of all sprites/spritesheets in the game
-  "assets/images/fadeblack.png",
-  "assets/images/floor-temp.png",
-  "assets/images/wall-temp.png",
-  "assets/images/link_temporary.png",
-  "assets/images/title.png",
-  "assets/images/click-to-start.png",
+let imageData = [ // list of all sprites/spritesheets in the game
+  {
+    key: "black",
+    location: "assets/images/fadeblack.png",
+  },
+  {
+    key: "floor-temp",
+    location: "assets/images/floor-temp.png",
+  },
+  {
+    key: "wall-temp",
+    location: "assets/images/wall-temp.png",
+  },
+  {
+    key: "link-temp",
+    location: "assets/images/link_temporary.png",
+  },
+  {
+    key: "title",
+    location: "assets/images/title.png",
+  },
+  {
+    key: "click-to-start",
+    location: "assets/images/click-to-start.png",
+  },
 ];
 
-let bgm = [ // list of all background music in the game
-  "assets/bgm/title.mp3",
-  "assets/bgm/overworld.mp3",
+let bgmData = [ // list of all background music in the game
+  {
+    key: "title",
+    location: "assets/bgm/title.mp3",
+  },
+  {
+    key: "overworld",
+    location: "assets/bgm/overworld.mp3",
+  },
 ];
 
-let sfx = [ // list of all sound effects in the game
-  "assets/sfx/click.wav",
-  "assets/sfx/footstep.wav",
-  "assets/sfx/hit_wall.wav",
+let sfxData = [ // list of all sound effects in the game
+  {
+    key: "click",
+    location: "assets/sfx/click.wav",
+  },
+  {
+    key: "footstep",
+    location: "assets/sfx/footstep.wav",
+  },
+  {
+    key: "hit-wall",
+    location: "assets/sfx/hit_wall.wav",
+  },
 ];
 
 let state = "start"; // current state of game
 
 function preload(){
   // load images
-  for (let image of imageAssets){
-    image = loadImage(image);
+  for (let image of imageData){
+    let imageKey = image.key;
+    let loadedImage = loadImage(image.location);
+    imageAssets.set(imageKey, loadedImage);
   }
 
   // set up sound formats to be used
   soundFormats("mp3", "wav");
 
   // load background music
-  for (let music of bgm){
-    music = loadSound(music);
+  for (let music of bgmData){
+    let musicKey = music.key;
+    let loadedBGM = loadSound(music.location);
+    imageAssets.set(musicKey, loadedBGM);
   }
 
   // load sound effects
-  for (let sound of sfx){
-    sound = loadSound(sound);
-    if (sound === "assets/sfx/hit_wall.wav"){
-      sound.playMode("untilDone");
+  for (let sound of sfxData){
+    let soundKey = sound.key;
+    let loadedSFX = loadSound(sound.location);
+    if (soundKey === "hit-wall"){
+      loadedSFX.playMode("untilDone");
     }
-    else if (sound === "assets/sfx/footstep.wav"){
-      sound.playMode("sustain");
+    else if (soundKey === "footstep"){
+      loadedSFX.playMode("sustain");
     }
   }
 }
