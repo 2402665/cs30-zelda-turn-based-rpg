@@ -132,7 +132,7 @@ function preload(){
   for (let music of bgmData){
     let musicKey = music.key;
     let loadedBGM = loadSound(music.location);
-    imageAssets.set(musicKey, loadedBGM);
+    bgmAssets.set(musicKey, loadedBGM);
   }
 
   // load sound effects
@@ -145,6 +145,7 @@ function preload(){
     else if (soundKey === "footstep"){
       loadedSFX.playMode("sustain");
     }
+    sfxAssets.set(soundKey, loadedSFX);
   }
 }
 
@@ -168,7 +169,7 @@ function setup() {
   startingRoom.addExits();
   rooms.push(startingRoom);
 
-  bgm[findArrayIndex("assets/bgm/title.mp3", bgm)].loop();
+  bgmAssets.get("title").loop();
 }
 
 function draw() {
@@ -209,8 +210,8 @@ function findArrayIndex(itemToFind, theArray){
 
 function loadStartScreen(){
   background(0);
-  image(imageAssets.title, width/2, height/2, width-cellSize, cellSize/1.5);
-  image(imageAssets.clicktostart, width/2, height-cellSize, width/2.5, cellSize/2.5);
+  image(imageAssets.get("title"), width/2, height/2, width-cellSize, cellSize/1.5);
+  image(imageAssets.get("click-to-start"), width/2, height-cellSize, width/2.5, cellSize/2.5);
 }
 
 function createEmptyRoom() {
@@ -229,7 +230,7 @@ function createEmptyRoom() {
 }
 
 function loadPlayer() {
-  image(imageAssets.player, cellSize*player.x, cellSize*player.y, cellSize, cellSize);
+  image(imageAssets.get("link-temp"), cellSize*player.x, cellSize*player.y, cellSize, cellSize);
 }
 
 function overworldControls() {
@@ -275,7 +276,7 @@ function movePlayer(addedPos) {
       player.x += addedPos.x;
     }
     else if (currentRoom.layout[round(player.y + addedPos.ySign)][round(player.x + addedPos.xSign)] === 1){ // if running into a wall
-      sfx.hit_wall.play();
+      sfxAssets.get("hit-wall").play();
     }
   }
   catch{ // in case of error (AKA player leaving the room in north/south directions)
@@ -345,8 +346,8 @@ function changeRoom(direction, player){
 
 function mousePressed() { 
   if (state === "start"){
-    bgm.title.stop();
-    bgm.overworld.loop();
+    bgmAssets.get("title").stop();
+    bgmAssets.get("overworld").loop();
     state = "explore";
     imageMode(CORNER);
   }
@@ -359,7 +360,7 @@ function mousePressed() {
         if (room.layout[mouseGridY][mouseGridX] === 0){
           player.x = mouseGridX;
           player.y = mouseGridY;
-          sfx.click.play();
+          sfxAssets.get("click").play();
         }
       }
     }
@@ -536,10 +537,10 @@ class Room {
     for (let i=0; i<GRID_Y; i++){
       for (let j=0; j<GRID_X; j++){
         if (this.layout[i][j]===0){
-          image(imageAssets.floor, cellSize*j, cellSize*i, cellSize, cellSize);
+          image(imageAssets.get("floor-temp"), cellSize*j, cellSize*i, cellSize, cellSize);
         }
         else if (this.layout[i][j]===1){
-          image(imageAssets.wall, cellSize*j, cellSize*i, cellSize, cellSize);
+          image(imageAssets.get("wall-temp"), cellSize*j, cellSize*i, cellSize, cellSize);
         }
       }
     }
