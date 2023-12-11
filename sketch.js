@@ -33,16 +33,18 @@ let cellSize; // will turn into a x/y value for scaling stuff later
 
 let rooms = []; // the holy array of every room
 
-
-
-let playerAbleToMove = true; // variable used to check if player should be able to move, used for cutscenes/fades
-
 let player = { // player values
   x: 8, // x value in relevance to grid
   y: 5.5, // y value in relevance to grid
   walkSPDBase: 0.075, // overworld speed without boosts
   walkSPDBoost: 0, // extra boost(s) to overworld speed
   walkSPD: 0, // total overworld speed
+  ableToMove: true, // variable used to check if player should be able to move, used for cutscenes/fades
+  attackTime: 0, // time when last attack was unleashed
+  attackCooldown: 600, // time it takes to unleash an overworld attack in milliseconds
+  isMoving: false, // boolean to tell if player is currently moving
+  isAttacking: false, // boolean to tell if player is currently using an attack in overworld
+  direction: "south", // direction player is facing
   roomX: 0, // x value in relevance to room grid
   roomY: 0, // y value in relevance to room grid
   battleX: 0, // x value during combat
@@ -50,7 +52,7 @@ let player = { // player values
   level: 1, // player's level
   exp: 0, // total experience points player has
   hp: 0, // health points player currently has
-  maxHP: 0, // total health player can have
+  maxHP: 0, // highest health value player is allowed to have
   atk: 0, // attack value during combat
   def: 0, // defense value during combat
   spd: 0, // speed value during combat
@@ -61,59 +63,6 @@ let player = { // player values
 let imageAssets = new Map();
 let bgmAssets = new Map();
 let sfxAssets = new Map();
-
-let imageData = [ // list of all sprites/spritesheets in the game
-  {
-    key: "black",
-    location: "assets/images/fadeblack.png",
-  },
-  {
-    key: "floor-temp",
-    location: "assets/images/floor-temp.png",
-  },
-  {
-    key: "wall-temp",
-    location: "assets/images/wall-temp.png",
-  },
-  {
-    key: "link-temp",
-    location: "assets/images/link_temporary.png",
-  },
-  {
-    key: "title",
-    location: "assets/images/title.png",
-  },
-  {
-    key: "click-to-start",
-    location: "assets/images/click-to-start.png",
-  },
-];
-
-let bgmData = [ // list of all background music in the game
-  {
-    key: "title",
-    location: "assets/bgm/title.mp3",
-  },
-  {
-    key: "overworld",
-    location: "assets/bgm/overworld.mp3",
-  },
-];
-
-let sfxData = [ // list of all sound effects in the game
-  {
-    key: "click",
-    location: "assets/sfx/click.wav",
-  },
-  {
-    key: "footstep",
-    location: "assets/sfx/footstep.wav",
-  },
-  {
-    key: "hit-wall",
-    location: "assets/sfx/hit_wall.wav",
-  },
-];
 
 let state = "start"; // current state of game
 
@@ -230,31 +179,71 @@ function createEmptyRoom() {
 }
 
 function loadPlayer() {
-  image(imageAssets.get("link-temp"), cellSize*player.x, cellSize*player.y, cellSize, cellSize);
+  let theImage;
+  if (player.isMoving === false && player.isAttacking === false){
+    if (player.direction === "north"){
+      theImage = imageAssets.get("link-north-idle");
+    }
+    else if (player.direction === "east"){
+      theImage = imageAssets.get("link-east-idle");
+    }
+    else if (player.direction === "south"){
+      theImage = imageAssets.get("link-south-idle");
+    }
+    else if (player.direction === "west"){
+      theImage = imageAssets.get("link-west-idle");
+    }
+  }
+  else if (player.isMoving === true){
+    if (player.direction === "north"){
+      theImage = imageAssets.get("link-north-moving");
+    }
+    else if (player.direction === "east"){
+      theImage = imageAssets.get("link-east-moving");
+    }
+    else if (player.direction === "south"){
+      theImage = imageAssets.get("link-south-moving");
+    }
+    else if (player.direction === "west"){
+      theImage = imageAssets.get("link-west-moving");
+    }
+  }
+  image(theImage, cellSize*player.x, cellSize*player.y, cellSize, cellSize);
 }
 
 function overworldControls() {
   let addedPos = {x: 0, y: 0, xSign: 0, ySign: 0};
-  if (state === "explore") {
-    if (keyIsDown(87) || keyIsDown(38) ) {
+  if (state === "explore" && player.ableToMove) {
+    if (keyIsDown(87) || keyIsDown(38)) {
       // w or up arrow
       addedPos.y = player.walkSPD * -1;
       addedPos.ySign = -0.5;
+      player.direction = "north";
+      player.isMoving = true;
     } 
-    else if (keyIsDown(83) || keyIsDown(40)  ) {
+    else if (keyIsDown(83) || keyIsDown(40)) {
       // s or down arrow
       addedPos.y = player.walkSPD;
       addedPos.ySign = 0.5;
+      player.direction = "south";
+      player.isMoving = true;
     } 
-    else if (keyIsDown(65) || keyIsDown(37)  ) {
+    else if (keyIsDown(65) || keyIsDown(37)) {
       // a or left arrow
       addedPos.x = player.walkSPD * -1;
       addedPos.xSign = -0.5;
+      player.direction = "west";
+      player.isMoving = true;
     } 
-    else if (keyIsDown(68) || keyIsDown(39)  ) {
+    else if (keyIsDown(68) || keyIsDown(39)) {
       // d or right arrow
       addedPos.x = player.walkSPD;
       addedPos.xSign = 0.5;
+      player.direction = "east";
+      player.isMoving = true;
+    }
+    else {
+      player.isMoving = false;
     }
   }
   movePlayer(addedPos);
@@ -588,6 +577,119 @@ class Enemy {
 
   }
 }
+
+let imageData = [ // list of all sprites/spritesheets in the game
+  {
+    key: "black",
+    location: "assets/images/fadeblack.png",
+  },
+  {
+    key: "floor-temp",
+    location: "assets/images/floor-temp.png",
+  },
+  {
+    key: "wall-temp",
+    location: "assets/images/wall-temp.png",
+  },
+  {
+    key: "title",
+    location: "assets/images/title.png",
+  },
+  {
+    key: "click-to-start",
+    location: "assets/images/click-to-start.png",
+  },
+  {
+    key: "link-north-idle",
+    location: "assets/images/link/link-north-idle.png",
+  },
+  {
+    key: "link-east-idle",
+    location: "assets/images/link/link-east-idle.png",
+  },
+  {
+    key: "link-south-idle",
+    location: "assets/images/link/link-south-idle.png",
+  },
+  {
+    key: "link-west-idle",
+    location: "assets/images/link/link-west-idle.png",
+  },
+  {
+    key: "link-north-moving",
+    location: "assets/images/link/link-north-moving.gif",
+  },
+  {
+    key: "link-east-moving",
+    location: "assets/images/link/link-east-moving.gif",
+  },
+  {
+    key: "link-south-moving",
+    location: "assets/images/link/link-south-moving.gif",
+  },
+  {
+    key: "link-west-moving",
+    location: "assets/images/link/link-west-moving.gif",
+  },
+  {
+    key: "link-north-preattack",
+    location: "assets/images/link/link-north-preattack.png",
+  },
+  {
+    key: "link-east-preattack",
+    location: "assets/images/link/link-east-preattack.png",
+  },
+  {
+    key: "link-south-preattack",
+    location: "assets/images/link/link-south-preattack.png",
+  },
+  {
+    key: "link-west-preattack",
+    location: "assets/images/link/link-west-preattack.png",
+  },
+  {
+    key: "link-north-attack",
+    location: "assets/images/link/link-north-attack.png",
+  },
+  {
+    key: "link-east-attack",
+    location: "assets/images/link/link-east-attack.png",
+  },
+  {
+    key: "link-south-attack",
+    location: "assets/images/link/link-south-attack.png",
+  },
+  {
+    key: "link-west-attack",
+    location: "assets/images/link/link-west-attack.png",
+  },
+];
+
+let bgmData = [ // list of all background music in the game
+  {
+    key: "title",
+    location: "assets/bgm/title.mp3",
+  },
+  {
+    key: "overworld",
+    location: "assets/bgm/overworld.mp3",
+  },
+];
+
+let sfxData = [ // list of all sound effects in the game
+  {
+    key: "click",
+    location: "assets/sfx/click.wav",
+  },
+  {
+    key: "footstep",
+    location: "assets/sfx/footstep.wav",
+  },
+  {
+    key: "hit-wall",
+    location: "assets/sfx/hit_wall.wav",
+  },
+];
 
 const enemies = [
   // enemy ID's first digit tells which section of the game they belong in
