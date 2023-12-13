@@ -20,7 +20,7 @@
 
 // Code:
 
-let exitMax = 4; // tells how many exits can be in a room at once
+let exitMax = 8; // tells how many exits can be in a room at once
 let exitScale = [2,5]; // tells how much grid slots an exit takes up, [min, max]
 
 const GRID_X = 16; // how wide the grid will be
@@ -41,7 +41,7 @@ let player = { // player values
   walkSPD: 0, // total overworld speed
   ableToMove: true, // variable used to check if player should be able to move, used for cutscenes/fades
   attackTime: 0, // time when last attack was unleashed
-  attackCooldown: 600, // time it takes to unleash an overworld attack in milliseconds
+  attackCooldown: 1000, // time it takes to unleash an overworld attack in milliseconds
   isMoving: false, // boolean to tell if player is currently moving
   isAttacking: false, // boolean to tell if player is currently using an attack in overworld
   direction: "south", // direction player is facing
@@ -180,41 +180,49 @@ function createEmptyRoom() {
 
 function loadPlayer() {
   let theImage;
-  if (player.isMoving === false && player.isAttacking === false){
-    if (player.direction === "north"){
-      theImage = imageAssets.get("link-north-idle");
+  let xScalar = 1; // scalar for Link in the case he is doing something beyond his normal width/height (like attacking)
+  let yScalar = 1; // same as above but for y value
+  let xSubtractValue = 1;
+  let ySubtractValue = 1;
+  if (player.isMoving === false && player.isAttacking === false){ // if idle (no movement)
+    theImage = imageAssets.get("link-"+player.direction+"-idle");
+  }
+  else if (player.isMoving === true){ // if walking
+    theImage = imageAssets.get("link-"+player.direction+"-moving");
+  }
+  else if (player.isAttacking === true){ // if attacking
+    if (millis() < player.attackTime + player.attackCooldown / 6 || millis() > player.attackTime + player.attackCooldown - player.attackCooldown / 6){ // if in preattack
+      theImage = imageAssets.get("link-"+player.direction+"-preattack");
     }
-    else if (player.direction === "east"){
-      theImage = imageAssets.get("link-east-idle");
-    }
-    else if (player.direction === "south"){
-      theImage = imageAssets.get("link-south-idle");
-    }
-    else if (player.direction === "west"){
-      theImage = imageAssets.get("link-west-idle");
+    else { // if sword is drawn
+      theImage = imageAssets.get("link-"+player.direction+"-attack");
+      if (player.direction === "north" || player.direction === "south"){
+        yScalar = 1.6875;
+      }
+      else if (player.direction === "west" || player.direction === "east"){
+        xScalar = 1.6875;
+      }
+      if (player.direction === "east"){
+        xSubtractValue = xScalar;
+      }
+      if (player.direction === "south"){
+        ySubtractValue = yScalar;
+      }
     }
   }
-  else if (player.isMoving === true){
-    if (player.direction === "north"){
-      theImage = imageAssets.get("link-north-moving");
-    }
-    else if (player.direction === "east"){
-      theImage = imageAssets.get("link-east-moving");
-    }
-    else if (player.direction === "south"){
-      theImage = imageAssets.get("link-south-moving");
-    }
-    else if (player.direction === "west"){
-      theImage = imageAssets.get("link-west-moving");
-    }
-  }
-  image(theImage, cellSize*player.x, cellSize*player.y, cellSize, cellSize);
+  image(theImage, cellSize*player.x-cellSize*(xScalar-xSubtractValue), cellSize*player.y-cellSize*(yScalar-ySubtractValue), cellSize*xScalar, cellSize*yScalar);
 }
 
 function overworldControls() {
   let addedPos = {x: 0, y: 0, xSign: 0, ySign: 0};
-  if (state === "explore" && player.ableToMove) {
-    if (keyIsDown(87) || keyIsDown(38)) {
+  if (state === "explore" && player.ableToMove && !player.isAttacking) {
+    if (keyIsDown(32)){
+      // space bar
+      player.isMoving = false;
+      player.isAttacking = true;
+      player.attackTime = millis();
+    }
+    else if (keyIsDown(87) || keyIsDown(38)) {
       // w or up arrow
       addedPos.y = player.walkSPD * -1;
       addedPos.ySign = -0.5;
@@ -245,6 +253,9 @@ function overworldControls() {
     else {
       player.isMoving = false;
     }
+  }
+  if (state === "explore" && player.ableToMove && player.isAttacking && millis() >= player.attackTime + player.attackCooldown){
+    player.isAttacking = false;
   }
   movePlayer(addedPos);
 }
