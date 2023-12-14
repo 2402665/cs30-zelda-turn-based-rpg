@@ -3,5 +3,5 @@
     "*.js",
     "libraries/*.js",
     "c:\\Users\\2402665\\.vscode\\extensions\\wmcicompsci.cs30-p5-1.7.2\\p5types\\global.d.ts"
-  ]
+, "modules/items.js", "modules/bosses.js", "modules/enemies.js", "modules/imagedata.js", "modules/bgmdata.js", "modules/sfxdata.js"  ]
 }
