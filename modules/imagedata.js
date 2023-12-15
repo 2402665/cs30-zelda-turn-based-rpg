@@ -4,6 +4,14 @@ let imageData = [ // list of all sprites/spritesheets in the game
     location: "assets/images/fadeblack.png",
   },
   {
+    key: "title",
+    location: "assets/images/title.png",
+  },
+  {
+    key: "click-to-start",
+    location: "assets/images/click-to-start.png",
+  },
+  {
     key: "floor-temp",
     location: "assets/images/floor-temp.png",
   },
@@ -12,12 +20,20 @@ let imageData = [ // list of all sprites/spritesheets in the game
     location: "assets/images/wall-temp.png",
   },
   {
-    key: "title",
-    location: "assets/images/title.png",
+    key: "tiles-overworld-gloomy",
+    location: "assets/images/tilesets/tiles-gloomy.png"
   },
   {
-    key: "click-to-start",
-    location: "assets/images/click-to-start.png",
+    key: "tiles-overworld-grassy",
+    location: "assets/images/tilesets/tiles-grassy.png"
+  },
+  {
+    key: "tiles-overworld-rocky",
+    location: "assets/images/tilesets/tiles-rocky.png"
+  },
+  {
+    key: "tiles-overworld-spooky",
+    location: "assets/images/tilesets/tiles-spooky.png"
   },
   {
     key: "link-north-idle",

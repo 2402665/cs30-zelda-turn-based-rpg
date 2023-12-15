@@ -29,6 +29,10 @@ let bgmAssets = new Map();
 let sfxAssets = new Map();
 let roomAssets = new Map();
 
+// biome list
+let biomeList = ["gloomy", "grassy", "rocky", "spooky"];
+let subbiomeList = ["rocks", "trees"];
+
 // exit settings
 let exitMax = 8; // tells how many exits can be in a room at once
 let exitScale = [2,5]; // tells how much grid slots an exit takes up, [min, max]
@@ -80,6 +84,20 @@ function preload(){
   for (let image of imageData){
     let imageKey = image.key;
     let loadedImage = loadImage(image.location);
+    for (let biome of biomeList){
+      if (imageKey === "tiles-overworld-"+biome){
+        let overworldSpriteX = 8;
+        let overworldSpriteY = 5;
+        let spriteArray = [];
+        for (let y=0; y<overworldSpriteY; y++){
+          spriteArray[y] = [];
+          for (let x=0; x<overworldSpriteX; x++){
+            spriteArray[y][x] = loadedImage.get(loadedImage.width / overworldSpriteX * x, loadedImage.height / overworldSpriteY * y, loadedImage.width / overworldSpriteX, loadedImage.height / overworldSpriteY);
+          }
+        }
+        loadedImage = spriteArray;
+      }
+    }
     imageAssets.set(imageKey, loadedImage);
   }
 
@@ -123,7 +141,7 @@ function setup() {
   imageMode(CENTER);
   rectMode(CENTER);
 
-  let startingRoom = new Room(0, 0, createEmptyRoom(), null, null, null);
+  let startingRoom = new Room(0, 0, createEmptyRoom(), null, randomBiome("biome"), randomBiome("subbiome"), null);
   startingRoom.addExits();
   rooms.push(startingRoom);
 
@@ -163,6 +181,17 @@ function findArrayIndex(itemToFind, theArray){
     if (theArray[i] === itemToFind){
       return i;
     }
+  }
+}
+
+function randomBiome(biomeType){
+  if (biomeType === "biome"){
+    let biomeNum = round(random(0,biomeList.length-1)); // intended that index 0 and 3 are rarer than 1 and 2
+    return biomeList[biomeNum];
+  }
+  else if (biomeType === "subbiome"){
+    let biomeNum = round(random(0,subbiomeList.length-1));
+    return subbiomeList[biomeNum];
   }
 }
 
@@ -331,7 +360,7 @@ function changeRoom(direction, player){
     }
   }
   if (roomNeedsGenerating){
-    let newRoom = new Room(player.roomX, player.roomY, createEmptyRoom(), null, null, null);
+    let newRoom = new Room(player.roomX, player.roomY, createEmptyRoom(), null, randomBiome("biome"), randomBiome("subbiome"), null);
     newRoom.addExits();
     rooms.push(newRoom);
   }
@@ -397,12 +426,13 @@ function newExit(direction, position, size){
 }
 
 class Room {
-  constructor(x, y, layout, preset, biome, exits){
+  constructor(x, y, layout, preset, biome, subbiome, exits){
     this.x = x;
     this.y = y;
     this.layout = layout;
-    this.preset = preset;
+    this.preset = preset; // still needs functionality
     this.biome = biome;
+    this.subbiome = subbiome;
     if (exits !== null){
       this.exits = exits;
     }
