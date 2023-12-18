@@ -84,20 +84,6 @@ function preload(){
   for (let image of imageData){
     let imageKey = image.key;
     let loadedImage = loadImage(image.location);
-    for (let biome of biomeList){
-      if (imageKey === "tiles-overworld-"+biome){
-        let overworldSpriteX = 8;
-        let overworldSpriteY = 5;
-        let spriteArray = [];
-        for (let y=0; y<overworldSpriteY; y++){
-          spriteArray[y] = [];
-          for (let x=0; x<overworldSpriteX; x++){
-            spriteArray[y][x] = loadedImage.get(loadedImage.width / overworldSpriteX * x, loadedImage.height / overworldSpriteY * y, loadedImage.width / overworldSpriteX, loadedImage.height / overworldSpriteY);
-          }
-        }
-        loadedImage = spriteArray;
-      }
-    }
     imageAssets.set(imageKey, loadedImage);
   }
 
@@ -133,9 +119,24 @@ function setup() {
     cellSize = windowWidth/GRID_X;
   }
   canvas = createCanvas(cellSize*GRID_X, cellSize*GRID_Y);
-
   player.walkSPD = player.walkSPDBase + player.walkSPDBoost;
 
+  for (let biome of biomeList){
+    if (imageAssets.has("tiles-overworld-"+biome)){
+      let loadedImage = imageAssets.get("tiles-overworld-"+biome);
+      let overworldSpriteX = 8;
+      let overworldSpriteY = 5;
+      let spriteArray = [];
+      for (let y=0; y<overworldSpriteY; y++){
+        spriteArray[y] = [];
+        for (let x=0; x<overworldSpriteX; x++){
+          spriteArray[y][x] = loadedImage.get(loadedImage.width / overworldSpriteX * x, loadedImage.height / overworldSpriteY * y, loadedImage.width / overworldSpriteX, loadedImage.height / overworldSpriteY);
+        }
+      }
+      imageAssets.set("tiles-overworld-"+biome, spriteArray);
+    }
+  }
+  
   console.log(new Enemy(0,0,100,1));
 
   imageMode(CENTER);
@@ -567,10 +568,42 @@ class Room {
     for (let i=0; i<GRID_Y; i++){
       for (let j=0; j<GRID_X; j++){
         if (this.layout[i][j]===0){
-          image(imageAssets.get("floor-temp"), cellSize*j, cellSize*i, cellSize, cellSize);
+          image(imageAssets.get("tiles-overworld-"+this.biome)[0][2], cellSize*j, cellSize*i, cellSize, cellSize);
         }
         else if (this.layout[i][j]===1){
-          image(imageAssets.get("wall-temp"), cellSize*j, cellSize*i, cellSize, cellSize);
+          if (this.subbiome === "trees"){
+            image(imageAssets.get("tiles-overworld-"+this.biome)[3][1], cellSize*j, cellSize*i, cellSize, cellSize);
+          }
+          else if (this.subbiome === "rocks"){
+            if (i-1 >= 0 && j-1 >= 0){ // rock 
+              if (this.layout[i-1][j] === 0 && this.layout[i][j-1] === 0){
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][3], cellSize*j, cellSize*i, cellSize, cellSize);
+              } 
+            }
+            else if (i-1 >= 0 && j+1 < GRID_X){
+              if (this.layout[i-1][j] === 0 && this.layout[i][j+1] === 0){
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][4], cellSize*j, cellSize*i, cellSize, cellSize);
+              } 
+            }
+            else if (i-1 >= 0){
+              if (this.layout[i-1][j] === 0){
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][2], cellSize*j, cellSize*i, cellSize, cellSize);
+              } 
+            }
+            else if (i+1 < GRID_Y && j-1 >= 0){
+              if (this.layout[i+1][j] === 0 && this.layout[i][j-1] === 0){
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][5], cellSize*j, cellSize*i, cellSize, cellSize);
+              } 
+            }
+            else if (i+1 < GRID_Y && j+1 < GRID_X){
+              if (this.layout[i+1][j] === 0 && this.layout[i][j+1] === 0){
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][7], cellSize*j, cellSize*i, cellSize, cellSize);
+              } 
+            }
+            else {
+              image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+            }
+          }
         }
       }
     }
@@ -650,6 +683,11 @@ const roomObjects = [
   {
     name: "Movable Rock",
     ID: 5,
+    size: [1,1],
+  },
+  {
+    name: "Armos Statue",
+    ID: 6,
     size: [1,1],
   },
   {
