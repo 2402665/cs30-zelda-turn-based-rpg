@@ -575,6 +575,19 @@ class Room {
             image(imageAssets.get("tiles-overworld-"+this.biome)[3][1], cellSize*j, cellSize*i, cellSize, cellSize);
           }
           else if (this.subbiome === "rocks"){
+            // for rocks biome, checks must be done in a specific order so they overlap one another
+            // one specific sprite can be used in many different cases
+
+            if (j-1 >= 0) { // if not open to left
+              if (this.layout[i][j-1] === 1) {
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+              }
+            }
+            if (j+1 < GRID_X) { // if not open to right
+              if (this.layout[i][j+1] === 1) {
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+              }
+            }
             if (i-1 >= 0 && j-1 >= 0) { // if not open to left or above
               if (this.layout[i][j-1] === 1 && this.layout[i-1][j] === 1) {
                 image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
@@ -600,6 +613,16 @@ class Room {
                 image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
               }
             }
+            if (i-1 >= 0 && j-1 >= 0) { // if open to left but not above
+              if (this.layout[i][j-1] === 0 && this.layout[i-1][j] === 1) {
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+              }
+            }
+            if (i-1 >= 0 && j+1 >= 0) { // if open to right but not above
+              if (this.layout[i][j+1] === 0 && this.layout[i-1][j] === 1) {
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+              }
+            }
             if (i+1 < GRID_Y && j-1 >= 0) { // if open to left but not below
               if (this.layout[i][j-1] === 0 && this.layout[i+1][j] === 1) {
                 image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
@@ -610,10 +633,10 @@ class Room {
                 image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
               }
             }
-            if (i-1 >= 0 && j-1 >= 0 && j+1 < GRID_X){ // if open in left, right and above
-              if (this.layout[i-1][j] === 0 && this.layout[i][j-1] === 0 && this.layout[i][j+1] === 0){
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][2], cellSize*j, cellSize*i, cellSize, cellSize);
-              } 
+            if (i-1 >= 0 && j-1 >= 0) { // if not open to left or right but open above
+              if (this.layout[i][j-1] === 1 && this.layout[i][j-1] === 1 && this.layout[i-1][j] === 0) {
+                image(imageAssets.get("tiles-overworld-"+this.biome)[4][1], cellSize*j, cellSize*i, cellSize, cellSize);
+              }
             }
             if (i-1 >= 0 && j-1 >= 0){// if open to left and above
               if (this.layout[i-1][j] === 0 && this.layout[i][j-1] === 0){ 
@@ -633,6 +656,26 @@ class Room {
             if (i+1 < GRID_Y && j+1 < GRID_X){ // if open to right and below
               if (this.layout[i+1][j] === 0 && this.layout[i][j+1] === 0){
                 image(imageAssets.get("tiles-overworld-"+this.biome)[3][7], cellSize*j, cellSize*i, cellSize, cellSize);
+              } 
+            }
+            if (i-1 >= 0 && j-1 >= 0 && j+1 < GRID_X){ // if open in left, right and above
+              if (this.layout[i-1][j] === 0 && this.layout[i][j-1] === 0 && this.layout[i][j+1] === 0){
+                image(imageAssets.get("tiles-overworld-"+this.biome)[4][1], cellSize*j, cellSize*i, cellSize, cellSize);
+              } 
+            }
+            if (i+1 < GRID_Y && j-1 >= 0 && j+1 < GRID_X){ // if open in left, right and below
+              if (this.layout[i+1][j] === 0 && this.layout[i][j-1] === 0 && this.layout[i][j+1] === 0){
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+              } 
+            }
+            if (i-1 >= 0 && i+1 < GRID_Y && j-1 >= 0){ // if open in left, above and below
+              if (this.layout[i-1][j] === 0 && this.layout[i][j-1] === 0 && this.layout[i+1][j] === 0){
+                image(imageAssets.get("tiles-overworld-"+this.biome)[4][1], cellSize*j, cellSize*i, cellSize, cellSize);
+              } 
+            }
+            if (i-1 >= 0 && i+1 < GRID_Y && j+1 < GRID_X){ // if open in right, above and below
+              if (this.layout[i-1][j] === 0 && this.layout[i][j+1] === 0 && this.layout[i+1][j] === 0){
+                image(imageAssets.get("tiles-overworld-"+this.biome)[4][1], cellSize*j, cellSize*i, cellSize, cellSize);
               } 
             }
           }
