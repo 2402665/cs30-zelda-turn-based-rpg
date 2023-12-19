@@ -575,33 +575,65 @@ class Room {
             image(imageAssets.get("tiles-overworld-"+this.biome)[3][1], cellSize*j, cellSize*i, cellSize, cellSize);
           }
           else if (this.subbiome === "rocks"){
-            if (i-1 >= 0 && j-1 >= 0){ // rock 
-              if (this.layout[i-1][j] === 0 && this.layout[i][j-1] === 0){
+            if (i-1 >= 0 && j-1 >= 0) { // if not open to left or above
+              if (this.layout[i][j-1] === 1 && this.layout[i-1][j] === 1) {
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+              }
+            }
+            if (i+1 < GRID_Y && j-1 >= 0) { // if not open to left or below
+              if (this.layout[i][j-1] === 1 && this.layout[i+1][j] === 1) {
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+              }
+            }
+            if (i-1 >= 0 && j+1 < GRID_X) { // if not open to right or above
+              if (this.layout[i][j+1] === 1 && this.layout[i-1][j] === 1) {
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+              }
+            }
+            if (i+1 < GRID_Y && j+1 < GRID_X) { // if not open to right or below
+              if (this.layout[i][j+1] === 1 && this.layout[i+1][j] === 1) {
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+              }
+            }
+            if (j-1 >= 0 && j+1 < GRID_X) { // if not open to left or right
+              if (this.layout[i][j+1] === 1 && this.layout[i][j-1] === 1) {
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+              }
+            }
+            if (i+1 < GRID_Y && j-1 >= 0) { // if open to left but not below
+              if (this.layout[i][j-1] === 0 && this.layout[i+1][j] === 1) {
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+              }
+            }
+            if (i+1 < GRID_Y && j+1 >= 0) { // if open to right but not below
+              if (this.layout[i][j+1] === 0 && this.layout[i+1][j] === 1) {
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+              }
+            }
+            if (i-1 >= 0 && j-1 >= 0 && j+1 < GRID_X){ // if open in left, right and above
+              if (this.layout[i-1][j] === 0 && this.layout[i][j-1] === 0 && this.layout[i][j+1] === 0){
+                image(imageAssets.get("tiles-overworld-"+this.biome)[3][2], cellSize*j, cellSize*i, cellSize, cellSize);
+              } 
+            }
+            if (i-1 >= 0 && j-1 >= 0){// if open to left and above
+              if (this.layout[i-1][j] === 0 && this.layout[i][j-1] === 0){ 
                 image(imageAssets.get("tiles-overworld-"+this.biome)[3][3], cellSize*j, cellSize*i, cellSize, cellSize);
               } 
             }
-            else if (i-1 >= 0 && j+1 < GRID_X){
+            if (i-1 >= 0 && j+1 < GRID_X){ // if open to right and above
               if (this.layout[i-1][j] === 0 && this.layout[i][j+1] === 0){
                 image(imageAssets.get("tiles-overworld-"+this.biome)[3][4], cellSize*j, cellSize*i, cellSize, cellSize);
               } 
             }
-            else if (i-1 >= 0){
-              if (this.layout[i-1][j] === 0){
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][2], cellSize*j, cellSize*i, cellSize, cellSize);
-              } 
-            }
-            else if (i+1 < GRID_Y && j-1 >= 0){
+            if (i+1 < GRID_Y && j-1 >= 0){ // if open to left and below
               if (this.layout[i+1][j] === 0 && this.layout[i][j-1] === 0){
                 image(imageAssets.get("tiles-overworld-"+this.biome)[3][5], cellSize*j, cellSize*i, cellSize, cellSize);
               } 
             }
-            else if (i+1 < GRID_Y && j+1 < GRID_X){
+            if (i+1 < GRID_Y && j+1 < GRID_X){ // if open to right and below
               if (this.layout[i+1][j] === 0 && this.layout[i][j+1] === 0){
                 image(imageAssets.get("tiles-overworld-"+this.biome)[3][7], cellSize*j, cellSize*i, cellSize, cellSize);
               } 
-            }
-            else {
-              image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
             }
           }
         }
