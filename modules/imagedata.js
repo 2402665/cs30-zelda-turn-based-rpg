@@ -1,23 +1,11 @@
 let imageData = [ // list of all sprites/spritesheets in the game
   {
-    key: "black",
-    location: "assets/images/fadeblack.png",
-  },
-  {
     key: "title",
     location: "assets/images/title.png",
   },
   {
     key: "click-to-start",
     location: "assets/images/click-to-start.png",
-  },
-  {
-    key: "floor-temp",
-    location: "assets/images/floor-temp.png",
-  },
-  {
-    key: "wall-temp",
-    location: "assets/images/wall-temp.png",
   },
   {
     key: "tiles-overworld-gloomy",

@@ -48,34 +48,7 @@ let cellSize; // will turn into a x/y value for scaling stuff later
 
 let rooms = []; // the holy array of every room
 
-// player settings 
-let player = { // player values
-  x: 8, // x value in relevance to grid
-  y: 5.5, // y value in relevance to grid
-  walkSPDBase: 0.075, // overworld speed without boosts
-  walkSPDBoost: 0, // extra boost(s) to overworld speed
-  walkSPD: 0, // total overworld speed
-  ableToMove: true, // variable used to check if player should be able to move, used for cutscenes/fades
-  attackTime: 0, // time when last attack was unleashed
-  attackCooldown: 400, // time it takes to unleash an overworld attack in milliseconds
-  isMoving: false, // boolean to tell if player is currently moving
-  isAttacking: false, // boolean to tell if player is currently using an attack in overworld
-  direction: "south", // direction player is facing
-  roomX: 0, // x value in relevance to room grid
-  roomY: 0, // y value in relevance to room grid
-  battleX: 0, // x value during combat
-  battleY: 0, // y value during combat
-  level: 1, // player's level
-  exp: 0, // total experience points player has
-  hp: 0, // health points player currently has
-  maxHP: 0, // highest health value player is allowed to have
-  atk: 0, // attack value during combat
-  def: 0, // defense value during combat
-  spd: 0, // speed value during combat
-  evasion: 10, // evasion value during combat (chance to dodge enemy attacks, is a percentage value)
-  actionVal: 0, // the turn value during combat for Link; will be used in formulas taken from Honkai: Star Rail's combat system
-};
-
+let player = null; // the current player; will be changed into an array of players should co-op be added
 
 let state = "start"; // current state of game
 
@@ -119,6 +92,9 @@ function setup() {
     cellSize = windowWidth/GRID_X;
   }
   canvas = createCanvas(cellSize*GRID_X, cellSize*GRID_Y);
+
+  player = new Player(GRID_X/2, GRID_Y/2, 0, 0);
+
   player.walkSPD = player.walkSPDBase + player.walkSPDBoost;
 
   for (let biome of biomeList){
@@ -255,41 +231,49 @@ function loadPlayer() {
 function overworldControls() {
   let addedPos = {x: 0, y: 0, xSign: 0, ySign: 0};
   if (state === "explore" && player.ableToMove && !player.isAttacking) {
-    if (keyIsDown(32)){
-      // space bar
+    if (keyIsDown(32)){ // space bar
+      // attack
       player.isMoving = false;
       player.isAttacking = true;
       player.attackTime = millis();
     }
-    else if (keyIsDown(87) || keyIsDown(38)) {
-      // w or up arrow
+    else if (keyIsDown(69)){ // e
+      // opens menu so long as player is not attacking
+      if (!player.isAttacking){
+        player.isMoving = false; 
+        state = "menu";
+      }
+    }
+    else if (keyIsDown(87) || keyIsDown(38)) { // w or up arrow
+      // move player up
       addedPos.y = player.walkSPD * -1;
       addedPos.ySign = -0.5;
       player.direction = "north";
       player.isMoving = true;
     } 
-    else if (keyIsDown(83) || keyIsDown(40)) {
-      // s or down arrow
+    else if (keyIsDown(83) || keyIsDown(40)) { // s or down arrow
+      // move player down
       addedPos.y = player.walkSPD;
       addedPos.ySign = 0.5;
       player.direction = "south";
       player.isMoving = true;
     } 
-    else if (keyIsDown(65) || keyIsDown(37)) {
-      // a or left arrow
+    else if (keyIsDown(65) || keyIsDown(37)) {// a or left arrow
+      // move player left
       addedPos.x = player.walkSPD * -1;
       addedPos.xSign = -0.5;
       player.direction = "west";
       player.isMoving = true;
     } 
-    else if (keyIsDown(68) || keyIsDown(39)) {
-      // d or right arrow
+    else if (keyIsDown(68) || keyIsDown(39)) { // d or right arrow
+      // move player right
       addedPos.x = player.walkSPD;
       addedPos.xSign = 0.5;
       player.direction = "east";
       player.isMoving = true;
     }
     else {
+      // player is not moving
       player.isMoving = false;
     }
   }
@@ -367,22 +351,6 @@ function changeRoom(direction, player){
   }
 }
 
-// function fadeIntoBlack(){
-//   for (let i=0; i>256; i++){
-//     push();
-//     tint(255, i);
-//     image(imageAssets.fadeBlack, 0, 0, width, height);
-//   }
-// }
-
-// function fadeOutBlack(){
-//   for (let i=255; i<=0; i++){
-//     push();
-//     tint(255, i);
-//     image(imageAssets.fadeBlack, 0, 0, width, height);
-//   }
-// }
-
 function mousePressed() { 
   if (state === "start"){
     bgmAssets.get("title").stop();
@@ -395,6 +363,9 @@ function mousePressed() {
     player.isMoving = false;
     player.isAttacking = true;
     player.attackTime = millis();
+  }
+  else if (state === "menu"){
+    // activates some menu button, depending on where clicked
   }
   else if (state === "battle"){
     // activate some battle button, depending on where clicked
@@ -425,352 +396,6 @@ function newExit(direction, position, size){
     size: size,
   };
 }
-
-class Room {
-  constructor(x, y, layout, preset, biome, subbiome, exits){
-    this.x = x;
-    this.y = y;
-    this.layout = layout;
-    this.preset = preset; // still needs functionality
-    this.biome = biome;
-    this.subbiome = subbiome;
-    if (exits !== null){
-      this.exits = exits;
-    }
-    else{
-      this.exits = [];
-    }
-    this.enemies = null;
-    this.objects = null;
-  }
-  addExits(){
-    // before adding exits, add banned direction table so you can't exit into another room's wall
-    let bannedDirections = [];
-    // first, check for exits in surrounding rooms if they exist
-    for (let room of rooms){
-      //checking north side
-      if (room.x === this.x && room.y === this.y - 1){
-        for (let exit of room.exits){
-          if (exit.direction === "south"){
-            this.exits.push(newExit("north", exit.position, exit.size));
-          }
-        }
-        // make banned direction so no weird exits get placed in that direction
-        bannedDirections.push("north");
-      }
-      //checking south side
-      else if (room.x === this.x && room.y === this.y + 1){
-        for (let exit of room.exits){
-          if (exit.direction === "north"){
-            this.exits.push(newExit("south", exit.position, exit.size));
-          }
-        }
-        // make banned direction so no weird exits get placed in that direction
-        bannedDirections.push("south");
-      }
-      //checking west side
-      else if (room.x === this.x - 1 && room.y === this.y){
-        for (let exit of room.exits){
-          if (exit.direction === "east"){
-            this.exits.push(newExit("west", exit.position, exit.size));
-          }
-        }
-        // make banned direction so no weird exits get placed in that direction
-        bannedDirections.push("west");
-      }
-      //checking east side
-      else if (room.x === this.x + 1 && room.y === this.y){
-        for (let exit of room.exits){
-          if (exit.direction === "west"){
-            this.exits.push(newExit("east", exit.position, exit.size));
-          }
-        }
-        // make banned direction so no weird exits get placed in that direction
-        bannedDirections.push("east");
-      }
-    }
-    // add random exits until hit exit maximum
-    if (bannedDirections.length < 4){ // makes sure that more exits can actually be placed
-      while(this.exits.length < exitMax){
-        let newExitDirection = round(random(0,3));
-        let newExitSize = round(random(exitScale[0], exitScale[1]));
-        let notBanned = true;
-
-        if (newExitDirection === 0){ //north
-          for (let ban of bannedDirections){ //check for an exit ban
-            if (ban === "north"){
-              notBanned = false;
-            }
-          }
-          if (notBanned){
-            this.exits.push(newExit("north", round(random(1,GRID_X-newExitSize-1)), newExitSize));
-          }
-        }
-        else if (newExitDirection === 1){ //south
-          for (let ban of bannedDirections){ //check for an exit ban
-            if (ban === "south"){
-              notBanned = false;
-            }
-          }
-          if (notBanned){
-            this.exits.push(newExit("south", round(random(1,GRID_X-newExitSize-1)), newExitSize));
-          }
-        }
-        else if (newExitDirection === 2){ //west
-          for (let ban of bannedDirections){ //check for an exit ban
-            if (ban === "west"){
-              notBanned = false;
-            }
-          }
-          if (notBanned){
-            this.exits.push(newExit("west", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
-          }
-        }
-        else if (newExitDirection === 3){ //east
-          for (let ban of bannedDirections){ //check for an exit ban
-            if (ban === "east"){
-              notBanned = false;
-            }
-          }
-          if (notBanned){
-            this.exits.push(newExit("east", round(random(1,GRID_Y-newExitSize-1)), newExitSize));
-          }
-        }
-      }
-    }
-    
-    //put the exits on the layout
-    for (let exit of this.exits){
-      if (exit.direction === "north"){
-        for (let i=0; i<exit.size; i++){
-          this.layout[0][exit.position+i] = 0;
-        }
-      }
-      else if (exit.direction === "south"){
-        for (let i=0; i<exit.size; i++){
-          this.layout[GRID_Y-1][exit.position+i] = 0;
-        }
-      }
-      else if (exit.direction === "west"){
-        for (let i=0; i<exit.size; i++){
-          this.layout[exit.position+i][0] = 0;
-        }
-      }
-      else if (exit.direction === "east"){
-        for (let i=0; i<exit.size; i++){
-          this.layout[exit.position+i][GRID_X-1] = 0;
-        }
-      }
-    }
-  }
-  display(){
-    // display room borders
-    for (let i=0; i<GRID_Y; i++){
-      for (let j=0; j<GRID_X; j++){
-        if (this.layout[i][j]===0){
-          image(imageAssets.get("tiles-overworld-"+this.biome)[0][2], cellSize*j, cellSize*i, cellSize, cellSize);
-        }
-        else if (this.layout[i][j]===1){
-          if (this.subbiome === "trees"){
-            image(imageAssets.get("tiles-overworld-"+this.biome)[3][1], cellSize*j, cellSize*i, cellSize, cellSize);
-          }
-          else if (this.subbiome === "rocks"){
-            // for rocks biome, checks must be done in a specific order so they overlap one another
-            // one specific sprite can be used in many different cases
-
-            if (j-1 >= 0) { // if not open to left
-              if (this.layout[i][j-1] === 1) {
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
-              }
-            }
-            if (j+1 < GRID_X) { // if not open to right
-              if (this.layout[i][j+1] === 1) {
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
-              }
-            }
-            if (i-1 >= 0 && j-1 >= 0) { // if not open to left or above
-              if (this.layout[i][j-1] === 1 && this.layout[i-1][j] === 1) {
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
-              }
-            }
-            if (i+1 < GRID_Y && j-1 >= 0) { // if not open to left or below
-              if (this.layout[i][j-1] === 1 && this.layout[i+1][j] === 1) {
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
-              }
-            }
-            if (i-1 >= 0 && j+1 < GRID_X) { // if not open to right or above
-              if (this.layout[i][j+1] === 1 && this.layout[i-1][j] === 1) {
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
-              }
-            }
-            if (i+1 < GRID_Y && j+1 < GRID_X) { // if not open to right or below
-              if (this.layout[i][j+1] === 1 && this.layout[i+1][j] === 1) {
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
-              }
-            }
-            if (j-1 >= 0 && j+1 < GRID_X) { // if not open to left or right
-              if (this.layout[i][j+1] === 1 && this.layout[i][j-1] === 1) {
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
-              }
-            }
-            if (i-1 >= 0 && j-1 >= 0) { // if open to left but not above
-              if (this.layout[i][j-1] === 0 && this.layout[i-1][j] === 1) {
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
-              }
-            }
-            if (i-1 >= 0 && j+1 >= 0) { // if open to right but not above
-              if (this.layout[i][j+1] === 0 && this.layout[i-1][j] === 1) {
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
-              }
-            }
-            if (i+1 < GRID_Y && j-1 >= 0) { // if open to left but not below
-              if (this.layout[i][j-1] === 0 && this.layout[i+1][j] === 1) {
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
-              }
-            }
-            if (i+1 < GRID_Y && j+1 >= 0) { // if open to right but not below
-              if (this.layout[i][j+1] === 0 && this.layout[i+1][j] === 1) {
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
-              }
-            }
-            if (i-1 >= 0 && j-1 >= 0) { // if not open to left or right but open above
-              if (this.layout[i][j-1] === 1 && this.layout[i][j-1] === 1 && this.layout[i-1][j] === 0) {
-                image(imageAssets.get("tiles-overworld-"+this.biome)[4][1], cellSize*j, cellSize*i, cellSize, cellSize);
-              }
-            }
-            if (i-1 >= 0 && j-1 >= 0){// if open to left and above
-              if (this.layout[i-1][j] === 0 && this.layout[i][j-1] === 0){ 
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][3], cellSize*j, cellSize*i, cellSize, cellSize);
-              } 
-            }
-            if (i-1 >= 0 && j+1 < GRID_X){ // if open to right and above
-              if (this.layout[i-1][j] === 0 && this.layout[i][j+1] === 0){
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][4], cellSize*j, cellSize*i, cellSize, cellSize);
-              } 
-            }
-            if (i+1 < GRID_Y && j-1 >= 0){ // if open to left and below
-              if (this.layout[i+1][j] === 0 && this.layout[i][j-1] === 0){
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][5], cellSize*j, cellSize*i, cellSize, cellSize);
-              } 
-            }
-            if (i+1 < GRID_Y && j+1 < GRID_X){ // if open to right and below
-              if (this.layout[i+1][j] === 0 && this.layout[i][j+1] === 0){
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][7], cellSize*j, cellSize*i, cellSize, cellSize);
-              } 
-            }
-            if (i-1 >= 0 && j-1 >= 0 && j+1 < GRID_X){ // if open in left, right and above
-              if (this.layout[i-1][j] === 0 && this.layout[i][j-1] === 0 && this.layout[i][j+1] === 0){
-                image(imageAssets.get("tiles-overworld-"+this.biome)[4][1], cellSize*j, cellSize*i, cellSize, cellSize);
-              } 
-            }
-            if (i+1 < GRID_Y && j-1 >= 0 && j+1 < GRID_X){ // if open in left, right and below
-              if (this.layout[i+1][j] === 0 && this.layout[i][j-1] === 0 && this.layout[i][j+1] === 0){
-                image(imageAssets.get("tiles-overworld-"+this.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
-              } 
-            }
-            if (i-1 >= 0 && i+1 < GRID_Y && j-1 >= 0){ // if open in left, above and below
-              if (this.layout[i-1][j] === 0 && this.layout[i][j-1] === 0 && this.layout[i+1][j] === 0){
-                image(imageAssets.get("tiles-overworld-"+this.biome)[4][1], cellSize*j, cellSize*i, cellSize, cellSize);
-              } 
-            }
-            if (i-1 >= 0 && i+1 < GRID_Y && j+1 < GRID_X){ // if open in right, above and below
-              if (this.layout[i-1][j] === 0 && this.layout[i][j+1] === 0 && this.layout[i+1][j] === 0){
-                image(imageAssets.get("tiles-overworld-"+this.biome)[4][1], cellSize*j, cellSize*i, cellSize, cellSize);
-              } 
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-class Enemy {
-  constructor(x, y, id, level){
-    this.x = x;
-    this.y = y;
-    let currentEnemy;
-    try{
-      currentEnemy = findEnemy(id, "enemy");
-    }
-    catch{
-      console.log("Enemy does not exist!");
-      currentEnemy = findEnemy(100, "enemy"); // defaults to spawning Armos if enemy ID does not exist
-    }
-    this.id = currentEnemy.id;
-    this.name = currentEnemy.name;
-    this.size = currentEnemy.size;
-    this.diffColor = currentEnemy.diffColor;
-    this.movementType = currentEnemy.movementType; // walk, normal (between walk and run), run, hop, idle, etc
-    if (this.movementType === "hop"){
-      this.hopSpeed = currentEnemy.hopSpeed;
-    }
-    this.enemyType = currentEnemy.enemyType;
-    this.behavior = currentEnemy.behavior;
-    this.baseStats = currentEnemy.baseStats;
-    this.attacks = currentEnemy.attacks;
-    this.level = level;
-    this.canSeePlayer = false;
-    this.bonuses = []; // stat bonuses, like temporary attack/defense buffs
-  }
-  display(){
-
-  }
-  canSeePlayer(){
-
-  }
-  move(){
-
-  }
-  attack(){
-
-  }
-}
-
-const roomObjects = [
-  // other objects in the game that have different uses and functionality
-  {
-    name: "Treasure Chest",
-    id: 0,
-    size: [1,1],
-  },
-  {
-    name: "Speed Booster",
-    ID: 1,
-    size: [1,1],
-  },
-  {
-    name: "Spikes",
-    ID: 2,
-    size: [1,1],
-  },
-  {
-    name: "Boulder",
-    ID: 3,
-    size: [1,1],
-  },
-  {
-    name: "Breakable Object",
-    ID: 4,
-    type: null,
-    size: [1,1],
-  },
-  {
-    name: "Movable Rock",
-    ID: 5,
-    size: [1,1],
-  },
-  {
-    name: "Armos Statue",
-    ID: 6,
-    size: [1,1],
-  },
-  {
-    name: "Safe Chest",
-    ID: 9,
-    size: [1,1]
-  }
-];
 
 window.onresize = function() { // if the window gets resized
   if (windowWidth>windowHeight){
