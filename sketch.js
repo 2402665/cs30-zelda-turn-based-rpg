@@ -240,7 +240,8 @@ function overworldControls() {
     else if (keyIsDown(69)){ // e
       // opens menu so long as player is not attacking
       if (!player.isAttacking){
-        player.isMoving = false; 
+        player.isMoving = false;
+        player.ableToMove = false;
         state = "menu";
       }
     }
@@ -281,6 +282,15 @@ function overworldControls() {
     player.isAttacking = false;
   }
   movePlayer(addedPos);
+}
+
+function menuControls(){
+  if (state === "menu"){
+    if (keyPressed(69)){
+      state = "explore";
+      player.ableToMove = true;
+    }
+  }
 }
 
 function movePlayer(addedPos) {
