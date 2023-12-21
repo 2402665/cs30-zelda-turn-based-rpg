@@ -136,17 +136,13 @@ function draw() {
   } 
   else if (state === "explore") {
     // If exploring
-    for (let room of rooms){
-      if (room.x === player.roomX && room.y === player.roomY){
-        room.display();
-      }
-    }
-    overworldControls();
-    loadPlayer();
+    findRoom(player).display();
+    player.overworldControls();
+    player.displayPlayer();
   } 
   else if (state === "menu") {
     // If in the player menu
-
+    player.displayMenu();
   } 
   else if (state === "battle") {
     // If entered a battle
@@ -193,172 +189,19 @@ function createEmptyRoom() {
   return table;
 }
 
-function loadPlayer() {
-  let theImage;
-  let xScalar = 1; // scalar for Link in the case he is doing something beyond his normal width/height (like attacking)
-  let yScalar = 1; // same as above but for y value
-  let xSubtractValue = 1; // position to be subtracted from where Link's position is, used for east and south to make the attack look clean
-  let ySubtractValue = 1; // same as above but for y value
-  if (player.isMoving === false && player.isAttacking === false){ // if idle (no movement)
-    theImage = imageAssets.get("link-"+player.direction+"-idle");
-  }
-  else if (player.isMoving === true){ // if walking
-    theImage = imageAssets.get("link-"+player.direction+"-moving");
-  }
-  else if (player.isAttacking === true){ // if attacking
-    if (millis() < player.attackTime + player.attackCooldown / 6 || millis() > player.attackTime + player.attackCooldown - player.attackCooldown / 6){ // if in preattack
-      theImage = imageAssets.get("link-"+player.direction+"-preattack");
-    }
-    else { // if weapon (currently only sword) is drawn
-      theImage = imageAssets.get("link-"+player.direction+"-attack");
-      if (player.direction === "north" || player.direction === "south"){
-        yScalar = 1.6875;
-      }
-      else if (player.direction === "west" || player.direction === "east"){
-        xScalar = 1.6875;
-      }
-      if (player.direction === "east"){
-        xSubtractValue = xScalar;
-      }
-      if (player.direction === "south"){
-        ySubtractValue = yScalar;
-      }
-    }
-  }
-  image(theImage, cellSize*player.x-cellSize*(xScalar-xSubtractValue), cellSize*player.y-cellSize*(yScalar-ySubtractValue), cellSize*xScalar, cellSize*yScalar);
-}
-
-function overworldControls() {
-  let addedPos = {x: 0, y: 0, xSign: 0, ySign: 0};
-  if (state === "explore" && player.ableToMove && !player.isAttacking) {
-    if (keyIsDown(32)){ // space bar
-      // attack
-      player.isMoving = false;
-      player.isAttacking = true;
-      player.attackTime = millis();
-    }
-    else if (keyIsDown(69)){ // e
-      // opens menu so long as player is not attacking
-      if (!player.isAttacking){
-        player.isMoving = false;
-        player.ableToMove = false;
-        state = "menu";
-      }
-    }
-    else if (keyIsDown(87) || keyIsDown(38)) { // w or up arrow
-      // move player up
-      addedPos.y = player.walkSPD * -1;
-      addedPos.ySign = -0.5;
-      player.direction = "north";
-      player.isMoving = true;
-    } 
-    else if (keyIsDown(83) || keyIsDown(40)) { // s or down arrow
-      // move player down
-      addedPos.y = player.walkSPD;
-      addedPos.ySign = 0.5;
-      player.direction = "south";
-      player.isMoving = true;
-    } 
-    else if (keyIsDown(65) || keyIsDown(37)) {// a or left arrow
-      // move player left
-      addedPos.x = player.walkSPD * -1;
-      addedPos.xSign = -0.5;
-      player.direction = "west";
-      player.isMoving = true;
-    } 
-    else if (keyIsDown(68) || keyIsDown(39)) { // d or right arrow
-      // move player right
-      addedPos.x = player.walkSPD;
-      addedPos.xSign = 0.5;
-      player.direction = "east";
-      player.isMoving = true;
-    }
-    else {
-      // player is not moving
-      player.isMoving = false;
-    }
-  }
-  if (state === "explore" && player.ableToMove && player.isAttacking && millis() >= player.attackTime + player.attackCooldown){
-    player.isAttacking = false;
-  }
-  movePlayer(addedPos);
-}
-
-function menuControls(){
-  if (state === "menu"){
-    if (keyPressed(69)){
-      state = "explore";
-      player.ableToMove = true;
-    }
-  }
-}
-
-function movePlayer(addedPos) {
-  // moves the player
-  // moves into a new room given if player left the room
-  let currentRoom;
+function findRoom(thePlayer){
+  let currentRoom = null;
   for (let room of rooms){
-    if (player.roomX === room.x && player.roomY === room.y){
+    if (thePlayer.roomX === room.x && thePlayer.roomY === room.y){
       currentRoom = room;
       break;
     }
   }
-  try{ //checking for room movement
-    if (currentRoom.layout[round(player.y + addedPos.ySign)][round(player.x + addedPos.xSign)] === 0){ // if not running into something
-      player.y += addedPos.y;
-      player.x += addedPos.x;
-    }
-    else if (currentRoom.layout[round(player.y + addedPos.ySign)][round(player.x + addedPos.xSign)] === 1){ // if running into a wall
-      sfxAssets.get("hit-wall").play();
-    }
-  }
-  catch{ // in case of error (AKA player leaving the room in north/south directions)
-    if (player.y < player.walkSPD){ // if going into north exit
-      changeRoom("north", player);
-    }
-    else if (player.y > GRID_Y - 1 - player.walkSPD*2){ // if going to south exit
-      changeRoom("south", player);
-    }
-  }
-  // game does not error in case of west/east exits, so check them here
-  if (player.x < 0){ // if going to west exit
-    changeRoom("west", player);
-  }
-  else if (player.x > GRID_X - 1 - player.walkSPD){ // if going to east exit
-    changeRoom("east", player);
-  }
+  return currentRoom;
 }
 
-function changeRoom(direction, player){
-  // changes the player position based on which exit the player took
-  if (direction === "north"){
-    player.y = GRID_Y-1;
-    player.roomY -= 1;
-  }
-  else if (direction === "south"){
-    player.y = 0;
-    player.roomY += 1;
-  }
-  else if (direction === "west"){
-    player.x = GRID_X-1;
-    player.roomX -= 1;
-  }
-  else if (direction === "east"){
-    player.x = 0;
-    player.roomX += 1;
-  }
-  // check to see if another room needs to be generated
-  let roomNeedsGenerating = true;
-  for (let room of rooms){
-    if (player.roomX === room.x && player.roomY === room.y){
-      roomNeedsGenerating = false;
-    }
-  }
-  if (roomNeedsGenerating){
-    let newRoom = new Room(player.roomX, player.roomY, createEmptyRoom(), null, randomBiome("biome"), randomBiome("subbiome"), null);
-    newRoom.addExits();
-    rooms.push(newRoom);
-  }
+function keyPressed(){
+  player.menuControls(keyCode);
 }
 
 function mousePressed() { 
