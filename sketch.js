@@ -29,6 +29,13 @@ let bgmAssets = new Map();
 let sfxAssets = new Map();
 let roomAssets = new Map();
 
+// define nesFont for use later
+let nesFont;
+
+// define timers for use later
+let startupTextTimer = 0;
+let startupTextCooldown = 800;
+
 // biome list
 let biomeList = ["gloomy", "grassy", "rocky", "spooky"];
 let subbiomeList = ["rocks", "trees"];
@@ -44,6 +51,7 @@ const GRID_Y = 11; // how tall the grid will be
 const DUNGEON_X = 12; // how wide the dungeon grid will be
 const DUNGEON_Y = 7; // how tall the dungeon grid will be
 
+// other important variables
 let cellSize; // will turn into a x/y value for scaling stuff later
 
 let rooms = []; // the holy array of every room
@@ -53,6 +61,9 @@ let player = null; // the current player; will be changed into an array of playe
 let state = "start"; // current state of game
 
 function preload(){
+  // load nesFont
+  nesFont = loadFont("assets/fonts/PressStart2P-vaV7.ttf");
+
   // load images
   for (let image of imageData){
     let imageKey = image.key;
@@ -93,6 +104,9 @@ function setup() {
   }
   canvas = createCanvas(cellSize*GRID_X, cellSize*GRID_Y);
 
+  textFont(nesFont);
+  fill(255);
+
   player = new Player(GRID_X/2, GRID_Y/2, 0, 0);
 
   player.walkSPD = player.walkSPDBase + player.walkSPDBoost;
@@ -117,6 +131,7 @@ function setup() {
 
   imageMode(CENTER);
   rectMode(CENTER);
+  textAlign(CENTER, CENTER);
 
   let startingRoom = new Room(0, 0, createEmptyRoom(), null, randomBiome("biome"), randomBiome("subbiome"), null);
   startingRoom.addExits();
@@ -170,8 +185,22 @@ function randomBiome(biomeType){
 
 function loadStartScreen(){
   background(0);
-  image(imageAssets.get("title"), width/2, height/2, width-cellSize, cellSize/1.5);
-  image(imageAssets.get("click-to-start"), width/2, height-cellSize, width/2.5, cellSize/2.5);
+  push();
+  image(imageAssets.get("title-screen"), width/2, height/2, width, height);
+  image(imageAssets.get("rift"), width/2, height/2-height/20, width-width/5, height/5);
+  textSize(height/22.5);
+  fill("white");
+  text("RIFT IN SPACETIME", width/2, height/2-height/24);
+  textSize(height/30);
+  fill("black");
+  text("DEMO", width/2, height/1.725);
+  if (millis() < startupTextTimer + startupTextCooldown / 2){
+    text("PRESS ANY KEY", width/2, height/1.57);
+  }
+  else if (millis() > startupTextTimer + startupTextCooldown){
+    startupTextTimer = millis();
+  }
+  pop();
 }
 
 function createEmptyRoom() {
@@ -201,7 +230,15 @@ function findRoom(thePlayer){
 }
 
 function keyPressed(){
-  player.menuControls(keyCode);
+  if (state === "start"){
+    bgmAssets.get("title").stop();
+    bgmAssets.get("overworld").loop();
+    state = "explore";
+    imageMode(CORNER);
+  }
+  else {
+    player.menuControls(keyCode);
+  }
 }
 
 function mousePressed() { 
@@ -213,9 +250,11 @@ function mousePressed() {
   }
   else if (state === "explore"){
     // attacks
-    player.isMoving = false;
-    player.isAttacking = true;
-    player.attackTime = millis();
+    if (!player.isAttacking){
+      player.isMoving = false;
+      player.isAttacking = true;
+      player.attackTime = millis();
+    }
   }
   else if (state === "menu"){
     // activates some menu button, depending on where clicked

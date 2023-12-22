@@ -4,11 +4,6 @@ html, body {
   background-color: black;
 }
 
-/* @font-face {
-  font-family: f;
-  src: url();
-} */
-
 canvas {
   padding: 0;
   margin: auto;
