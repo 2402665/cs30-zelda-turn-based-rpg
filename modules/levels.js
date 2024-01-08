@@ -8,6 +8,6 @@ const levels = [ // table of EXP requirements to hit x level
   325, // 7
   500, // 8
   750, // 9
-  1250 // 10
-  // we'll just call that the max level
+  1500 // 10
+  // we'll just call 10 the max level for now
 ];

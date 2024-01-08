@@ -20,6 +20,11 @@ class Player {
     this.weaponInventory = [];
     this.shieldInventory = [];
     this.itemInventory = [];
+    this.rupees = 0; // money player has
+    this.triforceCount = 0; // triforce fragments player owns
+    this.equippedWeapon1 = "Wooden Sword"; // currently equipped weapon - link can have 2 equipped at once
+    this.equippedWeapon2 = null; // refer to line directly above
+    this.equippedShield = "Shield"; // currently equipped shield
     this.battleX = 0; // x value during combat
     this.battleY = 0; // y value during combat
     this.level = 1; // player's level
@@ -193,6 +198,13 @@ class Player {
           image(imageAssets.get("triforce"), width/menuButtons.length*i + width/16, height/9, width/25, width/25);
         }
       }
+      image(imageAssets.get("heart"), width/16, height - width/16, width/25, width/25);
+      image(imageAssets.get("rupee"), width/16 + width/2.75, height - width/16, width/45, width/25);
+      image(imageAssets.get("triforce"), width/16 + width/1.6, height - width/16, width/25, width/25);
+      textAlign(LEFT, CENTER);
+      text(this.hp + "/" + this.maxHP, width/16 + width/25, height - width/16);
+      text("x " + this.rupees, width/16 + width/2.5, height - width/16);
+      text("x " + this.triforceCount, width/16 + width/1.5, height - width/16);
       if (this.menuButton === 0){ // stat screen
         image(imageAssets.get("link-south-moving"), width/4, height*1.25/4, width/8, width/8);
         textAlign(CENTER, CENTER);
@@ -207,7 +219,7 @@ class Player {
         // opens menu so long as player is not attacking
         if (!this.isAttacking){
           state = "menu";
-          this.menuButton === "STATS";
+          this.menuButton = 0;
           this.isMoving = false;
           this.ableToMove = false;
         }

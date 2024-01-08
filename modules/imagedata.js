@@ -91,4 +91,16 @@ let imageData = [ // list of all sprites/spritesheets in the game
     key: "triforce",
     location: "assets/images/items/triforce.gif",
   },
+  {
+    key: "heart",
+    location: "assets/images/items/heart.gif",
+  },
+  {
+    key: "heart-container",
+    location: "assets/images/items/heartcontainer.png",
+  },
+  {
+    key: "rupee",
+    location: "assets/images/items/rupee.gif",
+  },
 ];
