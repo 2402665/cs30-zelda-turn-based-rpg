@@ -9,11 +9,11 @@
 
 // Overworld Controls:
 // Use the WSAD or arrow keys to move Link.
-// Click the screen, or tap the space bar to attack.
-// Tap the E key to open your inventory. Use WSAD, arrow keys, or the mouse to navigate the inventory menus.
+// Tap the space bar to attack.
+// Tap the E key to open your inventory. Use WSAD, or the arrow keys to navigate the inventory menus.
 
 // Battle Controls:
-// Use the WSAD, arrow keys, or hover with the mouse to select an action. Tap the space bar or click to use the action you have selected.
+// Use the WSAD, or the arrow keys to select an action. Tap the space bar to use the action you have selected.
 // Tap the space bar to move through battle dialogue.
 
 // Note To Self:
@@ -35,6 +35,9 @@ let nesFont;
 // define timers for use later
 let startupTextTimer = 0;
 let startupTextCooldown = 800;
+
+// button lists
+let menuButtons = ["STATS", "EQUIP", "ITEMS", "CONFIG"];
 
 // biome list
 let biomeList = ["gloomy", "grassy", "rocky", "spooky"];

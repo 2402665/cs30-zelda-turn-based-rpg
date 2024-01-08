@@ -1,6 +1,7 @@
 // player settings
 class Player {
   constructor(x,y,roomX,roomY){
+    this.name = "Link";
     this.x = x; // x value in relevance to grid
     this.y = y; // y value in relevance to grid
     this.walkSPDBase = 0.085; // overworld speed without boosts
@@ -14,6 +15,11 @@ class Player {
     this.direction = "south"; // direction player is facing
     this.roomX = roomX; // x value in relevance to room grid
     this.roomY = roomY; // y value in relevance to room grid
+    this.menuButton = 0; // current button player is on in menu
+    this.submenu = null; // current submenu player is in (if on one)
+    this.weaponInventory = [];
+    this.shieldInventory = [];
+    this.itemInventory = [];
     this.battleX = 0; // x value during combat
     this.battleY = 0; // y value during combat
     this.level = 1; // player's level
@@ -170,6 +176,29 @@ class Player {
   displayMenu(){
     if (state === "menu"){
       background(0);
+      push();
+      imageMode(CENTER);
+      textAlign(LEFT, TOP);
+      textSize(30);
+      for(let i=0; i<menuButtons.length; i++){
+        text(menuButtons[i], width/menuButtons.length*i, height/50);
+        if (i === this.menuButton){
+          let addedSpace = i;
+          if (i === 0){
+            addedSpace = 1;
+          }
+          else {
+            addedSpace = width/menuButtons.length*addedSpace/2;
+          }
+          image(imageAssets.get("triforce"), width/menuButtons.length*i + width/16, height/9, width/25, width/25);
+        }
+      }
+      if (this.menuButton === 0){ // stat screen
+        image(imageAssets.get("link-south-moving"), width/4, height*1.25/4, width/8, width/8);
+        textAlign(CENTER, CENTER);
+        text(this.name, width/4, height*1.75/4);
+      }
+      pop();
     }
   }
   menuControls(theKey){
@@ -178,6 +207,7 @@ class Player {
         // opens menu so long as player is not attacking
         if (!this.isAttacking){
           state = "menu";
+          this.menuButton === "STATS";
           this.isMoving = false;
           this.ableToMove = false;
         }
@@ -185,8 +215,37 @@ class Player {
     }
     else if (state === "menu"){
       if (theKey === 69){ // e
+        // exits menu
         state = "explore";
         player.ableToMove = true;
+      }
+      else if (theKey === 32){ // space bar
+        // enters section of menu
+        
+      }
+      else if (theKey === 87 || theKey === 38) { // w or up arrow
+        // moves cursor up in submenus only
+      } 
+      else if (theKey === 83 || theKey === 40) { // s or down arrow
+        // moves cursor down in submenus only
+      } 
+      else if (theKey === 65 || theKey === 37) {// a or left arrow
+        // moves cursor left in main menu only
+        if (this.menuButton === 0){
+          this.menuButton = menuButtons.length-1;
+        }
+        else{
+          this.menuButton--;
+        }
+      } 
+      else if (theKey === 68 || theKey === 39) { // d or right arrow
+        // moves cursor right in main menu only
+        if (this.menuButton === menuButtons.length-1){
+          this.menuButton = 0;
+        }
+        else{
+          this.menuButton++;
+        }
       }
     }
   }

@@ -87,4 +87,8 @@ let imageData = [ // list of all sprites/spritesheets in the game
     key: "link-west-attack",
     location: "assets/images/link/link-west-attack.png",
   },
+  {
+    key: "triforce",
+    location: "assets/images/items/triforce.gif",
+  },
 ];
