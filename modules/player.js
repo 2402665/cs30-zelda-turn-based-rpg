@@ -22,8 +22,10 @@ class Player {
     this.itemInventory = [];
     this.rupees = 0; // money player has
     this.triforceCount = 0; // triforce fragments player owns
-    this.equippedWeapon1 = "Wooden Sword"; // currently equipped weapon - link can have 2 equipped at once
-    this.equippedWeapon2 = null; // refer to line directly above
+    this.equippedWeapon1 = 0; // currently equipped weapon (index value in equipment table) - link can have 2 equipped at once, hence equippedWeapon2
+    this.equippedWeapon2 = 1; // refer to line directly above
+    this.equippedSkill1 = [0,1]; // currently equipped skills with equippedWeapon1 in weapons table; works same for equippedSkill2 and equippedWeapon2
+    this.equippedSkill2 = [0,1]; // refer to line directly above
     this.equippedShield = "Shield"; // currently equipped shield
     this.battleX = 0; // x value during combat
     this.battleY = 0; // y value during combat
@@ -195,13 +197,62 @@ class Player {
       image(imageAssets.get("rupee"), width/16 + width/2.75, height - width/16, width/45, width/25);
       image(imageAssets.get("triforce"), width/16 + width/1.6, height - width/16, width/25, width/25);
       textAlign(LEFT, CENTER);
+      textSize(35);
       text(this.hp + "/" + this.maxHP, width/16 + width/25, height - width/16);
       text("x " + this.rupees, width/16 + width/2.5, height - width/16);
       text("x " + this.triforceCount, width/16 + width/1.5, height - width/16);
+      textSize(30);
       if (this.menuButton === 0){ // stat screen
-        image(imageAssets.get("link-south-moving"), width/4, height*1.25/4, width/8, width/8);
+        image(imageAssets.get("link-south-moving"), width/4, height*1.15/4, width/8, width/8);
         textAlign(CENTER, CENTER);
-        text(this.name, width/4, height*1.75/4);
+        text(this.name, width/4, height*1.65/4);
+        let expToLevel = this.exp;
+        let nextLevel;
+        for(let i=0; i<levels.length; i++){ // find exp required to get to next level and how much progress has been made already
+          if (i===levels.length-1){
+            nextLevel = levels[levels.length-1].exp;
+            this.level = levels.length;
+            this.maxHP = levels[levels.length-1].maxHP;
+            this.atk = levels[levels.length-1].atk;
+            this.def = levels[levels.length-1].def;
+            this.spd = levels[levels.length-1].spd;
+            break;
+          }
+          else if (expToLevel - levels[i].exp < 0){
+            nextLevel = levels[i].exp;
+            break;
+          }
+          else {
+            expToLevel-=levels[i].exp;
+            this.level = i+1;
+            this.maxHP = levels[i].maxHP;
+            this.atk = levels[i].atk;
+            this.def = levels[i].def;
+            this.spd = levels[i].spd;
+          }
+        }
+        text("LEVEL: " + this.level, width*3/5, height*0.9/4);
+        if (this.level === levels.length){
+          text("EXP: " + nextLevel + "/" + nextLevel, width*3/5, height*1.15/4);
+        }
+        else{
+          text("EXP: " + expToLevel + "/" + nextLevel, width*3/5, height*1.15/4);
+        }
+        text("ATK: " + this.atk, width*3/5, height*1.4/4);
+        text("DEF: " + this.def, width*3/5, height*1.65/4);
+        text("SPD: " + this.spd, width*3/5, height*1.9/4);
+        text("EVASION: " + this.evasion, width*3/5, height*2.15/4);
+        text("LUCK: " + this.luck, width*3/5, height*2.4/4);
+        image(imageAssets.get(equipment[this.equippedWeapon1].name), width/10, height*2.2/4, imageAssets.get(equipment[this.equippedWeapon1].name).width*4, imageAssets.get(equipment[this.equippedWeapon1].name).height*4);
+        text(equipment[this.equippedWeapon1].attacks[this.equippedSkill1[0]].name, width/4, height*2.05/4);
+        text(equipment[this.equippedWeapon1].attacks[this.equippedSkill1[1]].name, width/4, height*2.3/4);
+        image(imageAssets.get(equipment[this.equippedWeapon2].name), width/10, height*2.8/4, imageAssets.get(equipment[this.equippedWeapon2].name).width*4, imageAssets.get(equipment[this.equippedWeapon2].name).height*4);
+        text(equipment[this.equippedWeapon2].attacks[this.equippedSkill2[0]].name, width/4, height*2.65/4);
+        text(equipment[this.equippedWeapon2].attacks[this.equippedSkill2[1]].name, width/4, height*2.9/4);
+      }
+      else { // if any other button
+        textAlign(CENTER, CENTER);
+        text("NOT FINISHED", width/2, height/2);
       }
       pop();
     }

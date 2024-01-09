@@ -1,6 +1,6 @@
 const equipment = [
   {
-    name: "Sword", // starter sword
+    name: "sword", // starter sword
     overworldUse: { // what this does when used in the overworld
       type: "sword",
     },
@@ -8,7 +8,7 @@ const equipment = [
       {
         name: "Slash", // name of attack
         atkSpeed: "normal", // the speed of the attack; slower speeds gives the enemy more turns, higher speeds gives Link more turns
-        atkType: "melee", // melee weapons can only hit things on the ground; flying enemies cannot be hit with them
+        atkType: "melee", // melee attacks can only hit things on the ground; flying enemies cannot be hit with them
         atkAff: "hit", // attack affinity determines what kind of attack it is; some enemies are weak/resistant to certain attacks
         baseDMG: 0, // base damage of specific attack
         accuracy: 100, // base chance of attack actually hitting enemy; is in percentage, can be lowered by enemy's evasion stat
@@ -24,7 +24,7 @@ const equipment = [
     ],
   },
   {
-    name: "White Sword",
+    name: "white-sword",
     overworldUse:{
       type: "sword",
     },

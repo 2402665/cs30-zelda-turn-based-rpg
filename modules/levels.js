@@ -1,13 +1,73 @@
 const levels = [ // table of EXP requirements to hit x level
-  0, // level 1
-  10, // level 2
-  25, // level 3
-  50, // 4
-  100, // 5
-  200, // 6
-  325, // 7
-  500, // 8
-  750, // 9
-  1500 // 10
+  { // level 1
+    exp: 0,
+    maxHP: 10,
+    atk: 5,
+    def: 5,
+    spd: 3,
+  },
+  { // level 2
+    exp: 10,
+    maxHP: 18,
+    atk: 6,
+    def: 6,
+    spd: 4,
+  },
+  { // level 3
+    exp: 25,
+    maxHP: 24,
+    atk: 8,
+    def: 8,
+    spd: 5,
+  },
+  { // level 4
+    exp: 50,
+    maxHP: 32,
+    atk: 10,
+    def: 10,
+    spd: 7,
+  },
+  { // level 5
+    exp: 100,
+    maxHP: 45,
+    atk: 13,
+    def: 12,
+    spd: 9,
+  },
+  { // level 6
+    exp: 200,
+    maxHP: 58,
+    atk: 15,
+    def: 13,
+    spd: 11,
+  },
+  { // level 7
+    exp: 325,
+    maxHP: 67,
+    atk: 18,
+    def: 15,
+    spd: 14,
+  },
+  { // level 8
+    exp: 500,
+    maxHP: 76,
+    atk: 21,
+    def: 19,
+    spd: 17,
+  },
+  { // level 9
+    exp: 750,
+    maxHP: 89,
+    atk: 24,
+    def: 23,
+    spd: 21,
+  },
+  { // level 10
+    exp: 1500,
+    maxHP: 99,
+    atk: 28,
+    def: 28,
+    spd: 24,
+  },
   // we'll just call 10 the max level for now
 ];

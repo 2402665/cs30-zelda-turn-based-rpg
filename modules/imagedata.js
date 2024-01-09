@@ -103,4 +103,12 @@ let imageData = [ // list of all sprites/spritesheets in the game
     key: "rupee",
     location: "assets/images/items/rupee.gif",
   },
+  {
+    key: "sword",
+    location: "assets/images/items/sword.png",
+  },
+  {
+    key: "white-sword",
+    location: "assets/images/items/white-sword.png",
+  },
 ];
