@@ -13,8 +13,8 @@
 // Tap the E key to open your inventory. Use WSAD, or the arrow keys to navigate the inventory menus.
 
 // Battle Controls:
-// Use the WSAD, or the arrow keys to select an action. Tap the space bar to use the action you have selected.
-// Tap the space bar to move through battle dialogue.
+// Use WSAD, or arrow keys to select an action. Tap the space bar to use the action you have selected.
+// Tap the space bar to move through dialogue.
 
 // Note To Self:
 // Remember that in package.json, the "no-undef" is "off", meaning that error won't pop up for module stuff
@@ -241,29 +241,6 @@ function keyPressed(){
   }
   else {
     player.menuControls(keyCode);
-  }
-}
-
-function mousePressed() { 
-  if (state === "start"){
-    bgmAssets.get("title").stop();
-    bgmAssets.get("overworld").loop();
-    state = "explore";
-    imageMode(CORNER);
-  }
-  else if (state === "explore"){
-    // attacks
-    if (!player.isAttacking){
-      player.isMoving = false;
-      player.isAttacking = true;
-      player.attackTime = millis();
-    }
-  }
-  else if (state === "menu"){
-    // activates some menu button, depending on where clicked
-  }
-  else if (state === "battle"){
-    // activate some battle button, depending on where clicked
   }
 }
 

@@ -183,19 +183,12 @@ class Player {
       background(0);
       push();
       imageMode(CENTER);
-      textAlign(LEFT, TOP);
+      textAlign(CENTER, TOP);
       textSize(30);
       for(let i=0; i<menuButtons.length; i++){
-        text(menuButtons[i], width/menuButtons.length*i, height/50);
+        text(menuButtons[i], width/menuButtons.length*i + width/menuButtons.length/2, height/50);
         if (i === this.menuButton){
-          let addedSpace = i;
-          if (i === 0){
-            addedSpace = 1;
-          }
-          else {
-            addedSpace = width/menuButtons.length*addedSpace/2;
-          }
-          image(imageAssets.get("triforce"), width/menuButtons.length*i + width/16, height/9, width/25, width/25);
+          image(imageAssets.get("triforce"), width/menuButtons.length*i + width/menuButtons.length/2, height/9, width/25, width/25);
         }
       }
       image(imageAssets.get("heart"), width/16, height - width/16, width/25, width/25);
