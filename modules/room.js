@@ -12,7 +12,7 @@ class Room {
     else{
       this.exits = [];
     }
-    this.enemies = null;
+    this.enemies = [];
     this.objects = null;
   }
   addExits(){
@@ -133,6 +133,24 @@ class Room {
           this.layout[exit.position+i][GRID_X-1] = 0;
         }
       }
+    }
+  }
+  addEnemies(){
+    //finds a random enemy and a random amount of enemies to add, then adds them
+    let enemyCount = round(random(1,3));
+    for (let i=0; i<enemyCount; i++){
+      let theID = round(random(0,5)) + 100;
+      let notAllowed = true; // forgive me for giving this a horrible name I was out of ideas
+      let x;
+      let y;
+      while(notAllowed){
+        x = random(2, GRID_X-2);
+        y = random(2, GRID_Y-2);
+        if (this.layout[round(y)][round(x)] === 0){ // if where it has chosen to spawn is not a wall
+          notAllowed = false;
+        }
+      }
+      this.enemies.push(new Enemy(x,y,theID,1));
     }
   }
   display(){

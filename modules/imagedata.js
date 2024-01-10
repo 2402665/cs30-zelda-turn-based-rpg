@@ -111,4 +111,80 @@ let imageData = [ // list of all sprites/spritesheets in the game
     key: "white-sword",
     location: "assets/images/items/white-sword.png",
   },
+  {
+    key: "armos-north",
+    location: "assets/images/enemies/armos-north.gif",
+  },
+  {
+    key: "armos-south",
+    location: "assets/images/enemies/armos-south.gif",
+  },
+  {
+    key: "ghini-north",
+    location: "assets/images/enemies/ghini-north.png",
+  },
+  {
+    key: "ghini-south",
+    location: "assets/images/enemies/ghini-south.png",
+  },
+  {
+    key: "ghini-west",
+    location: "assets/images/enemies/ghini-west.png",
+  },
+  {
+    key: "ghini-east",
+    location: "assets/images/enemies/ghini-east.png",
+  },
+  {
+    key: "leever-red",
+    location: "assets/images/enemies/leever-red.gif",
+  },
+  {
+    key: "lynel-red-north",
+    location: "assets/images/enemies/lynel-red-north.gif",
+  },
+  {
+    key: "lynel-red-south",
+    location: "assets/images/enemies/lynel-red-south.gif",
+  },
+  {
+    key: "lynel-red-west",
+    location: "assets/images/enemies/lynel-red-west.gif",
+  },
+  {
+    key: "lynel-red-east",
+    location: "assets/images/enemies/lynel-red-east.gif",
+  },
+  {
+    key: "moblin-red-north",
+    location: "assets/images/enemies/moblin-red-north.gif",
+  },
+  {
+    key: "moblin-red-south",
+    location: "assets/images/enemies/moblin-red-south.gif",
+  },
+  {
+    key: "moblin-red-west",
+    location: "assets/images/enemies/moblin-red-west.gif",
+  },
+  {
+    key: "moblin-red-east",
+    location: "assets/images/enemies/moblin-red-east.gif",
+  },
+  {
+    key: "octorok-red-north",
+    location: "assets/images/enemies/octorok-red-north.gif",
+  },
+  {
+    key: "octorok-red-south",
+    location: "assets/images/enemies/octorok-red-south.gif",
+  },
+  {
+    key: "octorok-red-west",
+    location: "assets/images/enemies/octorok-red-west.gif",
+  },
+  {
+    key: "octorok-red-east",
+    location: "assets/images/enemies/octorok-red-east.gif",
+  },
 ];

@@ -129,8 +129,6 @@ function setup() {
       imageAssets.set("tiles-overworld-"+biome, spriteArray);
     }
   }
-  
-  console.log(new Enemy(0,0,100,1));
 
   imageMode(CENTER);
   rectMode(CENTER);
@@ -154,7 +152,12 @@ function draw() {
   } 
   else if (state === "explore") {
     // If exploring
-    findRoom(player).display();
+    let theRoom = findRoom(player);
+    theRoom.display();
+    for(let enemy of theRoom.enemies){
+      enemy.move();
+      enemy.display();
+    }
     player.overworldControls();
     player.displayPlayer();
   } 

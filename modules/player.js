@@ -85,28 +85,28 @@ class Player {
       }
       else if (keyIsDown(87) || keyIsDown(38)) { // w or up arrow
         // move player up
-        addedPos.y = this.walkSPD * -1;
+        addedPos.y -= this.walkSPD;
         addedPos.ySign = -0.5;
         this.direction = "north";
         this.isMoving = true;
       } 
       else if (keyIsDown(83) || keyIsDown(40)) { // s or down arrow
         // move player down
-        addedPos.y = this.walkSPD;
+        addedPos.y += this.walkSPD;
         addedPos.ySign = 0.5;
         this.direction = "south";
         this.isMoving = true;
       } 
       else if (keyIsDown(65) || keyIsDown(37)) {// a or left arrow
         // move player left
-        addedPos.x = this.walkSPD * -1;
+        addedPos.x -= this.walkSPD;
         addedPos.xSign = -0.5;
         this.direction = "west";
         this.isMoving = true;
       } 
       else if (keyIsDown(68) || keyIsDown(39)) { // d or right arrow
         // move player right
-        addedPos.x = this.walkSPD;
+        addedPos.x += this.walkSPD;
         addedPos.xSign = 0.5;
         this.direction = "east";
         this.isMoving = true;
@@ -177,6 +177,7 @@ class Player {
     if (roomNeedsGenerating){
       let newRoom = new Room(this.roomX, this.roomY, createEmptyRoom(), null, randomBiome("biome"), randomBiome("subbiome"), null);
       newRoom.addExits();
+      newRoom.addEnemies();
       rooms.push(newRoom);
     }
   }
