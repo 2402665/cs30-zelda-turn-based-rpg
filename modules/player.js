@@ -38,7 +38,16 @@ class Player {
     this.spd = 1; // speed value during combat
     this.evasion = 10; // evasion value during combat (chance to dodge enemy attacks, is a percentage value)
     this.luck = 5; // luck value during combat (chance to land critical hits, is a percentage value)
+    this.statBoosts = { // extra stat boosts player can receive from equipment / level ups
+      maxHP: 0,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      evasion: 0,
+      luck: 0,
+    };
     this.actionVal = 0; // the turn value during combat for Link; will be used in formulas taken from Honkai: Star Rail's combat system
+    this.tempBoosts = []; // stat boosts activated during battle that dissipate when the battle ends
   }
   displayPlayer() {
     let theImage;
@@ -77,13 +86,7 @@ class Player {
   overworldControls(theKey) {
     let addedPos = {x: 0, y: 0, xSign: 0, ySign: 0};
     if (state === "explore" && this.ableToMove && !this.isAttacking) {
-      if (keyIsDown(32)){ // space bar
-        // attack
-        this.isMoving = false;
-        this.isAttacking = true;
-        this.attackTime = millis();
-      }
-      else if (keyIsDown(87) || keyIsDown(38)) { // w or up arrow
+      if (keyIsDown(87) || keyIsDown(38)) { // w or up arrow
         // move player up
         addedPos.y -= this.walkSPD;
         addedPos.ySign = -0.5;
@@ -123,9 +126,19 @@ class Player {
   }
   move(addedPos) {
     // moves the player
+    // checks if player moves into an enemy (initiates combat if so)
     // moves into a new room given if player left the room
     let currentRoom = findRoom(this);
   
+    // check for enemy collisions (this now works!!!)
+    for  (let enemy of currentRoom.enemies){
+      if (this.x + 1 > enemy.x && this.x - 1 < enemy.x){ // check x collision
+        if (this.y + 1 > enemy.y && this.y - 1 < enemy.y){ // check y collision
+          console.log("collision!!!!");
+        }
+      }
+    }
+
     try{ //checking for room movement
       if (currentRoom.layout[round(this.y + addedPos.ySign)][round(this.x + addedPos.xSign)] === 0){ // if not running into something
         this.y += addedPos.y;
@@ -260,7 +273,14 @@ class Player {
   }
   menuControls(theKey){
     if (state === "explore"){
-      if (theKey === 69){ // e
+      if (theKey === 32 && !this.isAttacking){ // space bar
+        // attack
+        // I know it sounds wrong that I put attacking in the menu controls, but this way it only activates once per space bar hit
+        this.isMoving = false;
+        this.isAttacking = true;
+        this.attackTime = millis();
+      }
+      else if (theKey === 69){ // e
         // opens menu so long as player is not attacking
         if (!this.isAttacking){
           state = "menu";
