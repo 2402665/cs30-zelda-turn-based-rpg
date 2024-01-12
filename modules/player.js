@@ -134,7 +134,8 @@ class Player {
     for  (let enemy of currentRoom.enemies){
       if (this.x + 1 > enemy.x && this.x - 1 < enemy.x){ // check x collision
         if (this.y + 1 > enemy.y && this.y - 1 < enemy.y){ // check y collision
-          console.log("collision!!!!");
+          isFading = true;
+          state = "battle";
         }
       }
     }
@@ -270,6 +271,56 @@ class Player {
       }
       pop();
     }
+  }
+  fadeIntoBattle(){
+    if (isFading && currentFadeCount < fadeCount){ // if battle just started and is still fading into the battle
+      background(255, 255, 255, currentFadeCount); // fade current screen to white
+      currentFadeCount++;
+      if (!sfxAssets.get("enter-battle").isPlaying()){
+        sfxAssets.get("enter-battle").play();
+      }
+    }
+    else{ // if fade is over, we can transition into battle
+      isFading = false;
+      currentFadeCount = 5;
+      if (!bgmAssets.get("battle").isPlaying()){
+        bgmAssets.get("battle").loop();
+      }
+      this.battle();
+    }
+  }
+  battle(){
+    let currentRoom = findRoom(player);
+
+    // now we display the battle itself
+    for (let i=2; i<GRID_Y-2; i++){
+      for (let j=0; j<GRID_X; j++){
+        if (j===0 || j===GRID_X-1){
+          if (currentRoom.subbiome === "trees"){
+            image(imageAssets.get("tiles-overworld-"+currentRoom.biome)[3][1], cellSize*j, cellSize*i, cellSize, cellSize);
+          }
+          else if (currentRoom.subbiome === "rocks"){
+            image(imageAssets.get("tiles-overworld-"+currentRoom.biome)[3][6], cellSize*j, cellSize*i, cellSize, cellSize);
+          }
+        }
+        else{
+          image(imageAssets.get("tiles-overworld-"+currentRoom.biome)[0][2], cellSize*j, cellSize*i, cellSize, cellSize);
+        }
+      }
+    }
+    push();
+    rectMode(CORNER);
+    fill("black");
+    rect(0,0,width,cellSize*2); // top black rectangle
+    rect(0, height - cellSize*2,width, height); // bottom black rectangle
+    textAlign(LEFT, CENTER);
+    textSize(35);
+    fill("white");
+    text(this.hp + "/" + this.maxHP, width/6.25, width/16); // hp for player
+    imageMode(CENTER);
+    image(imageAssets.get("link-south-moving"), width/16, width/16, cellSize, cellSize); // display player
+    image(imageAssets.get("heart"), width/8, width/16, cellSize/1.9, cellSize/1.9); // display heart
+    pop();
   }
   menuControls(theKey){
     if (state === "explore"){

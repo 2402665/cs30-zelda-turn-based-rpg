@@ -11,4 +11,8 @@ let sfxData = [ // list of all sound effects in the game
     key: "hit-wall",
     location: "assets/sfx/hit_wall.wav",
   },
+  {
+    key: "enter-battle",
+    location: "assets/sfx/enter_battle.wav",
+  },
 ];

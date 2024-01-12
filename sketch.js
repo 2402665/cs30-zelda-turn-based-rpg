@@ -38,6 +38,7 @@ let startupTextCooldown = 800;
 
 // button lists
 let menuButtons = ["STATS", "EQUIP", "ITEMS", "CONFIG"];
+let battleButtons = ["ATTACK", "GUARD", "ITEM", "RUN"];
 
 // biome list
 let biomeList = ["gloomy", "grassy", "rocky", "spooky"];
@@ -61,7 +62,11 @@ let rooms = []; // the holy array of every room
 
 let player = null; // the current player; will be changed into an array of players should co-op be added
 
-let state = "start"; // current state of game
+let state = "not-done"; // current state of game
+
+let isFading = false; // if there is a battle fade occurring
+let fadeCount = 51; // amount of times fade has to occur (255/51 is fade level, aka 5)
+let currentFadeCount = 0; //however many times fade has occurred
 
 function preload(){
   // load nesFont
@@ -114,6 +119,7 @@ function setup() {
 
   player.walkSPD = player.walkSPDBase + player.walkSPDBoost;
 
+  // split up tileset/spritesheet for overworld sprites
   for (let biome of biomeList){
     if (imageAssets.has("tiles-overworld-"+biome)){
       let loadedImage = imageAssets.get("tiles-overworld-"+biome);
@@ -137,13 +143,15 @@ function setup() {
   let startingRoom = new Room(0, 0, createEmptyRoom(), null, randomBiome("biome"), randomBiome("subbiome"), null);
   startingRoom.addExits();
   rooms.push(startingRoom);
-
-  bgmAssets.get("title").loop();
+  state = "start";
 }
 
 function draw() {
   if (state === "start"){
     // If on the start screen
+    if (!bgmAssets.get("title").isPlaying()){
+      bgmAssets.get("title").loop();
+    }
     loadStartScreen();
   }
   else if (state === "save") {
@@ -167,6 +175,10 @@ function draw() {
   } 
   else if (state === "battle") {
     // If entered a battle
+    if (bgmAssets.get("overworld").isPlaying()){
+      bgmAssets.get("overworld").stop();
+    }
+    player.fadeIntoBattle();
   }
 }
 
@@ -242,9 +254,12 @@ function keyPressed(){
     state = "explore";
     imageMode(CORNER);
   }
-  else {
+  else if (state === "explore" || state === "menu"){
     player.menuControls(keyCode);
   }
+  // else if (state === "battle"){
+
+  // }
 }
 
 function findEnemy(id, type){ // searches through enemy or boss table to retrieve information

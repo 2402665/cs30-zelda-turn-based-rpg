@@ -12,10 +12,10 @@ const enemies = [
     enemyType: "normal",
     behavior: "lazy",
     baseStats: {
-      maxHP: 0,
-      atk: 0,
-      def: 0,
-      spd: 0,
+      maxHP: 10,
+      atk: 2,
+      def: 2,
+      spd: 1,
       evasion: 0,
     },
     attacks: [

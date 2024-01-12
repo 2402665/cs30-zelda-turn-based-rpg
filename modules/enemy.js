@@ -25,6 +25,7 @@ class Enemy {
     this.enemyType = currentEnemy.enemyType;
     this.behavior = currentEnemy.behavior;
     this.baseStats = currentEnemy.baseStats;
+    this.hp = this.baseStats.maxHP;
     this.attacks = currentEnemy.attacks;
     this.level = level;
     this.canSeePlayer = false;
