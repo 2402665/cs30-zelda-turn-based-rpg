@@ -38,7 +38,7 @@ let startupTextCooldown = 800;
 
 // button lists
 let menuButtons = ["STATS", "EQUIP", "ITEMS", "CONFIG"];
-let battleButtons = ["ATTACK", "GUARD", "ITEM", "RUN"];
+let battleButtons = ["ATTACK", "GUARD", "ITEM", "CHANGE", "RUN"];
 
 // biome list
 let biomeList = ["gloomy", "grassy", "rocky", "spooky"];
@@ -247,6 +247,17 @@ function findRoom(thePlayer){
   return currentRoom;
 }
 
+function findWeapon(theName){
+  for (let i=0; i<equipment.length; i++){
+    if (theName === equipment[i].name){ // if theName is a name of a weapon, return the index in the equipment tab
+      return i;
+    }
+    else if (theName === i){ // if theName is an index variable, return the name of the weapon
+      return equipment[i].name;
+    }
+  }
+}
+
 function keyPressed(){
   if (state === "start"){
     bgmAssets.get("title").stop();
@@ -254,12 +265,9 @@ function keyPressed(){
     state = "explore";
     imageMode(CORNER);
   }
-  else if (state === "explore" || state === "menu"){
+  else{
     player.menuControls(keyCode);
   }
-  // else if (state === "battle"){
-
-  // }
 }
 
 function findEnemy(id, type){ // searches through enemy or boss table to retrieve information

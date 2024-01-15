@@ -12,10 +12,11 @@ class Player {
     this.attackCooldown = 300; // time it takes to unleash an overworld attack in milliseconds
     this.isMoving = false; // boolean to tell if player is currently moving
     this.isAttacking = false; // boolean to tell if player is currently using an attack in overworld
-    this.direction = "south"; // direction player is facing
+    this.direction = "south"; // direction player is facing in overworld
     this.roomX = roomX; // x value in relevance to room grid
     this.roomY = roomY; // y value in relevance to room grid
     this.menuButton = 0; // current button player is on in menu
+    this.battleButton = 0;
     this.submenu = null; // current submenu player is in (if on one)
     this.weaponInventory = [];
     this.shieldInventory = [];
@@ -23,12 +24,10 @@ class Player {
     this.rupees = 0; // money player has
     this.triforceCount = 0; // triforce fragments player owns
     this.equippedWeapon1 = 0; // currently equipped weapon (index value in equipment table) - link can have 2 equipped at once, hence equippedWeapon2
-    this.equippedWeapon2 = 1; // refer to line directly above
+    this.equippedWeapon2 = null; // refer to line directly above
     this.equippedSkill1 = [0,1]; // currently equipped skills with equippedWeapon1 in weapons table; works same for equippedSkill2 and equippedWeapon2
-    this.equippedSkill2 = [0,1]; // refer to line directly above
+    this.equippedSkill2 = null; // refer to line directly above
     this.equippedShield = "Shield"; // currently equipped shield
-    this.battleX = 0; // x value during combat
-    this.battleY = 0; // y value during combat
     this.level = 1; // player's level
     this.exp = 0; // total experience points player has
     this.maxHP = 10; // highest health value player is allowed to have
@@ -83,8 +82,9 @@ class Player {
     }
     image(theImage, cellSize*this.x-cellSize*(xScalar-xSubtractValue), cellSize*this.y-cellSize*(yScalar-ySubtractValue), cellSize*xScalar, cellSize*yScalar);
   }
-  overworldControls(theKey) {
+  overworldControls() {
     let addedPos = {x: 0, y: 0, xSign: 0, ySign: 0};
+    this.walkSPD = this.walkSPDBase + this.walkSPDBoost; // reset total overworld speed
     if (state === "explore" && this.ableToMove && !this.isAttacking) {
       if (keyIsDown(87) || keyIsDown(38)) { // w or up arrow
         // move player up
@@ -132,8 +132,8 @@ class Player {
   
     // check for enemy collisions (this now works!!!)
     for  (let enemy of currentRoom.enemies){
-      if (this.x + 1 > enemy.x && this.x - 1 < enemy.x){ // check x collision
-        if (this.y + 1 > enemy.y && this.y - 1 < enemy.y){ // check y collision
+      if (this.x + enemy.size[0] > enemy.x && this.x - enemy.size[0] < enemy.x){ // check x collision
+        if (this.y + enemy.size[1] > enemy.y && this.y - enemy.size[1] < enemy.y){ // check y collision
           isFading = true;
           state = "battle";
         }
@@ -258,12 +258,48 @@ class Player {
         text("SPD: " + this.spd, width*3/5, height*1.9/4);
         text("EVASION: " + this.evasion, width*3/5, height*2.15/4);
         text("LUCK: " + this.luck, width*3/5, height*2.4/4);
-        image(imageAssets.get(equipment[this.equippedWeapon1].name), width/10, height*2.2/4, imageAssets.get(equipment[this.equippedWeapon1].name).width*4, imageAssets.get(equipment[this.equippedWeapon1].name).height*4);
-        text(equipment[this.equippedWeapon1].attacks[this.equippedSkill1[0]].name, width/4, height*2.05/4);
-        text(equipment[this.equippedWeapon1].attacks[this.equippedSkill1[1]].name, width/4, height*2.3/4);
-        image(imageAssets.get(equipment[this.equippedWeapon2].name), width/10, height*2.8/4, imageAssets.get(equipment[this.equippedWeapon2].name).width*4, imageAssets.get(equipment[this.equippedWeapon2].name).height*4);
-        text(equipment[this.equippedWeapon2].attacks[this.equippedSkill2[0]].name, width/4, height*2.65/4);
-        text(equipment[this.equippedWeapon2].attacks[this.equippedSkill2[1]].name, width/4, height*2.9/4);
+        if (this.equippedWeapon1 !== null){
+          image(imageAssets.get(equipment[this.equippedWeapon1].name), width/10, height*2.2/4, imageAssets.get(equipment[this.equippedWeapon1].name).width*4, imageAssets.get(equipment[this.equippedWeapon1].name).height*4);
+        }
+        if (this.equippedSkill1 !== null){
+          if (this.equippedSkill1[0] !== null){
+            text(equipment[this.equippedWeapon1].attacks[this.equippedSkill1[0]].name, width/4, height*2.05/4);
+          }
+          else {
+            text("-----", width/4, height*2.05/4);
+          }
+          if (this.equippedSkill1[1]!== null){
+            text(equipment[this.equippedWeapon1].attacks[this.equippedSkill1[1]].name, width/4, height*2.3/4);
+          }
+          else {
+            text("-----", width/4, height*2.3/4);
+          }
+        }
+        else{
+          text("-----", width/4, height*2.05/4);
+          text("-----", width/4, height*2.3/4);
+        }
+        if (this.equippedWeapon2 !== null){
+          image(imageAssets.get(equipment[this.equippedWeapon2].name), width/10, height*2.8/4, imageAssets.get(equipment[this.equippedWeapon2].name).width*4, imageAssets.get(equipment[this.equippedWeapon2].name).height*4);
+        }
+        if (this.equippedSkill2 !== null){
+          if (this.equippedSkill2[0] !== null){
+            text(equipment[this.equippedWeapon2].attacks[this.equippedSkill2[0]].name, width/4, height*2.65/4);
+          }
+          else {
+            text("-----", width/4, height*2.65/4);
+          }
+          if (this.equippedSkill2[1] !== null){
+            text(equipment[this.equippedWeapon2].attacks[this.equippedSkill2[1]].name, width/4, height*2.9/4);
+          }
+          else {
+            text("-----", width/4, height*2.9/4);
+          }
+        }
+        else {
+          text("-----", width/4, height*2.65/4);
+          text("-----", width/4, height*2.9/4);
+        }
       }
       else { // if any other button
         textAlign(CENTER, CENTER);
@@ -292,7 +328,7 @@ class Player {
   battle(){
     let currentRoom = findRoom(player);
 
-    // now we display the battle itself
+    // now we display the battle itself, starting with a background
     for (let i=2; i<GRID_Y-2; i++){
       for (let j=0; j<GRID_X; j++){
         if (j===0 || j===GRID_X-1){
@@ -320,6 +356,14 @@ class Player {
     imageMode(CENTER);
     image(imageAssets.get("link-south-moving"), width/16, width/16, cellSize, cellSize); // display player
     image(imageAssets.get("heart"), width/8, width/16, cellSize/1.9, cellSize/1.9); // display heart
+    textAlign(CENTER, TOP);
+    textSize(30);
+    for(let i=0; i<battleButtons.length; i++){
+      text(battleButtons[i], width/battleButtons.length*i + width/battleButtons.length/2, height-height/7.5);
+      if (i === this.battleButton){
+        image(imageAssets.get("triforce"), width/battleButtons.length*i + width/battleButtons.length/2, height-height/18, width/25, width/25);
+      }
+    }
     pop();
   }
   menuControls(theKey){
@@ -373,6 +417,30 @@ class Player {
         }
         else{
           this.menuButton++;
+        }
+      }
+    }
+    else if (state === "battle"){
+      if (theKey === 32){ // space bar
+        // enters section of menu
+        
+      }
+      else if (theKey === 65 || theKey === 37) {// a or left arrow
+        // moves cursor left in main menu only
+        if (this.battleButton === 0){
+          this.battleButton = battleButtons.length-1;
+        }
+        else{
+          this.battleButton--;
+        }
+      } 
+      else if (theKey === 68 || theKey === 39) { // d or right arrow
+        // moves cursor right in main menu only
+        if (this.battleButton === battleButtons.length-1){
+          this.battleButton = 0;
+        }
+        else{
+          this.battleButton++;
         }
       }
     }
