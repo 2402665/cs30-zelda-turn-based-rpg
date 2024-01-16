@@ -1,7 +1,7 @@
 // player settings
 class Player {
   constructor(x,y,roomX,roomY){
-    this.name = "Link";
+    this.name = "LINK";
     this.x = x; // x value in relevance to grid
     this.y = y; // y value in relevance to grid
     this.walkSPDBase = 0.085; // overworld speed without boosts
@@ -49,7 +49,8 @@ class Player {
     this.isFading = null;
     this.currentlyFighting = [];
     this.currentAction = null;
-    this.actionVal = 0; // the turn value during combat for Link; will be used in formulas taken from Honkai: Star Rail's combat system
+    this.baseActionVal = 10000/this.spd;
+    this.actionVal = this.baseActionVal; // the turn value during combat for Link; will be used in formulas taken from Honkai: Star Rail's combat system
     this.tempBoosts = []; // stat boosts activated during battle that dissipate when the battle ends
   }
   displayPlayer() {
@@ -337,7 +338,10 @@ class Player {
     else{ // if fade is over, we can transition into battle
       this.isFading = null;
       currentFadeCount = 0;
-      if (!bgmAssets.get("battle").isPlaying()){
+      if (!bgmAssets.get("mass-destruction").isPlaying() && this.name === "MAKOTO"){
+        bgmAssets.get("mass-destruction").loop();
+      }
+      else if (!bgmAssets.get("battle").isPlaying()){
         bgmAssets.get("battle").loop();
       }
     }
@@ -345,7 +349,9 @@ class Player {
   battle(){
     let currentRoom = findRoom(this);
 
-    // now we display the battle itself, starting with a background
+    // find the turn order based on everyone's action value
+
+    // display the battle itself, starting with a background
     for (let i=2; i<GRID_Y-2; i++){
       for (let j=0; j<GRID_X; j++){
         if (j===0 || j===GRID_X-1){
@@ -377,6 +383,11 @@ class Player {
     imageMode(CENTER);
     image(imageAssets.get("link-south-moving"), width/16, width/16, cellSize, cellSize); // display player in health area
     image(imageAssets.get("heart"), width/8, width/16, cellSize/1.9, cellSize/1.9); // display heart
+
+    // now displaying who's turn it is next
+    textAlign(RIGHT, CENTER);
+    text("NEXT:", width - width/10, width/16);
+    image(imageAssets.get("link-south-moving"), width - width/16, width/16, cellSize, cellSize);
 
     // now bottom (can be buttons or dialogue)
     textAlign(CENTER, TOP);
@@ -454,6 +465,7 @@ class Player {
       this.currentAction = null;
       this.battleButton = 0;
       bgmAssets.get("battle").stop();
+      bgmAssets.get("mass-destruction").stop();
       bgmAssets.get("overworld").loop();
       state = "explore";
     }
@@ -518,7 +530,6 @@ class Player {
 
         // check dialogue first
         if (this.currentAction === "run"){
-          console.log("out");
           this.isFading = "out";
           this.fadeOutOfBattle();
         }

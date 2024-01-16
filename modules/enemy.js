@@ -28,6 +28,8 @@ class Enemy {
     this.hp = this.baseStats.maxHP;
     this.attacks = currentEnemy.attacks;
     this.level = level;
+    this.baseActionVal = 10000/this.baseStats.spd;
+    this.actionVal = this.baseActionVal;
     this.canSeePlayer = false;
     this.canMove = true;
     this.canMoveTimer = 5000;

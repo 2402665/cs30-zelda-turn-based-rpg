@@ -15,4 +15,8 @@ let sfxData = [ // list of all sound effects in the game
     key: "enter-battle",
     location: "assets/sfx/enter_battle.wav",
   },
+  {
+    key: "game-over-jingle",
+    location: "assets/sfx/game-over-jingle.mp3",
+  },
 ];

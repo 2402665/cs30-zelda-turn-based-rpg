@@ -20,6 +20,10 @@
 // Remember that in package.json, the "no-undef" is "off", meaning that error won't pop up for module stuff
 // when debugging, remember to turn it back on
 
+// NOTES FOR LATER:
+// DAMAGE CALCULATIONS: base dmg (of attack used) * link's attack * enemy def formula (100% - [enemyDEF / (enemyDEF + 20)]
+// reverse the above for enemy attacks
+
 // Code:
 
 // setting up variables for modules
@@ -143,6 +147,11 @@ function setup() {
   startingRoom.addExits();
   rooms.push(startingRoom);
   state = "start";
+
+  //array sorting testing (for action values)
+  let anArray = [0, 500, 1, 20, 4, 500];
+  anArray.sort((a,b) => b-a);
+  console.log(anArray);
 }
 
 function draw() {
