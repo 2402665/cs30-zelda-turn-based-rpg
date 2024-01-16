@@ -29,6 +29,8 @@ class Enemy {
     this.attacks = currentEnemy.attacks;
     this.level = level;
     this.canSeePlayer = false;
+    this.canMove = true;
+    this.canMoveTimer = 5000;
     this.bonuses = []; // stat bonuses, like temporary attack/defense buffs
   }
   move(){
@@ -61,47 +63,14 @@ class Enemy {
       directions = ["north", "south", "west", "east"];
     }
 
-    // change the direction should the enemy's time moving in that direction be over
-    if (this.lastMovement + this.movementTime < millis()){
-      let randomDirection = floor(random(0, directions.length));
-      for (let i=0; i<directions.length; i++){
-        if (i === randomDirection){
-          this.direction = directions[i];
-        }
-      }
-      this.lastMovement = millis();
-      this.movementTime = random(500, 1500);
-    }
-    
-    // use direction to find the addedPos
-    let addedPos = {x: 0, y: 0, xSign: 0, ySign: 0};
-    if (this.direction === "north"){
-      addedPos.y -= walkSPD;
-      addedPos.ySign = -0.5;
-    }
-    else if (this.direction === "south"){
-      addedPos.y += walkSPD;
-      addedPos.ySign = 0.5;
-    }
-    else if (this.direction === "west"){
-      addedPos.x -= walkSPD;
-      addedPos.xSign = -0.5;
-    }
-    else if (this.direction === "east"){
-      addedPos.x += walkSPD;
-      addedPos.xSign = 0.5;
+    // check to see if enemy can move again
+    if (this.lastMovement + this.canMoveTimer < millis()){
+      this.canMove = true;
     }
 
-    // move the enemy
-    let currentRoom = findRoom(player);
-  
-    try{ //checking for room movement
-      if (currentRoom.layout[round(this.y + addedPos.ySign)][round(this.x + addedPos.xSign)] === 0){ // if not running into something
-        this.y += addedPos.y;
-        this.x += addedPos.x;
-      }
-      else if (currentRoom.layout[round(this.y + addedPos.ySign)][round(this.x + addedPos.xSign)] === 1){
-        // change enemy direction if hit a wall
+    // change the direction should the enemy's time moving in that direction be over
+    if (this.canMove){
+      if (this.lastMovement + this.movementTime < millis()){
         let randomDirection = floor(random(0, directions.length));
         for (let i=0; i<directions.length; i++){
           if (i === randomDirection){
@@ -111,24 +80,63 @@ class Enemy {
         this.lastMovement = millis();
         this.movementTime = random(500, 1500);
       }
-    }
-    catch{ // in case of error (AKA enemy leaving the room in north/south directions)
-      // if an enemy goes through an exit, it removes the enemy from the room grid
-      if (this.y < walkSPD){ // if going into north exit
-        this.remove();
+    
+      // use direction to find the addedPos
+      let addedPos = {x: 0, y: 0, xSign: 0, ySign: 0};
+      if (this.direction === "north"){
+        addedPos.y -= walkSPD;
+        addedPos.ySign = -0.5;
       }
-      else if (this.y > GRID_Y - 1 - walkSPD*2){ // if going to south exit
-        this.remove();
+      else if (this.direction === "south"){
+        addedPos.y += walkSPD;
+        addedPos.ySign = 0.5;
       }
-    }
-    // game does not error in case of west/east exits, so check them here
-    if (this.x < 0){ // if going to west exit
-      this.remove();
-    }
-    else if (this.x > GRID_X - 1 - walkSPD){ // if going to east exit
-      this.remove();
-    }
+      else if (this.direction === "west"){
+        addedPos.x -= walkSPD;
+        addedPos.xSign = -0.5;
+      }
+      else if (this.direction === "east"){
+        addedPos.x += walkSPD;
+        addedPos.xSign = 0.5;
+      }
 
+      // move the enemy if can move
+      let currentRoom = findRoom(player);
+  
+      try{ //checking for room movement
+        if (currentRoom.layout[round(this.y + addedPos.ySign)][round(this.x + addedPos.xSign)] === 0){ // if not running into something
+          this.y += addedPos.y;
+          this.x += addedPos.x;
+        }
+        else if (currentRoom.layout[round(this.y + addedPos.ySign)][round(this.x + addedPos.xSign)] === 1){
+        // change enemy direction if hit a wall
+          let randomDirection = floor(random(0, directions.length));
+          for (let i=0; i<directions.length; i++){
+            if (i === randomDirection){
+              this.direction = directions[i];
+            }
+          }
+          this.lastMovement = millis();
+          this.movementTime = random(500, 1500);
+        }
+      }
+      catch{ // in case of error (AKA enemy leaving the room in north/south directions)
+      // if an enemy goes through an exit, it removes the enemy from the room grid
+        if (this.y < walkSPD){ // if going into north exit
+          this.remove();
+        }
+        else if (this.y > GRID_Y - 1 - walkSPD*2){ // if going to south exit
+          this.remove();
+        }
+      }
+      // game does not error in case of west/east exits, so check them here
+      if (this.x < 0){ // if going to west exit
+        this.remove();
+      }
+      else if (this.x > GRID_X - 1 - walkSPD){ // if going to east exit
+        this.remove();
+      }
+    }
   }
   display(){
     push();
@@ -142,6 +150,9 @@ class Enemy {
     }
     else{
       theImage = imageAssets.get(this.name.toLowerCase()+"-"+this.direction);
+    }
+    if (!this.canMove){
+      tint(255, 100);
     }
     image(theImage, this.x*cellSize, this.y*cellSize, cellSize*this.size[0], cellSize*this.size[1]);
     pop();

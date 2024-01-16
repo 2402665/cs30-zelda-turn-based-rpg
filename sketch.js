@@ -38,7 +38,7 @@ let startupTextCooldown = 800;
 
 // button lists
 let menuButtons = ["STATS", "EQUIP", "ITEMS", "CONFIG"];
-let battleButtons = ["ATTACK", "GUARD", "ITEM", "CHANGE", "RUN"];
+let battleButtons = ["FIGHT", "GUARD", "ITEM", "CHANGE", "RUN"];
 
 // biome list
 let biomeList = ["gloomy", "grassy", "rocky", "spooky"];
@@ -64,7 +64,6 @@ let player = null; // the current player; will be changed into an array of playe
 
 let state = "not-done"; // current state of game
 
-let isFading = false; // if there is a battle fade occurring
 let fadeCount = 51; // amount of times fade has to occur (255/51 is fade level, aka 5)
 let currentFadeCount = 0; //however many times fade has occurred
 
@@ -175,10 +174,16 @@ function draw() {
   } 
   else if (state === "battle") {
     // If entered a battle
-    if (bgmAssets.get("overworld").isPlaying()){
+    if (player.isFading === "in"){
       bgmAssets.get("overworld").stop();
+      player.fadeIntoBattle();
     }
-    player.fadeIntoBattle();
+    else if (player.isFading === "out"){
+      player.fadeOutOfBattle();
+    }
+    else{
+      player.battle();
+    }
   }
 }
 

@@ -16,8 +16,9 @@ class Player {
     this.roomX = roomX; // x value in relevance to room grid
     this.roomY = roomY; // y value in relevance to room grid
     this.menuButton = 0; // current button player is on in menu
-    this.battleButton = 0;
+    this.battleButton = 0; // current button player is on in battle
     this.submenu = null; // current submenu player is in (if on one)
+    this.battleMenu = "main",
     this.weaponInventory = [];
     this.shieldInventory = [];
     this.itemInventory = [];
@@ -45,6 +46,9 @@ class Player {
       evasion: 0,
       luck: 0,
     };
+    this.isFading = null;
+    this.currentlyFighting = [];
+    this.currentAction = null;
     this.actionVal = 0; // the turn value during combat for Link; will be used in formulas taken from Honkai: Star Rail's combat system
     this.tempBoosts = []; // stat boosts activated during battle that dissipate when the battle ends
   }
@@ -130,12 +134,26 @@ class Player {
     // moves into a new room given if player left the room
     let currentRoom = findRoom(this);
   
-    // check for enemy collisions (this now works!!!)
-    for  (let enemy of currentRoom.enemies){
-      if (this.x + enemy.size[0] > enemy.x && this.x - enemy.size[0] < enemy.x){ // check x collision
-        if (this.y + enemy.size[1] > enemy.y && this.y - enemy.size[1] < enemy.y){ // check y collision
-          isFading = true;
-          state = "battle";
+    // check for enemy collisions
+    for  (let i=0; i<currentRoom.enemies.length; i++){
+      if (currentRoom.enemies[i].canMove){
+        if (this.x + currentRoom.enemies[i].size[0] > currentRoom.enemies[i].x && this.x - currentRoom.enemies[i].size[0] < currentRoom.enemies[i].x){ // check x collision
+          if (this.y + currentRoom.enemies[i].size[1] > currentRoom.enemies[i].y && this.y - currentRoom.enemies[i].size[1] < currentRoom.enemies[i].y){ // check y collision
+          // put the enemy that was encountered in the currentlyFighting table
+            this.currentlyFighting.push(i);
+            // add 2 more enemies from the room to currentlyFighting should they exist
+            let count = 1;
+            for (let j=0; j<currentRoom.enemies.length; j++){
+              if (j !== i && count < 3){
+                this.currentlyFighting.push(j);
+                count++;
+              }
+            }
+            // start the battle
+            this.isFading = "in";
+            state = "battle";
+            break;
+          }
         }
       }
     }
@@ -201,7 +219,7 @@ class Player {
       push();
       imageMode(CENTER);
       textAlign(CENTER, TOP);
-      textSize(30);
+      textSize(cellSize/2); // make text size based on cell size for scaling purposes
       for(let i=0; i<menuButtons.length; i++){
         text(menuButtons[i], width/menuButtons.length*i + width/menuButtons.length/2, height/50);
         if (i === this.menuButton){
@@ -212,11 +230,11 @@ class Player {
       image(imageAssets.get("rupee"), width/16 + width/2.75, height - width/16, width/45, width/25);
       image(imageAssets.get("triforce"), width/16 + width/1.6, height - width/16, width/25, width/25);
       textAlign(LEFT, CENTER);
-      textSize(35);
+      textSize(cellSize/1.7);
       text(this.hp + "/" + this.maxHP, width/16 + width/25, height - width/16);
       text("x " + this.rupees, width/16 + width/2.5, height - width/16);
       text("x " + this.triforceCount, width/16 + width/1.5, height - width/16);
-      textSize(30);
+      textSize(cellSize/2);
       if (this.menuButton === 0){ // stat screen
         image(imageAssets.get("link-south-moving"), width/4, height*1.15/4, width/8, width/8);
         textAlign(CENTER, CENTER);
@@ -309,7 +327,7 @@ class Player {
     }
   }
   fadeIntoBattle(){
-    if (isFading && currentFadeCount < fadeCount){ // if battle just started and is still fading into the battle
+    if (this.isFading === "in" && currentFadeCount < fadeCount){ // if battle just started and is still fading into the battle
       background(255, 255, 255, currentFadeCount); // fade current screen to white
       currentFadeCount++;
       if (!sfxAssets.get("enter-battle").isPlaying()){
@@ -317,16 +335,15 @@ class Player {
       }
     }
     else{ // if fade is over, we can transition into battle
-      isFading = false;
-      currentFadeCount = 5;
+      this.isFading = null;
+      currentFadeCount = 0;
       if (!bgmAssets.get("battle").isPlaying()){
         bgmAssets.get("battle").loop();
       }
-      this.battle();
     }
   }
   battle(){
-    let currentRoom = findRoom(player);
+    let currentRoom = findRoom(this);
 
     // now we display the battle itself, starting with a background
     for (let i=2; i<GRID_Y-2; i++){
@@ -345,26 +362,101 @@ class Player {
       }
     }
     push();
+
+    // now the black border
     rectMode(CORNER);
     fill("black");
     rect(0,0,width,cellSize*2); // top black rectangle
     rect(0, height - cellSize*2,width, height); // bottom black rectangle
+
+    // now the player health meter
     textAlign(LEFT, CENTER);
-    textSize(35);
+    textSize(cellSize/1.7);
     fill("white");
     text(this.hp + "/" + this.maxHP, width/6.25, width/16); // hp for player
     imageMode(CENTER);
-    image(imageAssets.get("link-south-moving"), width/16, width/16, cellSize, cellSize); // display player
+    image(imageAssets.get("link-south-moving"), width/16, width/16, cellSize, cellSize); // display player in health area
     image(imageAssets.get("heart"), width/8, width/16, cellSize/1.9, cellSize/1.9); // display heart
+
+    // now bottom (can be buttons or dialogue)
     textAlign(CENTER, TOP);
-    textSize(30);
-    for(let i=0; i<battleButtons.length; i++){
-      text(battleButtons[i], width/battleButtons.length*i + width/battleButtons.length/2, height-height/7.5);
-      if (i === this.battleButton){
-        image(imageAssets.get("triforce"), width/battleButtons.length*i + width/battleButtons.length/2, height-height/18, width/25, width/25);
+    textSize(cellSize/2);
+
+    // check dialogue first, then menus
+    if (this.currentAction === "run"){
+      textAlign(LEFT, TOP);
+      text("GOT AWAY!", width/16, height-height/7.5);
+    }
+    else if (this.battleMenu === "main"){
+      for(let i=0; i<battleButtons.length; i++){
+        text(battleButtons[i], width/battleButtons.length*i + width/battleButtons.length/2, height-height/7.5);
+        if (i === this.battleButton){
+          image(imageAssets.get("triforce"), width/battleButtons.length*i + width/battleButtons.length/2, height-height/18, width/25, width/25);
+        }
       }
     }
+    image(imageAssets.get("link-east-idle"), width/4, height/2, cellSize, cellSize); // display player in battle visual
+
+    //display enemies
+    for (let i=0; i<this.currentlyFighting.length; i++){
+      let theEnemy = currentRoom.enemies[this.currentlyFighting[i]];
+      let theImage;
+      if (theEnemy.name === "Leever"){
+        theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-"+theEnemy.color);
+      }
+      else if (theEnemy.diffColor){
+        theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-"+theEnemy.color+"-west");
+      }
+      else{
+        if (theEnemy.movementType === "armos"){
+          theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-south");
+        }
+        else {
+          theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-west");
+        }
+      }
+      if (i===0){
+        image(theImage, width*2/3, height/2, cellSize*theEnemy.size[0], cellSize*theEnemy.size[1]);
+      }
+      else if (i===1){
+        image(theImage, width*2.3/3, height/2.75, cellSize*theEnemy.size[0], cellSize*theEnemy.size[1]);
+      }
+      else if (i===2){
+        image(theImage, width*2.6/3, height/1.65, cellSize*theEnemy.size[0], cellSize*theEnemy.size[1]);
+      }
+    }
+
     pop();
+  }
+  fadeOutOfBattle(){
+    let currentRoom = findRoom(this);
+    if (this.isFading === "out" && currentFadeCount < fadeCount){ // if battle just started and is still fading into the battle
+      background(0, 0, 0, currentFadeCount); // fade current screen to black
+      currentFadeCount++;
+    }
+    else{ // if fade is over, we can leave the battle
+      // reset fade
+      currentFadeCount = 0;
+
+      // make enemies that were in the battle unable to move / initiate combat for 5 seconds
+      for (let i=0; i<currentRoom.enemies.length; i++){
+        for (let enemy of this.currentlyFighting){
+          if (i === enemy){
+            currentRoom.enemies[i].canMove = false;
+            currentRoom.enemies[i].lastMovement = millis();
+          }
+        }
+      }
+
+      // reset variables to how they were before the battle
+      this.isFading = null;
+      this.currentlyFighting = [];
+      this.currentAction = null;
+      this.battleButton = 0;
+      bgmAssets.get("battle").stop();
+      bgmAssets.get("overworld").loop();
+      state = "explore";
+    }
   }
   menuControls(theKey){
     if (state === "explore"){
@@ -422,8 +514,19 @@ class Player {
     }
     else if (state === "battle"){
       if (theKey === 32){ // space bar
-        // enters section of menu
-        
+        // enters section of menu or passes through dialogue
+
+        // check dialogue first
+        if (this.currentAction === "run"){
+          console.log("out");
+          this.isFading = "out";
+          this.fadeOutOfBattle();
+        }
+
+        // now buttons
+        if (this.battleMenu === "main" && battleButtons[this.battleButton] === "RUN"){
+          this.currentAction = "run";
+        }
       }
       else if (theKey === 65 || theKey === 37) {// a or left arrow
         // moves cursor left in main menu only
