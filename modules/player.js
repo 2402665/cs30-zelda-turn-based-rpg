@@ -49,8 +49,7 @@ class Player {
     this.isFading = null;
     this.currentlyFighting = [];
     this.currentAction = null;
-    this.baseActionVal = 10000/this.spd;
-    this.actionVal = this.baseActionVal; // the turn value during combat for Link; will be used in formulas taken from Honkai: Star Rail's combat system
+    this.turnOrder = [];
     this.tempBoosts = []; // stat boosts activated during battle that dissipate when the battle ends
   }
   displayPlayer() {
@@ -214,6 +213,30 @@ class Player {
       rooms.push(newRoom);
     }
   }
+  checkLevel(){// changes Link's stats to his current attributes
+    let expToLevel = this.exp;
+    for(let i=0; i<levels.length; i++){ 
+      if (i===levels.length-1){
+        this.level = levels.length;
+        this.maxHP = levels[levels.length-1].maxHP;
+        this.atk = levels[levels.length-1].atk;
+        this.def = levels[levels.length-1].def;
+        this.spd = levels[levels.length-1].spd;
+        break;
+      }
+      else if (expToLevel - levels[i].exp < 0){
+        break;
+      }
+      else {
+        expToLevel-=levels[i].exp;
+        this.level = i+1;
+        this.maxHP = levels[i].maxHP;
+        this.atk = levels[i].atk;
+        this.def = levels[i].def;
+        this.spd = levels[i].spd;
+      }
+    }
+  }
   displayMenu(){
     if (state === "menu"){
       background(0);
@@ -346,10 +369,27 @@ class Player {
       }
     }
   }
+  findTurnOrder(){
+    let currentRoom = findRoom(this);
+    // gather all action values and put into the turn order table
+    // first the player
+    this.turnOrder.push({id: "player", actionVal: 10000/this.spd});
+
+    // now the enemies
+    for (let enemyIndex of this.currentlyFighting){
+      this.turnOrder.push({id: enemyIndex, actionVal: 10000/currentRoom.enemies[enemyIndex].baseStats.spd});
+    }
+
+    // find the turn order based on everyone's action value
+    this.turnOrder.sort((a,b) => a.actionVal-b.actionVal);
+  }
   battle(){
     let currentRoom = findRoom(this);
 
-    // find the turn order based on everyone's action value
+    // find the turn order should it not already exist
+    if (this.turnOrder.length === 0){
+      this.findTurnOrder();
+    }
 
     // display the battle itself, starting with a background
     for (let i=2; i<GRID_Y-2; i++){
@@ -387,7 +427,32 @@ class Player {
     // now displaying who's turn it is next
     textAlign(RIGHT, CENTER);
     text("NEXT:", width - width/10, width/16);
-    image(imageAssets.get("link-south-moving"), width - width/16, width/16, cellSize, cellSize);
+    if (this.turnOrder[0].id === "player" && this.turnOrder[0].actionVal < this.turnOrder[1].actionVal - this.turnOrder[0].actionVal){
+      // if it is currently the player's turn and the player is fast enough to get another turn afterward
+      image(imageAssets.get("link-south-moving"), width - width/16, width/16, cellSize, cellSize);
+    }
+    else if (this.turnOrder[1].id === "player"){
+      image(imageAssets.get("link-south-moving"), width - width/16, width/16, cellSize, cellSize);
+    }
+    else{
+      let theEnemy = currentRoom.enemies[this.turnOrder[1].id];
+      let theImage;
+      if (theEnemy.name === "Leever"){
+        theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-"+theEnemy.color);
+      }
+      else if (theEnemy.diffColor){
+        theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-"+theEnemy.color+"-west");
+      }
+      else{
+        if (theEnemy.movementType === "armos"){
+          theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-south");
+        }
+        else {
+          theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-west");
+        }
+      }
+      image(theImage, width - width/16, width/16, cellSize*theEnemy.size[0], cellSize*theEnemy.size[1]);
+    }
 
     // now bottom (can be buttons or dialogue)
     textAlign(CENTER, TOP);
@@ -398,7 +463,7 @@ class Player {
       textAlign(LEFT, TOP);
       text("GOT AWAY!", width/16, height-height/7.5);
     }
-    else if (this.battleMenu === "main"){
+    else if (this.turnOrder[0].id === "player" && this.battleMenu === "main"){
       for(let i=0; i<battleButtons.length; i++){
         text(battleButtons[i], width/battleButtons.length*i + width/battleButtons.length/2, height-height/7.5);
         if (i === this.battleButton){
@@ -406,9 +471,11 @@ class Player {
         }
       }
     }
-    image(imageAssets.get("link-east-idle"), width/4, height/2, cellSize, cellSize); // display player in battle visual
 
-    //display enemies
+    // display player in battle visual
+    image(imageAssets.get("link-east-idle"), width/4, height/2, cellSize, cellSize); 
+
+    //display enemies in battle visual
     for (let i=0; i<this.currentlyFighting.length; i++){
       let theEnemy = currentRoom.enemies[this.currentlyFighting[i]];
       let theImage;
@@ -462,6 +529,7 @@ class Player {
       // reset variables to how they were before the battle
       this.isFading = null;
       this.currentlyFighting = [];
+      this.turnOrder = [];
       this.currentAction = null;
       this.battleButton = 0;
       bgmAssets.get("battle").stop();
@@ -534,9 +602,11 @@ class Player {
           this.fadeOutOfBattle();
         }
 
-        // now buttons
-        if (this.battleMenu === "main" && battleButtons[this.battleButton] === "RUN"){
-          this.currentAction = "run";
+        // now buttons, if it is the player's turn
+        if (this.turnOrder[0].id === "player"){
+          if (this.battleMenu === "main" && battleButtons[this.battleButton] === "RUN"){
+            this.currentAction = "run";
+          }
         }
       }
       else if (theKey === 65 || theKey === 37) {// a or left arrow

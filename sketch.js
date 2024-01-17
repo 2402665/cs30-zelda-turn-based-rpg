@@ -42,7 +42,7 @@ let startupTextCooldown = 800;
 
 // button lists
 let menuButtons = ["STATS", "EQUIP", "ITEMS", "CONFIG"];
-let battleButtons = ["FIGHT", "GUARD", "ITEM", "CHANGE", "RUN"];
+let battleButtons = ["FIGHT", "GUARD", "ITEM", "RUN"];
 
 // biome list
 let biomeList = ["gloomy", "grassy", "rocky", "spooky"];
@@ -147,14 +147,10 @@ function setup() {
   startingRoom.addExits();
   rooms.push(startingRoom);
   state = "start";
-
-  //array sorting testing (for action values)
-  let anArray = [0, 500, 1, 20, 4, 500];
-  anArray.sort((a,b) => b-a);
-  console.log(anArray);
 }
 
 function draw() {
+  player.checkLevel();
   if (state === "start"){
     // If on the start screen
     if (!bgmAssets.get("title").isPlaying()){
