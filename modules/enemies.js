@@ -24,7 +24,7 @@ const enemies = [
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
-        baseDMG: 0,
+        baseDMG: 8,
         accuracy: 100,
       },
       {
@@ -36,7 +36,8 @@ const enemies = [
         accuracy: 100,
       },
     ],
-    sprites: [],
+    rupees: 1,
+    exp: 1,
   },
   {
     name: "Ghini",
@@ -45,6 +46,7 @@ const enemies = [
     diffColor: false,
     movementType: "normal",
     enemyType: "normal",
+    behavior: "crafty",
     baseStats: {
       maxHP: 5,
       atk: 1,
@@ -58,7 +60,7 @@ const enemies = [
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
-        baseDMG: 0,
+        baseDMG: 8,
         accuracy: 100,
       },
     ],
@@ -70,6 +72,7 @@ const enemies = [
     diffColor: true,
     movementType: "walk",
     enemyType: "normal",
+    behavior: "lazy",
     baseStats: {
       maxHP: 6,
       atk: 2,
@@ -83,7 +86,7 @@ const enemies = [
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
-        baseDMG: 0,
+        baseDMG: 8,
         accuracy: 100,
       },
     ],
@@ -95,6 +98,7 @@ const enemies = [
     diffColor: true,
     movementType: "normal",
     enemyType: "normal",
+    behavior: "smart",
     baseStats: {
       maxHP: 25,
       atk: 7,
@@ -108,7 +112,7 @@ const enemies = [
         atkSpeed: "normal",
         atkType: "melee",
         atkAff: "hit",
-        baseDMG: 0,
+        baseDMG: 10,
         accuracy: 100,
       },
     ],
@@ -120,6 +124,7 @@ const enemies = [
     diffColor: true,
     movementType: "walk",
     enemyType: "normal",
+    behavior: "crafty",
     baseStats: {
       maxHP: 10,
       atk: 3,
@@ -133,7 +138,7 @@ const enemies = [
         atkSpeed: "slow",
         atkType: "melee",
         atkAff: "hit",
-        baseDMG: 0,
+        baseDMG: 15,
         accuracy: 70,
       },
       {
@@ -141,7 +146,7 @@ const enemies = [
         atkSpeed: "fast",
         atkType: "melee",
         atkAff: "hit",
-        baseDMG: 0,
+        baseDMG: 5,
         accuracy: 80,
       },
     ],
@@ -153,6 +158,7 @@ const enemies = [
     diffColor: true,
     movementType: "walk",
     enemyType: "normal",
+    behavior: "lazy",
     baseStats: {
       maxHP: 10,
       atk: 2,
@@ -162,11 +168,11 @@ const enemies = [
     },
     attacks: [
       {
-        name: "SHOOT",
+        name: "SHOOT ROCK",
         atkSpeed: "normal",
         atkType: "ranged",
         atkAff: "hit",
-        baseDMG: 0,
+        baseDMG: 5,
         accuracy: 70,
       },
     ],

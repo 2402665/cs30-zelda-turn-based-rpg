@@ -53,7 +53,12 @@ class Player {
     this.fightButtons = [];
     this.turnOrder = [];
     this.attackUsed = false;
+    this.attackMissed = false;
+    this.lastSkill = null;
     this.damageDealt = 0;
+    this.enemySkill = null;
+    this.accumulatedEXP = 0;
+    this.accumulatedRupees = 0;
     this.inAttackAnimation = false;
     this.tempBoosts = []; // stat boosts activated during battle that dissipate when the battle ends
   }
@@ -432,7 +437,7 @@ class Player {
     // now displaying who's turn it is next
     textAlign(RIGHT, CENTER);
     text("NEXT:", width - width/10, width/16);
-    if (this.turnOrder[0].id === "player" && this.turnOrder[0].actionVal < this.turnOrder[1].actionVal - this.turnOrder[0].actionVal){
+    if (this.turnOrder[0].id === "player" && 10000/this.spd < this.turnOrder[1].actionVal - this.turnOrder[0].actionVal){
       // if it is currently the player's turn and the player is fast enough to get another turn afterward
       image(imageAssets.get("link-south-moving"), width - width/16, width/16, cellSize, cellSize);
     }
@@ -482,6 +487,7 @@ class Player {
         this.attackUsed = true;
       }
       text(player.name + " used " + theSkill.name + "!", width/16, height-height/7.5);
+      this.lastSkill = theSkill;
 
       // display damage dealt below enemy
       if (this.enemyButton===0){
@@ -494,6 +500,54 @@ class Player {
         text(this.damageDealt, width*2.6/3, height/1.65 + height/16);
       }
     }
+    else if (this.currentAction === "enemyTurn"){
+      textAlign(LEFT, TOP);
+      // deal damage to player
+      let theEnemy = currentRoom.enemies[this.turnOrder[0].id];
+      let theAttack;
+
+      // pick a move to use depending on enemy behavior, if a move hasn't already been picked
+      if (this.enemySkill === null){
+        if (theEnemy.behavior === "lazy"){
+          theAttack = round(random(0,theEnemy.attacks.length-1));
+        }
+        else if (theEnemy.behavior === "crafty"){
+          if (theEnemy.lastAttack === null || theEnemy.attacks.length === 1){
+            theAttack = round(random(0,theEnemy.attacks.length-1));
+          }
+          else{
+            theAttack = round(random(0,theEnemy.attacks.length-1));
+            while (theEnemy.attacks[theAttack] === theEnemy.lastAttack){
+              theAttack = round(random(0,theEnemy.attacks.length-1));
+            }
+          }
+        }
+        theAttack = theEnemy.attacks[theAttack];
+      }
+      else{
+        theAttack = this.enemySkill;
+      }
+
+      this.enemySkill = theAttack;
+
+      // use the move
+      if (!this.attackUsed){
+        if (theAttack.atkAff === "hit"){
+          this.damageDealt = ceil(theAttack.baseDMG / (this.def * 4) * (theEnemy.baseStats.atk/2));
+          console.log(this.damageDealt + " damage was taken.");
+          this.hp -= this.damageDealt;
+          this.attackUsed = true;
+        }
+      }
+      text(theEnemy.name + " used " + theAttack.name + "!", width/16, height-height/7.5);
+      text(this.damageDealt, width/4, height/2 + height/16);
+    }
+    else if (this.currentAction === "results"){
+      textAlign(LEFT, TOP);
+      text("Earned " + this.accumulatedEXP + " EXP and " + this.accumulatedRupees + " Rupees.", width/16, height-height/7.5);
+    }
+
+    //buttons
     else if (this.turnOrder[0].id === "player" && this.battleMenu === "main"){
       for(let i=0; i<battleButtons.length; i++){
         text(battleButtons[i], width/battleButtons.length*i + width/battleButtons.length/2, height-height/7.5);
@@ -557,13 +611,17 @@ class Player {
           theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-west");
         }
       }
-      if (i===0){
+      // add battle positions to enemy if they do not exist already
+      if (theEnemy.battlePos === null){
+        theEnemy.battlePos = i;
+      }
+      if (theEnemy.battlePos===0){
         image(theImage, width*2/3, height/2, cellSize*theEnemy.size[0], cellSize*theEnemy.size[1]);
       }
-      else if (i===1){
+      else if (theEnemy.battlePos===1){
         image(theImage, width*2.3/3, height/2.75, cellSize*theEnemy.size[0], cellSize*theEnemy.size[1]);
       }
-      else if (i===2){
+      else if (theEnemy.battlePos===2){
         image(theImage, width*2.6/3, height/1.65, cellSize*theEnemy.size[0], cellSize*theEnemy.size[1]);
       }
     }
@@ -663,12 +721,94 @@ class Player {
 
         // check dialogue first
         if (this.currentAction === "run"){
+          this.currentAction = "results";
+        }
+        else if (this.currentAction === "results"){
           this.isFading = "out";
           this.fadeOutOfBattle();
         }
+        else if (this.currentAction === "fight"){
+          // player has moved past battle dialogue from their turn
+          
+          // subtract Link's current action value from all enemies
+          for(let i=this.turnOrder.length-1; i>=0; i--){
+            this.turnOrder[i].actionVal -= this.turnOrder[0].actionVal;
+          }
+
+          // change player's action value
+          if (this.lastSkill.atkSpeed === "fast"){
+            this.turnOrder[0].actionVal = 10000/this.spd*0.6;
+          }
+          else if (this.lastSkill.atkSpeed === "slow"){
+            this.turnOrder[0].actionVal = 10000/this.spd*1.4;
+          }
+          else{
+            this.turnOrder[0].actionVal = 10000/this.spd;
+          }
+
+          // resort turn order
+          this.turnOrder.sort((a,b) => a.actionVal-b.actionVal);
+
+          // if enemy's turn, set currentAction to enemyTurn
+          if (this.turnOrder[0].id !== "player"){
+            this.currentAction = "enemyTurn";
+          }
+          else {
+            this.currentAction = null;
+          }
+
+          // reset buttons
+          this.battleButton = 0;
+          this.battleMenu = "main";
+          
+          // reset attack used regardless of who's turn it is
+          this.attackUsed = false;
+        }
+
+        else if (this.currentAction === "enemyTurn"){
+          // player has moved past battle dialogue from the enemy turn
+          
+          // subtract the enemy's current action value from all entities
+          for(let i=this.turnOrder.length-1; i>=0; i--){
+            this.turnOrder[i].actionVal -= this.turnOrder[0].actionVal;
+          }
+
+          // change the enemy's action value
+          if (this.enemySkill.atkSpeed === "fast"){
+            this.turnOrder[0].actionVal = 10000/this.spd*0.6;
+          }
+          else if (this.enemySkill.atkSpeed === "slow"){
+            this.turnOrder[0].actionVal = 10000/this.spd*1.4;
+          }
+          else if (this.enemySkill.atkSpeed === "superslow"){
+            this.turnOrder[0].actionVal = 10000/this.spd*2;
+          }
+          else{
+            this.turnOrder[0].actionVal = 10000/this.spd;
+          }
+
+          // resort turn order
+          this.turnOrder.sort((a,b) => a.actionVal-b.actionVal);
+
+          // if enemy's turn, set currentAction to enemyTurn
+          if (this.turnOrder[0].id !== "player"){
+            this.currentAction = "enemyTurn";
+            this.enemySkill = null;
+          }
+          else {
+            this.currentAction = null;  
+          }
+
+          // reset buttons
+          this.battleButton = 0;
+          this.battleMenu = "main";
+          
+          // reset attack used regardless of who's turn it is
+          this.attackUsed = false;
+        }
 
         // now buttons, if it is the player's turn
-        if (this.turnOrder[0].id === "player"){
+        else if (this.turnOrder[0].id === "player"){
           if (this.battleMenu === "main" && battleButtons[this.battleButton] === "FIGHT"){
             this.battleMenu = "fight";
             this.battleButton = 0;

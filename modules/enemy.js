@@ -24,6 +24,8 @@ class Enemy {
     this.movementTime = 0;
     this.enemyType = currentEnemy.enemyType;
     this.behavior = currentEnemy.behavior;
+    this.lastAttack = null;
+    this.battlePos = null;
     this.baseStats = currentEnemy.baseStats;
     this.hp = this.baseStats.maxHP;
     this.attacks = currentEnemy.attacks;
@@ -32,6 +34,8 @@ class Enemy {
     this.canMove = true;
     this.canMoveTimer = 5000;
     this.bonuses = []; // stat bonuses, like temporary attack/defense buffs
+    this.rupees = currentEnemy.rupees;
+    this.exp = currentEnemy.exp;
   }
   move(){
     // first determine how fast the enemy is
