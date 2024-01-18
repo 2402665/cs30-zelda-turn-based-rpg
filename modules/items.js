@@ -10,7 +10,7 @@ const equipment = [
         atkSpeed: "normal", // the speed of the attack; slower speeds gives the enemy more turns, higher speeds gives Link more turns
         atkType: "melee", // melee attacks can only hit things on the ground; flying enemies cannot be hit with them
         atkAff: "hit", // attack affinity determines what kind of attack it is; some enemies are weak/resistant to certain attacks
-        baseDMG: 0, // base damage of specific attack
+        baseDMG: 10, // base damage of specific attack
         accuracy: 100, // base chance of attack actually hitting enemy; is in percentage, can be lowered by enemy's evasion stat
       },
       {
@@ -18,7 +18,7 @@ const equipment = [
         atkSpeed: "slow",
         atkType: "melee",
         atkAff: "hit",
-        baseDMG: 0,
+        baseDMG: 15,
         accuracy: 70,
       },
     ],

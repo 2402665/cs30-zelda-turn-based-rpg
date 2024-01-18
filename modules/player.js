@@ -17,6 +17,7 @@ class Player {
     this.roomY = roomY; // y value in relevance to room grid
     this.menuButton = 0; // current button player is on in menu
     this.battleButton = 0; // current button player is on in battle
+    this.enemyButton = 0; // current enemy player is targeting
     this.submenu = null; // current submenu player is in (if on one)
     this.battleMenu = "main",
     this.weaponInventory = [];
@@ -27,7 +28,7 @@ class Player {
     this.equippedWeapon1 = 0; // currently equipped weapon (index value in equipment table) - link can have 2 equipped at once, hence equippedWeapon2
     this.equippedWeapon2 = null; // refer to line directly above
     this.equippedSkill1 = [0,1]; // currently equipped skills with equippedWeapon1 in weapons table; works same for equippedSkill2 and equippedWeapon2
-    this.equippedSkill2 = null; // refer to line directly above
+    this.equippedSkill2 = [null, null]; // refer to line directly above
     this.equippedShield = "Shield"; // currently equipped shield
     this.level = 1; // player's level
     this.exp = 0; // total experience points player has
@@ -49,7 +50,11 @@ class Player {
     this.isFading = null;
     this.currentlyFighting = [];
     this.currentAction = null;
+    this.fightButtons = [];
     this.turnOrder = [];
+    this.attackUsed = false;
+    this.damageDealt = 0;
+    this.inAttackAnimation = false;
     this.tempBoosts = []; // stat boosts activated during battle that dissipate when the battle ends
   }
   displayPlayer() {
@@ -444,12 +449,7 @@ class Player {
         theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-"+theEnemy.color+"-west");
       }
       else{
-        if (theEnemy.movementType === "armos"){
-          theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-south");
-        }
-        else {
-          theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-west");
-        }
+        theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-south");
       }
       image(theImage, width - width/16, width/16, cellSize*theEnemy.size[0], cellSize*theEnemy.size[1]);
     }
@@ -463,6 +463,37 @@ class Player {
       textAlign(LEFT, TOP);
       text("GOT AWAY!", width/16, height-height/7.5);
     }
+    else if (this.currentAction === "fight"){
+      textAlign(LEFT, TOP);
+      //find the skill used
+      let theSkill;
+      if (this.battleButton === 0 || this.battleButton === 1){
+        theSkill = equipment[this.equippedWeapon1].attacks[this.equippedSkill1[this.fightButtons[this.battleButton]]];
+      }
+      else{
+        theSkill = equipment[this.equippedWeapon2].attacks[this.equippedSkill2[this.fightButtons[this.battleButton]]];
+      }
+      
+      // deal damage
+      if (!this.attackUsed){
+        this.damageDealt = ceil(theSkill.baseDMG / (currentRoom.enemies[this.currentlyFighting[this.enemyButton]].baseStats.def * 4) * (this.atk/2));
+        console.log(this.damageDealt + " damage was dealt.");
+        currentRoom.enemies[this.currentlyFighting[this.enemyButton]].hp -= this.damageDealt;
+        this.attackUsed = true;
+      }
+      text(player.name + " used " + theSkill.name + "!", width/16, height-height/7.5);
+
+      // display damage dealt below enemy
+      if (this.enemyButton===0){
+        text(this.damageDealt, width*2/3, height/2 + height/16);
+      }
+      else if (this.enemyButton===1){
+        text(this.damageDealt, width*2.3/3, height/2.75 + height/16);
+      }
+      else if (this.enemyButton===2){
+        text(this.damageDealt, width*2.6/3, height/1.65 + height/16);
+      }
+    }
     else if (this.turnOrder[0].id === "player" && this.battleMenu === "main"){
       for(let i=0; i<battleButtons.length; i++){
         text(battleButtons[i], width/battleButtons.length*i + width/battleButtons.length/2, height-height/7.5);
@@ -470,6 +501,39 @@ class Player {
           image(imageAssets.get("triforce"), width/battleButtons.length*i + width/battleButtons.length/2, height-height/18, width/25, width/25);
         }
       }
+    }
+    else if (this.turnOrder[0].id === "player" && this.battleMenu === "fight"){
+      this.fightButtons = [this.equippedSkill1[0], this.equippedSkill1[1], this.equippedSkill2[0], this.equippedSkill2[1]];
+      for(let i=0; i<this.fightButtons.length; i++){
+        if (this.fightButtons[i] !== null){
+          if (i===0 || i===1){ // if part of equippedSkill1
+            text(equipment[this.equippedWeapon1].attacks[this.equippedSkill1[this.fightButtons[i]]].name, width/this.fightButtons.length*i + width/this.fightButtons.length/2, height-height/7.5);
+          }
+          else{
+            text(equipment[this.equippedWeapon2].attacks[this.equippedSkill2[this.fightButtons[i]]].name, width/this.fightButtons.length*i + width/this.fightButtons.length/2, height-height/7.5);
+          }
+        }
+        else{
+          text("-----", width/this.fightButtons.length*i + width/this.fightButtons.length/2, height-height/7.5);
+        }
+        if (i === this.battleButton){
+          image(imageAssets.get("triforce"), width/this.fightButtons.length*i + width/this.fightButtons.length/2, height-height/18, width/25, width/25);
+        }
+      }
+    }
+    else if (this.turnOrder[0].id === "player" && this.battleMenu === "enemy"){
+      let theImage = imageAssets.get("triforce");
+      if (this.enemyButton===0){
+        image(theImage, width*2/3, height - height/4, width/25, width/25);
+      }
+      else if (this.enemyButton===1){
+        image(theImage, width*2.3/3, height - height/4, width/25, width/25);
+      }
+      else if (this.enemyButton===2){
+        image(theImage, width*2.6/3, height - height/4, width/25, width/25);
+      }
+      textAlign(LEFT, TOP);
+      text("Use on " + currentRoom.enemies[this.currentlyFighting[this.enemyButton]].name + "?", width/16, height-height/7.5);
     }
 
     // display player in battle visual
@@ -532,6 +596,7 @@ class Player {
       this.turnOrder = [];
       this.currentAction = null;
       this.battleButton = 0;
+      this.enemyButton = 0;
       bgmAssets.get("battle").stop();
       bgmAssets.get("mass-destruction").stop();
       bgmAssets.get("overworld").loop();
@@ -604,27 +669,78 @@ class Player {
 
         // now buttons, if it is the player's turn
         if (this.turnOrder[0].id === "player"){
-          if (this.battleMenu === "main" && battleButtons[this.battleButton] === "RUN"){
+          if (this.battleMenu === "main" && battleButtons[this.battleButton] === "FIGHT"){
+            this.battleMenu = "fight";
+            this.battleButton = 0;
+          }
+          else if (this.battleMenu === "main" && battleButtons[this.battleButton] === "RUN"){
             this.currentAction = "run";
+          }
+          else if (this.battleMenu === "fight"){
+            if (this.battleButton === 0 || this.battleButton === 1){
+              if (this.equippedWeapon1 !== null && this.equippedSkill1[this.fightButtons[this.battleButton]] !== null){
+                this.battleMenu = "enemy";
+              }
+            }
+            else {
+              if (this.equippedWeapon2 !== null && this.equippedSkill2[this.fightButtons[this.battleButton]] !== null){
+                this.battleMenu = "enemy";
+              }
+            }
+          }
+          else if (this.battleMenu === "enemy"){
+            this.currentAction = "fight";
+          }
+        }
+      }
+      else if (theKey === 8 || theKey === 27){ // backspace or escape
+        // exits current menu
+        if (this.turnOrder[0].id === "player"){
+          if (this.battleMenu === "fight"){
+            this.battleMenu = "main";
+            this.battleButton = 0;
+          }
+          else if (this.battleMenu === "enemy"){
+            this.battleMenu = "fight";
           }
         }
       }
       else if (theKey === 65 || theKey === 37) {// a or left arrow
-        // moves cursor left in main menu only
-        if (this.battleButton === 0){
-          this.battleButton = battleButtons.length-1;
+        // moves cursor left
+        if (this.battleMenu === "enemy"){
+          if (this.enemyButton === 0){
+            this.enemyButton = this.currentlyFighting.length-1;
+          }
+          else{
+            this.enemyButton--;
+          }
         }
         else{
-          this.battleButton--;
+          if (this.battleButton === 0){
+            this.battleButton = battleButtons.length-1;
+          }
+          else{
+            this.battleButton--;
+          }
         }
       } 
       else if (theKey === 68 || theKey === 39) { // d or right arrow
-        // moves cursor right in main menu only
-        if (this.battleButton === battleButtons.length-1){
-          this.battleButton = 0;
+        // moves cursor right
+        if (this.battleMenu === "enemy"){
+          if (this.enemyButton === this.currentlyFighting.length-1){
+            this.enemyButton = 0;
+          }
+          else{
+            this.enemyButton++;
+          }
         }
         else{
-          this.battleButton++;
+          if (this.battleButton === battleButtons.length-1){
+            this.battleButton = 0;
+          }
+          else{
+            this.battleButton++;
+          }
         }
       }
     }
