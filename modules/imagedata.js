@@ -8,6 +8,10 @@ let imageData = [ // list of all sprites/spritesheets in the game
     location: "assets/images/rift.gif",
   },
   {
+    key: "cloud",
+    location: "assets/images/enemy-cloud.gif",
+  },
+  {
     key: "tiles-overworld-gloomy",
     location: "assets/images/tilesets/tiles-gloomy.png"
   },

@@ -597,6 +597,7 @@ class Player {
     for (let i=0; i<this.currentlyFighting.length; i++){
       let theEnemy = currentRoom.enemies[this.currentlyFighting[i]];
       let theImage;
+      
       if (theEnemy.name === "Leever"){
         theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-"+theEnemy.color);
       }
@@ -615,6 +616,8 @@ class Player {
       if (theEnemy.battlePos === null){
         theEnemy.battlePos = i;
       }
+
+      // draw the enemy
       if (theEnemy.battlePos===0){
         image(theImage, width*2/3, height/2, cellSize*theEnemy.size[0], cellSize*theEnemy.size[1]);
       }
