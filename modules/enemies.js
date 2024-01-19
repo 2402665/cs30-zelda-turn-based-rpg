@@ -64,6 +64,8 @@ const enemies = [
         accuracy: 100,
       },
     ],
+    rupees: 2,
+    exp: 1,
   },
   {
     name: "Leever",
@@ -90,6 +92,8 @@ const enemies = [
         accuracy: 100,
       },
     ],
+    rupees: 1,
+    exp: 1,
   },
   {
     name: "Lynel",
@@ -99,6 +103,7 @@ const enemies = [
     movementType: "normal",
     enemyType: "normal",
     behavior: "smart",
+    tactic: [2, 1], // attack index values (should be hone and beam)
     baseStats: {
       maxHP: 25,
       atk: 7,
@@ -116,6 +121,8 @@ const enemies = [
         accuracy: 100,
       },
     ],
+    rupees: 10,
+    exp: 15,
   },
   {
     name: "Moblin",
@@ -150,6 +157,8 @@ const enemies = [
         accuracy: 80,
       },
     ],
+    rupees: 3,
+    exp: 5,
   },
   {
     name: "Octorok",
@@ -176,6 +185,8 @@ const enemies = [
         accuracy: 70,
       },
     ],
+    rupees: 2,
+    exp: 2,
   },
   {
     name: "Peahat",

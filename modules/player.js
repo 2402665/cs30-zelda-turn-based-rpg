@@ -16,10 +16,10 @@ class Player {
     this.roomX = roomX; // x value in relevance to room grid
     this.roomY = roomY; // y value in relevance to room grid
     this.menuButton = 0; // current button player is on in menu
+    this.submenu = null; // current submenu player is in (if on one)
     this.battleButton = 0; // current button player is on in battle
     this.enemyButton = 0; // current enemy player is targeting
-    this.submenu = null; // current submenu player is in (if on one)
-    this.battleMenu = "main",
+    this.battleMenu = "main", // current menu the player is in during battle
     this.weaponInventory = [];
     this.shieldInventory = [];
     this.itemInventory = [];
@@ -47,20 +47,18 @@ class Player {
       evasion: 0,
       luck: 0,
     };
-    this.isFading = null;
-    this.currentlyFighting = [];
-    this.currentAction = null;
-    this.fightButtons = [];
-    this.turnOrder = [];
-    this.attackUsed = false;
-    this.attackMissed = false;
-    this.lastSkill = null;
-    this.damageDealt = 0;
-    this.enemySkill = null;
-    this.accumulatedEXP = 0;
-    this.accumulatedRupees = 0;
-    this.inAttackAnimation = false;
-    this.tempBoosts = []; // stat boosts activated during battle that dissipate when the battle ends
+    this.isFading = null; // variable for if the player is entering/exiting a battle: null if not fading
+    this.currentlyFighting = []; // list of enemies in battle
+    this.currentAction = null; // what is currently going on (dialogue, like enemyTurn for "Armos used BASH!") (null if on a menu)
+    this.fightButtons = []; // table of buttons, is a list of player's skills
+    this.turnOrder = []; // the turn order of the battle; turnOrder[0] is whoever currently has their turn
+    this.attackUsed = false; // boolean for whether or not an attack has been used (can be player or enemy, depends on current turn)
+    this.lastSkill = null; // last used player skill, changes anytime player uses said skill
+    this.damageDealt = 0; // damage last dealt to something (can be player or enemy)
+    this.enemySkill = null; // last used enemy skill
+    this.accumulatedEXP = 0; // exp accumulated from killing enemies
+    this.accumulatedRupees = 0; // rupees accumulated from killing enemies
+    this.tempBoosts = []; // stat boosts activated during battle that dissipate when the battle ends (unused)
   }
   displayPlayer() {
     let theImage;
@@ -578,13 +576,13 @@ class Player {
     else if (this.turnOrder[0].id === "player" && this.battleMenu === "enemy"){
       let theImage = imageAssets.get("triforce");
       if (this.enemyButton===0){
-        image(theImage, width*2/3, height - height/4, width/25, width/25);
+        image(theImage, width*2/3, height/2 + height/8, width/25, width/25);
       }
       else if (this.enemyButton===1){
-        image(theImage, width*2.3/3, height - height/4, width/25, width/25);
+        image(theImage, width*2.3/3, height/2.75 + height/8, width/25, width/25);
       }
       else if (this.enemyButton===2){
-        image(theImage, width*2.6/3, height - height/4, width/25, width/25);
+        image(theImage, width*2.6/3, height/1.65 + height/8, width/25, width/25);
       }
       textAlign(LEFT, TOP);
       text("Use on " + currentRoom.enemies[this.currentlyFighting[this.enemyButton]].name + "?", width/16, height-height/7.5);

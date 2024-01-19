@@ -41,7 +41,7 @@ let startupTextTimer = 0;
 let startupTextCooldown = 800;
 
 // button lists
-let menuButtons = ["STATS", "EQUIP", "ITEMS", "CONFIG"];
+let menuButtons = ["STATS", "EQUIP", "ITEMS"];
 let battleButtons = ["FIGHT", "GUARD", "ITEM", "RUN"];
 
 // biome list

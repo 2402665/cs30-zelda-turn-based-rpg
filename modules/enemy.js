@@ -25,7 +25,7 @@ class Enemy {
     this.enemyType = currentEnemy.enemyType;
     this.behavior = currentEnemy.behavior;
     this.lastAttack = null;
-    this.battlePos = null;
+    this.battlePos = null; // battle position, only used for battles
     this.baseStats = currentEnemy.baseStats;
     this.hp = this.baseStats.maxHP;
     this.attacks = currentEnemy.attacks;
