@@ -139,7 +139,7 @@ class Room {
     //finds a random enemy and a random amount of enemies to add, then adds them
     let enemyCount = round(random(1,5)); // how many enemies are to be added into the room
     for (let i=0; i<enemyCount; i++){
-      let theID = round(random(0,2)) + 100; // random IDs, set two numbers in random() to be the same for one enemy guaranteed
+      let theID = round(random(0,5)) + 100; // random IDs, set two numbers in random() to be the same for one enemy guaranteed
       let notAllowed = true; // forgive me for giving this a horrible name I was out of ideas
       let x;
       let y;

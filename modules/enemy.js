@@ -30,10 +30,20 @@ class Enemy {
     this.hp = this.baseStats.maxHP;
     this.attacks = currentEnemy.attacks;
     this.level = level;
+    if (currentEnemy.tactic !== undefined){
+      this.tactic = currentEnemy.tactic;
+      this.tacticMove = 0;
+    }
     this.canSeePlayer = false;
     this.canMove = true;
     this.canMoveTimer = 5000;
-    this.bonuses = []; // stat bonuses, like temporary attack/defense buffs
+    this.statBoosts = { // stat boosts activated during battle (acts like a multiplier)
+      atk: 1,
+      def: 1,
+      spd: 1,
+      evasion: 1,
+      luck: 1,
+    };
     this.rupees = currentEnemy.rupees;
     this.exp = currentEnemy.exp;
   }

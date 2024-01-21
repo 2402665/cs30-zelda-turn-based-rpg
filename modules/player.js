@@ -64,6 +64,7 @@ class Player {
     this.deathSpinLimit = 17; // amount of times Link spins in death animation
     this.accumulatedEXP = 0; // exp accumulated from killing enemies
     this.accumulatedRupees = 0; // rupees accumulated from killing enemies
+    this.accumulatedHearts = 0; // hearts accumulated from killing enemies (percentage * 10, 1=10%)
   }
   displayPlayer() {
     let theImage;
@@ -399,6 +400,11 @@ class Player {
 
     // find the turn order based on everyone's action value
     this.turnOrder.sort((a,b) => a.actionVal-b.actionVal);
+
+    if (this.currentAction === null && this.turnOrder[0].id !== "player"){
+      this.currentAction = "enemyTurn";
+      this.attackUsed = false;
+    }
   }
   battle(){
     let currentRoom = findRoom(this);
@@ -485,6 +491,7 @@ class Player {
       textAlign(LEFT, TOP);
       //find the skill used
       let theSkill;
+      let targetedEnemy;
       if (this.battleButton === 0 || this.battleButton === 1){
         theSkill = equipment[this.equippedWeapon1].attacks[this.equippedSkill1[this.fightButtons[this.battleButton]]];
       }
@@ -496,14 +503,60 @@ class Player {
       if (!this.attackUsed){
         for(let theEnemy of this.currentlyFighting){
           if (this.enemyButtonOptions[this.enemyButton] === currentRoom.enemies[theEnemy].battlePos){
-            this.damageDealt = ceil(theSkill.baseDMG / (currentRoom.enemies[theEnemy].baseStats.def * 4) * (this.atk/2));
-            console.log(this.damageDealt + " damage was dealt.");
-            currentRoom.enemies[theEnemy].hp -= this.damageDealt;
+            targetedEnemy = currentRoom.enemies[theEnemy];
+            if (theSkill.atkAff === "hit"){
+              if (this.statBoosts.atk <= 0){
+                this.statBoosts.atk = 0.1;
+              }
+              if (targetedEnemy.statBoosts.def <= 0){
+                targetedEnemy.statBoosts.def = 0.1;
+              }
+              this.damageDealt = ceil(theSkill.baseDMG / (targetedEnemy.baseStats.def * targetedEnemy.statBoosts.def*4) * (this.atk/2 * this.statBoosts.atk));
+              console.log(this.damageDealt + " damage was dealt.");
+              targetedEnemy.hp -= this.damageDealt;
+            }
+            else if (theSkill.atkAff === "support"){
+              if (theSkill.atkType === "buff"){
+                if (theSkill.buffType === "atk"){
+                  this.statBoosts.atk += theSkill.buffMultiplier;
+                }
+                else if (theSkill.buffType === "def"){
+                  this.statBoosts.def += theSkill.buffMultiplier;
+                }
+                else if (theSkill.buffType === "spd"){
+                  this.statBoosts.spd += theSkill.buffMultiplier;
+                }
+              }
+              else if (theSkill.atkType === "debuff"){
+                if (theSkill.buffType === "atk"){
+                  targetedEnemy.statBoosts.atk += theSkill.buffMultiplier;
+                }
+                else if (theSkill.buffType === "def"){
+                  targetedEnemy.statBoosts.def += theSkill.buffMultiplier;
+                }
+                else if (theSkill.buffType === "spd"){
+                  targetedEnemy.statBoosts.spd += thetheSkill.buffMultiplier;
+                }
+              }
+            }
           }
         }
         this.attackUsed = true;
       }
-      text(player.name + " used " + theSkill.name + "!", width/16, height-height/7.5);
+      if (theSkill.atkAff === "hit"){
+        text(player.name + " used " + theSkill.name + "!", width/16, height-height/7.5);
+      }
+      else if (theAttack.atkAff === "support"){
+        if (theAttack.atkType === "buff"){
+          text(this.name + " used " + theSkill.name + "!", width/16, height-height/7.5);
+          text(this.name + "'s " + theSkill.buffType.toUpperCase() + " raised!", width/16, height-height/12);
+        }
+        else if (theAttack.atkType === "debuff"){
+          text(this.name + " used " + theSkill.name + "!", width/16, height-height/7.5);
+          text(targetedEnemy.name + "'s " + theSkill.buffType.toUpperCase() + " fell!", width/16, height-height/12);
+        }
+      }
+      
       this.lastSkill = theSkill;
 
       // display damage dealt below enemy
@@ -539,6 +592,16 @@ class Player {
             }
           }
         }
+        else if (theEnemy.behavior === "smart"){
+          let randomMove = random(0,100);
+          if (randomMove < 75){
+            // pick a random move
+            theAttack = round(random(0,theEnemy.attacks.length-1));
+          }
+          else{ // if hit the 25% chance
+
+          }
+        }
         theAttack = theEnemy.attacks[theAttack];
       }
       else{
@@ -550,17 +613,67 @@ class Player {
       // use the move
       if (!this.attackUsed){
         if (theAttack.atkAff === "hit"){
-          this.damageDealt = ceil(theAttack.baseDMG / (this.def * 4) * (theEnemy.baseStats.atk/2));
+          if (theEnemy.statBoosts.atk <= 0){
+            theEnemy.statBoosts.atk = 0.1;
+          }
+          if (this.statBoosts.def <= 0){
+            this.statBoosts.def = 0.1;
+          }
+          this.damageDealt = ceil(theAttack.baseDMG / (this.def * this.statBoosts.def*4) * (theEnemy.baseStats.atk/2 * theEnemy.statBoosts.atk));
           console.log(this.damageDealt + " damage was taken.");
           this.hp -= this.damageDealt;
           if (this.hp < 0){
             this.hp = 0;
           }
-          this.attackUsed = true;
+        }
+        else if (theAttack.atkAff === "support"){
+          if (theAttack.atkType === "buff"){
+            if (theAttack.buffType === "atk"){
+              theEnemy.statBoosts.atk += theAttack.buffMultiplier;
+            }
+            else if (theAttack.buffType === "def"){
+              theEnemy.statBoosts.def += theAttack.buffMultiplier;
+            }
+            else if (theAttack.buffType === "spd"){
+              theEnemy.statBoosts.spd += theAttack.buffMultiplier;
+            }
+          }
+          else if (theAttack.atkType === "debuff"){
+            if (theAttack.buffType === "atk"){
+              this.statBoosts.atk -= theAttack.buffMultiplier;
+            }
+            else if (theAttack.buffType === "def"){
+              this.statBoosts.def -= theAttack.buffMultiplier;
+            }
+            else if (theAttack.buffType === "spd"){
+              this.statBoosts.spd -= theAttack.buffMultiplier;
+            }
+          }
+        }
+        this.attackUsed = true;
+      }
+      if (theAttack.atkAff === "hit"){
+        text(theEnemy.name + " used " + theAttack.name + "!", width/16, height-height/7.5);
+        text(this.damageDealt, width/4, height/2 + height/16);
+      }
+      else if (theAttack.atkAff === "support"){
+        if (theAttack.atkType === "buff"){
+          text(theEnemy.name + " used " + theAttack.name + "!", width/16, height-height/7.5);
+          text(theEnemy.name + "'s " + theAttack.buffType.toUpperCase() + " raised!", width/16, height-height/12);
+        }
+        else if (theAttack.atkType === "debuff"){
+          text(theEnemy.name + " used " + theAttack.name + "!", width/16, height-height/7.5);
+          text(this.name + "'s " + theAttack.buffType.toUpperCase() + " fell!", width/16, height-height/12);
         }
       }
-      text(theEnemy.name + " used " + theAttack.name + "!", width/16, height-height/7.5);
-      text(this.damageDealt, width/4, height/2 + height/16);
+    }
+    else if (this.currentAction === "guard"){
+      textAlign(LEFT, TOP);
+      if (!this.guarding){
+        this.guarding = true;
+        this.statBoosts.def += 1.5;
+      }
+      text(this.name + " started guarding!", width/16, height-height/7.5);
     }
     else if (this.currentAction === "results"){
       if (!bgmAssets.get("victory").isPlaying() && this.currentlyFighting.length === 0){
@@ -570,6 +683,7 @@ class Player {
       }
       textAlign(LEFT, TOP);
       text("Earned " + this.accumulatedEXP + " EXP and " + this.accumulatedRupees + " Rupees.", width/16, height-height/7.5);
+      text("Received " + round(this.maxHP * (this.accumulatedHearts/10)) + " hearts.", width/16, height-height/12);
     }
 
     //buttons
@@ -654,6 +768,26 @@ class Player {
       }
     }
 
+    // display dead enemies
+    for (let i=0; i<this.deadEnemyPos.length; i++){
+      let theImage = imageAssets.get("cloud");
+      let deadEnemy = this.deadEnemyPos[i];
+      if (deadEnemy.time + 1600 > millis()){
+        if (deadEnemy.pos===0){
+          image(theImage, width*2/3, height/2, cellSize, cellSize);
+        }
+        else if (deadEnemy.pos===1){
+          image(theImage, width*2.3/3, height/2.75, cellSize, cellSize);
+        }
+        else if (deadEnemy.pos===2){
+          image(theImage, width*2.6/3, height/1.65, cellSize, cellSize);
+        }
+      }
+      else {
+        this.deadEnemyPos.splice(i,1);
+      }
+    }
+
     pop();
   }
   fadeOutOfBattle(){
@@ -673,6 +807,15 @@ class Player {
             currentRoom.enemies[i].canMove = false;
             currentRoom.enemies[i].lastMovement = millis();
             currentRoom.enemies[i].battlePos = null;
+
+            // reset all stat boosts on enemies
+            currentRoom.enemies[i].statBoosts = {
+              atk: 1,
+              def: 1,
+              spd: 1,
+              evasion: 1,
+              luck: 1,
+            };
           }
         }
       }
@@ -680,10 +823,12 @@ class Player {
       // give player rewards for winning the battle
       this.exp += this.accumulatedEXP;
       this.rupees += this.accumulatedRupees;
+      this.hp += round(this.maxHP * (this.accumulatedHearts/10));
 
       // reset variables to how they were before the battle
       this.accumulatedEXP = 0;
       this.accumulatedRupees = 0;
+      this.accumulatedHearts = 0;
       this.isFading = null;
       this.currentlyFighting = [];
       this.enemyButtonOptions = [];
@@ -691,6 +836,14 @@ class Player {
       this.currentAction = null;
       this.battleButton = 0;
       this.enemyButton = 0;
+      this.deadEnemyPos = [];
+      this.statBoosts = {
+        atk: 1,
+        def: 1,
+        spd: 1,
+        evasion: 1,
+        luck: 1,
+      };
       bgmAssets.get("battle").stop();
       bgmAssets.get("mass-destruction").stop();
       bgmAssets.get("victory").stop();
@@ -829,7 +982,8 @@ class Player {
           this.isFading = "out";
           this.fadeOutOfBattle();
         }
-        else if (this.currentAction === "fight"){
+        else if (this.currentAction === "fight" || this.currentAction === "guard"){
+
           // player has moved past battle dialogue from their turn
           let currentRoom = findRoom(this);
           
@@ -863,25 +1017,23 @@ class Player {
               // change enemy button
               this.enemyButton = 0;
 
-              // add to rupees and experience gained from battle
+              // add to rupees, hearts and experience gained from battle
               this.accumulatedEXP += currentRoom.enemies[this.currentlyFighting[i]].exp;
               this.accumulatedRupees += currentRoom.enemies[this.currentlyFighting[i]].rupees;
+              this.accumulatedHearts++;
 
               // remove from room
               currentRoom.enemies.splice(this.currentlyFighting[i], 1);
 
               // subtract all values above what is about to be removed
-              console.log(this.currentlyFighting);
               for (let k=0; k<this.currentlyFighting.length; k++){
                 if (this.currentlyFighting[k] > this.currentlyFighting[i]){
                   this.currentlyFighting[k]--;
                 }
               }
-              console.log(this.currentlyFighting);
 
               // remove from currentlyFighting
               this.currentlyFighting.splice(i,1);
-              console.log(this.currentlyFighting);
               
             }
           }
@@ -892,7 +1044,10 @@ class Player {
           }
 
           // change player's action value
-          if (this.lastSkill.atkSpeed === "fast"){
+          if (this.currentAction === "guard"){
+            this.turnOrder[0].actionVal = 10000/this.spd;
+          }
+          else if (this.lastSkill.atkSpeed === "fast"){
             this.turnOrder[0].actionVal = 10000/this.spd*0.6;
           }
           else if (this.lastSkill.atkSpeed === "slow"){
@@ -928,6 +1083,7 @@ class Player {
           if (this.hp <= 0){
             this.accumulatedEXP = 0;
             this.accumulatedRupees = 0;
+            this.accumulatedHearts = 0;
             this.isFading = null;
             this.currentlyFighting = [];
             this.enemyButtonOptions = [];
@@ -935,6 +1091,14 @@ class Player {
             this.currentAction = null;
             this.battleButton = 0;
             this.enemyButton = 0;
+            this.deadEnemyPos = [];
+            this.statBoosts = {
+              atk: 1,
+              def: 1,
+              spd: 1,
+              evasion: 1,
+              luck: 1,
+            };
             bgmAssets.get("battle").stop();
             bgmAssets.get("mass-destruction").stop();
             this.direction = "east";
@@ -974,7 +1138,7 @@ class Player {
               this.currentAction = null;
               if (this.guarding){
                 this.guarding = false;
-                this.statBoosts.def -= 2.5;
+                this.statBoosts.def -= 1.5;
               }
             }
 
@@ -993,6 +1157,9 @@ class Player {
           if (this.battleMenu === "main" && battleButtons[this.battleButton] === "FIGHT"){
             this.battleMenu = "fight";
             this.battleButton = 0;
+          }
+          else if (this.battleMenu === "main" && battleButtons[this.battleButton] === "GUARD"){
+            this.currentAction = "guard";
           }
           else if (this.battleMenu === "main" && battleButtons[this.battleButton] === "RUN"){
             this.currentAction = "run";
