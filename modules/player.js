@@ -1028,7 +1028,7 @@ class Player {
       }
       else if (theKey === 65 || theKey === 37) {// a or left arrow
         // moves cursor left
-        if (this.battleMenu === "enemy"){
+        if (this.battleMenu === "enemy" && this.currentAction === null){
           if (this.enemyButton === 0 && this.enemyButtonOptions.length !== 1){
             this.enemyButton = this.enemyButtonOptions.length-1;
           }
@@ -1036,7 +1036,7 @@ class Player {
             this.enemyButton--;
           }
         }
-        else{
+        else if (this.currentAction === null){
           if (this.battleButton === 0){
             this.battleButton = battleButtons.length-1;
           }
@@ -1047,7 +1047,7 @@ class Player {
       } 
       else if (theKey === 68 || theKey === 39) { // d or right arrow
         // moves cursor right
-        if (this.battleMenu === "enemy"){
+        if (this.battleMenu === "enemy" && this.currentAction === null){
           if (this.enemyButton === this.currentlyFighting.length-1 && this.enemyButtonOptions.length !== 1){
             this.enemyButton = 0;
           }
@@ -1055,7 +1055,7 @@ class Player {
             this.enemyButton++;
           }
         }
-        else{
+        else if (this.currentAction === null){
           if (this.battleButton === battleButtons.length-1){
             this.battleButton = 0;
           }
