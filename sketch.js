@@ -43,6 +43,7 @@ let startupTextCooldown = 800;
 // button lists
 let menuButtons = ["STATS", "EQUIP", "ITEMS"];
 let battleButtons = ["FIGHT", "GUARD", "ITEM", "RUN"];
+let deathButtons = ["RESPAWN", "TITLE"];
 
 // biome list
 let biomeList = ["gloomy", "grassy", "rocky", "spooky"];
@@ -158,10 +159,6 @@ function draw() {
     }
     loadStartScreen();
   }
-  else if (state === "save") {
-    // If picking a save file
-    
-  } 
   else if (state === "explore") {
     // If exploring
     let theRoom = findRoom(player);
@@ -189,6 +186,12 @@ function draw() {
     else{
       player.battle();
     }
+  }
+  else if (state === "defeat"){
+    player.defeat();
+  }
+  else if (state === "game-over"){
+    player.gameOverMenu();
   }
 }
 

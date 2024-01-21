@@ -19,6 +19,8 @@ class Player {
     this.submenu = null; // current submenu player is in (if on one)
     this.battleButton = 0; // current button player is on in battle
     this.enemyButton = 0; // current enemy player is targeting
+    this.enemyButtonOptions = []; // table of enemy battle positions
+    this.deathButton = 0;
     this.battleMenu = "main", // current menu the player is in during battle
     this.weaponInventory = [];
     this.shieldInventory = [];
@@ -39,13 +41,12 @@ class Player {
     this.spd = 1; // speed value during combat
     this.evasion = 10; // evasion value during combat (chance to dodge enemy attacks, is a percentage value)
     this.luck = 5; // luck value during combat (chance to land critical hits, is a percentage value)
-    this.statBoosts = { // extra stat boosts player can receive from equipment / level ups
-      maxHP: 0,
-      atk: 0,
-      def: 0,
-      spd: 0,
-      evasion: 0,
-      luck: 0,
+    this.statBoosts = { // stat boosts activated during battle (acts like a multiplier)
+      atk: 1,
+      def: 1,
+      spd: 1,
+      evasion: 1,
+      luck: 1,
     };
     this.isFading = null; // variable for if the player is entering/exiting a battle: null if not fading
     this.currentlyFighting = []; // list of enemies in battle
@@ -53,12 +54,16 @@ class Player {
     this.fightButtons = []; // table of buttons, is a list of player's skills
     this.turnOrder = []; // the turn order of the battle; turnOrder[0] is whoever currently has their turn
     this.attackUsed = false; // boolean for whether or not an attack has been used (can be player or enemy, depends on current turn)
+    this.guarding = false; // boolean for if Link is guarding
     this.lastSkill = null; // last used player skill, changes anytime player uses said skill
     this.damageDealt = 0; // damage last dealt to something (can be player or enemy)
     this.enemySkill = null; // last used enemy skill
+    this.deadEnemyPos = []; // table of positions of dead enemies with the time they died
+    this.deathTime = null; // time in millis() that Link died
+    this.deathSpin = 0; // total times Link has spun in death animation
+    this.deathSpinLimit = 17; // amount of times Link spins in death animation
     this.accumulatedEXP = 0; // exp accumulated from killing enemies
     this.accumulatedRupees = 0; // rupees accumulated from killing enemies
-    this.tempBoosts = []; // stat boosts activated during battle that dissipate when the battle ends (unused)
   }
   displayPlayer() {
     let theImage;
@@ -149,11 +154,15 @@ class Player {
           if (this.y + currentRoom.enemies[i].size[1] > currentRoom.enemies[i].y && this.y - currentRoom.enemies[i].size[1] < currentRoom.enemies[i].y){ // check y collision
           // put the enemy that was encountered in the currentlyFighting table
             this.currentlyFighting.push(i);
+            currentRoom.enemies[i].battlePos = 0;
+            this.enemyButtonOptions.push(0);
             // add 2 more enemies from the room to currentlyFighting should they exist
             let count = 1;
             for (let j=0; j<currentRoom.enemies.length; j++){
               if (j !== i && count < 3){
                 this.currentlyFighting.push(j);
+                currentRoom.enemies[j].battlePos = count;
+                this.enemyButtonOptions.push(count);
                 count++;
               }
             }
@@ -399,6 +408,11 @@ class Player {
       this.findTurnOrder();
     }
 
+    // if the battle is won, set to results screen
+    if (this.currentlyFighting.length === 0){
+      this.currentAction = "results";
+    }
+
     // display the battle itself, starting with a background
     for (let i=2; i<GRID_Y-2; i++){
       for (let j=0; j<GRID_X; j++){
@@ -432,31 +446,32 @@ class Player {
     image(imageAssets.get("link-south-moving"), width/16, width/16, cellSize, cellSize); // display player in health area
     image(imageAssets.get("heart"), width/8, width/16, cellSize/1.9, cellSize/1.9); // display heart
 
-    // now displaying who's turn it is next
+    // now displaying who's turn it is next, if battle is not won yet
     textAlign(RIGHT, CENTER);
-    text("NEXT:", width - width/10, width/16);
-    if (this.turnOrder[0].id === "player" && 10000/this.spd < this.turnOrder[1].actionVal - this.turnOrder[0].actionVal){
+    if (this.currentAction !== "results"){
+      text("NEXT:", width - width/10, width/16);
+      if (this.turnOrder[0].id === "player" && 10000/this.spd < this.turnOrder[1].actionVal - this.turnOrder[0].actionVal){
       // if it is currently the player's turn and the player is fast enough to get another turn afterward
-      image(imageAssets.get("link-south-moving"), width - width/16, width/16, cellSize, cellSize);
-    }
-    else if (this.turnOrder[1].id === "player"){
-      image(imageAssets.get("link-south-moving"), width - width/16, width/16, cellSize, cellSize);
-    }
-    else{
-      let theEnemy = currentRoom.enemies[this.turnOrder[1].id];
-      let theImage;
-      if (theEnemy.name === "Leever"){
-        theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-"+theEnemy.color);
+        image(imageAssets.get("link-south-moving"), width - width/16, width/16, cellSize, cellSize);
       }
-      else if (theEnemy.diffColor){
-        theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-"+theEnemy.color+"-west");
+      else if (this.turnOrder[1].id === "player"){
+        image(imageAssets.get("link-south-moving"), width - width/16, width/16, cellSize, cellSize);
       }
       else{
-        theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-south");
+        let theEnemy = currentRoom.enemies[this.turnOrder[1].id];
+        let theImage;
+        if (theEnemy.name === "Leever"){
+          theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-"+theEnemy.color);
+        }
+        else if (theEnemy.diffColor){
+          theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-"+theEnemy.color+"-west");
+        }
+        else{
+          theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-south");
+        }
+        image(theImage, width - width/16, width/16, cellSize*theEnemy.size[0], cellSize*theEnemy.size[1]);
       }
-      image(theImage, width - width/16, width/16, cellSize*theEnemy.size[0], cellSize*theEnemy.size[1]);
     }
-
     // now bottom (can be buttons or dialogue)
     textAlign(CENTER, TOP);
     textSize(cellSize/2);
@@ -479,22 +494,26 @@ class Player {
       
       // deal damage
       if (!this.attackUsed){
-        this.damageDealt = ceil(theSkill.baseDMG / (currentRoom.enemies[this.currentlyFighting[this.enemyButton]].baseStats.def * 4) * (this.atk/2));
-        console.log(this.damageDealt + " damage was dealt.");
-        currentRoom.enemies[this.currentlyFighting[this.enemyButton]].hp -= this.damageDealt;
+        for(let theEnemy of this.currentlyFighting){
+          if (this.enemyButtonOptions[this.enemyButton] === currentRoom.enemies[theEnemy].battlePos){
+            this.damageDealt = ceil(theSkill.baseDMG / (currentRoom.enemies[theEnemy].baseStats.def * 4) * (this.atk/2));
+            console.log(this.damageDealt + " damage was dealt.");
+            currentRoom.enemies[theEnemy].hp -= this.damageDealt;
+          }
+        }
         this.attackUsed = true;
       }
       text(player.name + " used " + theSkill.name + "!", width/16, height-height/7.5);
       this.lastSkill = theSkill;
 
       // display damage dealt below enemy
-      if (this.enemyButton===0){
+      if (this.enemyButtonOptions[this.enemyButton]===0){
         text(this.damageDealt, width*2/3, height/2 + height/16);
       }
-      else if (this.enemyButton===1){
+      else if (this.enemyButtonOptions[this.enemyButton]===1){
         text(this.damageDealt, width*2.3/3, height/2.75 + height/16);
       }
-      else if (this.enemyButton===2){
+      else if (this.enemyButtonOptions[this.enemyButton]===2){
         text(this.damageDealt, width*2.6/3, height/1.65 + height/16);
       }
     }
@@ -534,6 +553,9 @@ class Player {
           this.damageDealt = ceil(theAttack.baseDMG / (this.def * 4) * (theEnemy.baseStats.atk/2));
           console.log(this.damageDealt + " damage was taken.");
           this.hp -= this.damageDealt;
+          if (this.hp < 0){
+            this.hp = 0;
+          }
           this.attackUsed = true;
         }
       }
@@ -541,6 +563,11 @@ class Player {
       text(this.damageDealt, width/4, height/2 + height/16);
     }
     else if (this.currentAction === "results"){
+      if (!bgmAssets.get("victory").isPlaying() && this.currentlyFighting.length === 0){
+        bgmAssets.get("battle").stop();
+        bgmAssets.get("mass-destruction").stop();
+        bgmAssets.get("victory").loop();
+      }
       textAlign(LEFT, TOP);
       text("Earned " + this.accumulatedEXP + " EXP and " + this.accumulatedRupees + " Rupees.", width/16, height-height/7.5);
     }
@@ -575,17 +602,21 @@ class Player {
     }
     else if (this.turnOrder[0].id === "player" && this.battleMenu === "enemy"){
       let theImage = imageAssets.get("triforce");
-      if (this.enemyButton===0){
-        image(theImage, width*2/3, height/2 + height/8, width/25, width/25);
+      for(let theEnemy of this.currentlyFighting){
+        if (this.enemyButtonOptions[this.enemyButton] === currentRoom.enemies[theEnemy].battlePos){
+          if (currentRoom.enemies[theEnemy].battlePos===0){
+            image(theImage, width*2/3, height/2 + height/8, width/25, width/25);
+          }
+          else if (currentRoom.enemies[theEnemy].battlePos===1){
+            image(theImage, width*2.3/3, height/2.75 + height/8, width/25, width/25);
+          }
+          else if (currentRoom.enemies[theEnemy].battlePos===2){
+            image(theImage, width*2.6/3, height/1.65 + height/8, width/25, width/25);
+          }
+          textAlign(LEFT, TOP);
+          text("Use on " + currentRoom.enemies[theEnemy].name + "?", width/16, height-height/7.5);
+        }
       }
-      else if (this.enemyButton===1){
-        image(theImage, width*2.3/3, height/2.75 + height/8, width/25, width/25);
-      }
-      else if (this.enemyButton===2){
-        image(theImage, width*2.6/3, height/1.65 + height/8, width/25, width/25);
-      }
-      textAlign(LEFT, TOP);
-      text("Use on " + currentRoom.enemies[this.currentlyFighting[this.enemyButton]].name + "?", width/16, height-height/7.5);
     }
 
     // display player in battle visual
@@ -609,10 +640,6 @@ class Player {
         else {
           theImage = imageAssets.get(theEnemy.name.toLowerCase()+"-west");
         }
-      }
-      // add battle positions to enemy if they do not exist already
-      if (theEnemy.battlePos === null){
-        theEnemy.battlePos = i;
       }
 
       // draw the enemy
@@ -645,22 +672,96 @@ class Player {
           if (i === enemy){
             currentRoom.enemies[i].canMove = false;
             currentRoom.enemies[i].lastMovement = millis();
+            currentRoom.enemies[i].battlePos = null;
           }
         }
       }
 
+      // give player rewards for winning the battle
+      this.exp += this.accumulatedEXP;
+      this.rupees += this.accumulatedRupees;
+
       // reset variables to how they were before the battle
+      this.accumulatedEXP = 0;
+      this.accumulatedRupees = 0;
       this.isFading = null;
       this.currentlyFighting = [];
+      this.enemyButtonOptions = [];
       this.turnOrder = [];
       this.currentAction = null;
       this.battleButton = 0;
       this.enemyButton = 0;
       bgmAssets.get("battle").stop();
       bgmAssets.get("mass-destruction").stop();
+      bgmAssets.get("victory").stop();
       bgmAssets.get("overworld").loop();
       state = "explore";
     }
+  }
+  defeat(){
+    push();
+    background("red");
+    rectMode(CORNER);
+    fill("black");
+    imageMode(CENTER);
+    rect(0,0,width,cellSize*2); // top black rectangle
+    rect(0, height - cellSize*2,width, height); // bottom black rectangle
+    
+    // depending on how long it's been since Link died, do certain things
+    // spinning Link
+    
+    if (this.deathSpin >= this.deathSpinLimit){
+      background("black");
+      if (this.deathTime + 100*(this.deathSpin+12) < millis()){
+        state = "game-over";
+      }
+    }
+    else if (this.deathTime + 100*this.deathSpin < millis()){
+      this.spin();
+      this.deathSpin++;
+    }
+
+    // display link
+    
+    image(imageAssets.get("link-" + this.direction + "-idle"), width/4, height/2, cellSize, cellSize);
+    if (this.deathTime + 100*(this.deathSpin+3) < millis()){
+      background("black");
+    }
+    pop();
+  }
+  spin(){
+    if (this.direction === "north"){
+      this.direction = "east";
+    }
+    else if (this.direction === "east"){
+      this.direction = "south";
+    }
+    else if (this.direction === "south"){
+      this.direction = "west";
+    }
+    else if (this.direction === "west"){
+      this.direction = "north";
+    }
+  }
+  gameOverMenu(){
+    this.deathSpin = 0;
+    push();
+    if (!bgmAssets.get("game-over").isPlaying()){
+      bgmAssets.get("game-over").loop();
+    }
+    background("black");
+    fill("white");
+    textSize(cellSize/1.75);
+    textAlign(CENTER, CENTER);
+    imageMode(CENTER);
+    text("GAME OVER", width/2, height/2);
+    for(let i=0; i<deathButtons.length; i++){
+      text(deathButtons[i], width/deathButtons.length*i + width/deathButtons.length/2, height-height/6);
+      if (i === this.deathButton){
+        image(imageAssets.get("triforce"), width/deathButtons.length*i + width/deathButtons.length/2, height-height/10, width/25, width/25);
+      }
+    }
+    pop();
   }
   menuControls(theKey){
     if (state === "explore"){
@@ -730,7 +831,61 @@ class Player {
         }
         else if (this.currentAction === "fight"){
           // player has moved past battle dialogue from their turn
+          let currentRoom = findRoom(this);
           
+          // check to see if any enemies are dead
+          for(let i=this.currentlyFighting.length-1; i>=0; i--){
+            if (currentRoom.enemies[this.currentlyFighting[i]].hp <= 0){
+              console.log("enemy died");
+              //remove from turn order
+              for(let j=this.turnOrder.length-1; j>=0; j--){
+                if (this.turnOrder[j].id === this.currentlyFighting[i]){
+                  for (let turn of this.turnOrder){
+                    if (turn.id > this.currentlyFighting[i]){
+                      turn.id--;
+                    }
+                  }
+                  this.turnOrder.splice(j, 1);
+                  break;
+                }
+              }
+
+              // add to deadEnemyPos
+              this.deadEnemyPos.push({pos: currentRoom.enemies[this.currentlyFighting[i]].battlePos, time: millis()});
+
+              // check what spaces in enemy buttons are still available
+              for (let h=this.enemyButtonOptions.length-1; h>=0; h--){
+                if (this.enemyButtonOptions[h] === currentRoom.enemies[this.currentlyFighting[i]].battlePos){
+                  this.enemyButtonOptions.splice(h, 1);
+                }
+              }
+
+              // change enemy button
+              this.enemyButton = 0;
+
+              // add to rupees and experience gained from battle
+              this.accumulatedEXP += currentRoom.enemies[this.currentlyFighting[i]].exp;
+              this.accumulatedRupees += currentRoom.enemies[this.currentlyFighting[i]].rupees;
+
+              // remove from room
+              currentRoom.enemies.splice(this.currentlyFighting[i], 1);
+
+              // subtract all values above what is about to be removed
+              console.log(this.currentlyFighting);
+              for (let k=0; k<this.currentlyFighting.length; k++){
+                if (this.currentlyFighting[k] > this.currentlyFighting[i]){
+                  this.currentlyFighting[k]--;
+                }
+              }
+              console.log(this.currentlyFighting);
+
+              // remove from currentlyFighting
+              this.currentlyFighting.splice(i,1);
+              console.log(this.currentlyFighting);
+              
+            }
+          }
+
           // subtract Link's current action value from all enemies
           for(let i=this.turnOrder.length-1; i>=0; i--){
             this.turnOrder[i].actionVal -= this.turnOrder[0].actionVal;
@@ -750,7 +905,7 @@ class Player {
           // resort turn order
           this.turnOrder.sort((a,b) => a.actionVal-b.actionVal);
 
-          // if enemy's turn, set currentAction to enemyTurn
+          // if enemy's turn next, set currentAction to enemyTurn
           if (this.turnOrder[0].id !== "player"){
             this.currentAction = "enemyTurn";
           }
@@ -768,44 +923,69 @@ class Player {
 
         else if (this.currentAction === "enemyTurn"){
           // player has moved past battle dialogue from the enemy turn
-          
-          // subtract the enemy's current action value from all entities
-          for(let i=this.turnOrder.length-1; i>=0; i--){
-            this.turnOrder[i].actionVal -= this.turnOrder[0].actionVal;
-          }
 
-          // change the enemy's action value
-          if (this.enemySkill.atkSpeed === "fast"){
-            this.turnOrder[0].actionVal = 10000/this.spd*0.6;
-          }
-          else if (this.enemySkill.atkSpeed === "slow"){
-            this.turnOrder[0].actionVal = 10000/this.spd*1.4;
-          }
-          else if (this.enemySkill.atkSpeed === "superslow"){
-            this.turnOrder[0].actionVal = 10000/this.spd*2;
+          // if player is dead
+          if (this.hp <= 0){
+            this.accumulatedEXP = 0;
+            this.accumulatedRupees = 0;
+            this.isFading = null;
+            this.currentlyFighting = [];
+            this.enemyButtonOptions = [];
+            this.turnOrder = [];
+            this.currentAction = null;
+            this.battleButton = 0;
+            this.enemyButton = 0;
+            bgmAssets.get("battle").stop();
+            bgmAssets.get("mass-destruction").stop();
+            this.direction = "east";
+            this.deathTime = millis();
+            sfxAssets.get("game-over-jingle").play();
+            state = "defeat";
           }
           else{
-            this.turnOrder[0].actionVal = 10000/this.spd;
-          }
+          // subtract the enemy's current action value from all entities
+            for(let i=this.turnOrder.length-1; i>=0; i--){
+              this.turnOrder[i].actionVal -= this.turnOrder[0].actionVal;
+            }
 
-          // resort turn order
-          this.turnOrder.sort((a,b) => a.actionVal-b.actionVal);
+            // change the enemy's action value
+            if (this.enemySkill.atkSpeed === "fast"){
+              this.turnOrder[0].actionVal = 10000/this.spd*0.6;
+            }
+            else if (this.enemySkill.atkSpeed === "slow"){
+              this.turnOrder[0].actionVal = 10000/this.spd*1.4;
+            }
+            else if (this.enemySkill.atkSpeed === "superslow"){
+              this.turnOrder[0].actionVal = 10000/this.spd*2;
+            }
+            else{
+              this.turnOrder[0].actionVal = 10000/this.spd;
+            }
 
-          // if enemy's turn, set currentAction to enemyTurn
-          if (this.turnOrder[0].id !== "player"){
-            this.currentAction = "enemyTurn";
-            this.enemySkill = null;
-          }
-          else {
-            this.currentAction = null;  
-          }
+            // resort turn order
+            this.turnOrder.sort((a,b) => a.actionVal-b.actionVal);
 
-          // reset buttons
-          this.battleButton = 0;
-          this.battleMenu = "main";
+            // if enemy's turn, set currentAction to enemyTurn
+            if (this.turnOrder[0].id !== "player"){
+              this.currentAction = "enemyTurn";
+              this.enemySkill = null;
+            }
+            else {
+              this.currentAction = null;
+              if (this.guarding){
+                this.guarding = false;
+                this.statBoosts.def -= 2.5;
+              }
+            }
+
+            // reset buttons
+            this.battleButton = 0;
+            this.battleMenu = "main";
           
-          // reset attack used regardless of who's turn it is
-          this.attackUsed = false;
+            // reset attack used regardless of who's turn it is
+            this.enemySkill = null;
+            this.attackUsed = false;
+          }
         }
 
         // now buttons, if it is the player's turn
@@ -849,10 +1029,10 @@ class Player {
       else if (theKey === 65 || theKey === 37) {// a or left arrow
         // moves cursor left
         if (this.battleMenu === "enemy"){
-          if (this.enemyButton === 0){
-            this.enemyButton = this.currentlyFighting.length-1;
+          if (this.enemyButton === 0 && this.enemyButtonOptions.length !== 1){
+            this.enemyButton = this.enemyButtonOptions.length-1;
           }
-          else{
+          else if (this.enemyButtonOptions.length !== 1){
             this.enemyButton--;
           }
         }
@@ -868,10 +1048,10 @@ class Player {
       else if (theKey === 68 || theKey === 39) { // d or right arrow
         // moves cursor right
         if (this.battleMenu === "enemy"){
-          if (this.enemyButton === this.currentlyFighting.length-1){
+          if (this.enemyButton === this.currentlyFighting.length-1 && this.enemyButtonOptions.length !== 1){
             this.enemyButton = 0;
           }
-          else{
+          else if (this.enemyButtonOptions.length !== 1){
             this.enemyButton++;
           }
         }
@@ -882,6 +1062,46 @@ class Player {
           else{
             this.battleButton++;
           }
+        }
+      }
+    }
+    else if (state === "game-over"){
+      if (theKey === 32){ // space bar
+        // respawns player or sends them back to the title screen
+        this.x = GRID_X/2;
+        this.y = GRID_Y/2;
+        this.roomX = 0;
+        this.roomY = 0;
+        this.direction = "south";
+        this.hp = this.maxHP;
+        bgmAssets.get("game-over").stop();
+        if (deathButtons[this.deathButton] === "RESPAWN"){
+          state = "explore";
+          bgmAssets.get("overworld").loop();
+        }
+        else if (deathButtons[this.deathButton] === "TITLE"){
+          state = "start";
+          imageMode(CENTER);
+          rectMode(CENTER);
+          textAlign(CENTER, CENTER);
+        }
+      }
+      if (theKey === 65 || theKey === 37) {// a or left arrow
+        // moves cursor left
+        if (this.deathButton === 0){
+          this.deathButton = deathButtons.length-1;
+        }
+        else{
+          this.deathButton--;
+        }
+      } 
+      else if (theKey === 68 || theKey === 39) { // d or right arrow
+        // moves cursor right
+        if (this.deathButton === deathButtons.length-1){
+          this.deathButton = 0;
+        }
+        else{
+          this.deathButton++;
         }
       }
     }
