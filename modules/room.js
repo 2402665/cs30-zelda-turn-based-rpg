@@ -157,7 +157,7 @@ class Room {
     // adds objects to room
     let objectCount = round(random(0,1));
     for (let i=0; i<objectCount; i++){
-      let theID = round(random(0,2));
+      let theID = round(random(0,3));
       let notAllowed = true;
       let x;
       let y;

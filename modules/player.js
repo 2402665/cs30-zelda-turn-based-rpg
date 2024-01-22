@@ -218,12 +218,18 @@ class Player {
               player.x--;
             }
 
-            // now take away from health without killing player
+            // now take away from health without killing the player
             if (this.hp - 1 > 0){
               this.hp--;
             }
 
             sfxAssets.get("hit-player").play();
+          }
+          else if (currentRoom.objects[i].id === 3){
+            // heart
+            this.rupees++;
+            sfxAssets.get("click").play();
+            currentRoom.objects.splice(i,1);
           }
         }
       }
@@ -1356,6 +1362,10 @@ class Player {
               evasion: 1,
               luck: 1,
             };
+            this.rupees = 0;
+            for (let item of this.itemInventory){
+              item.have = 0;
+            }
             bgmAssets.get("battle").stop();
             bgmAssets.get("mass-destruction").stop();
             this.direction = "east";

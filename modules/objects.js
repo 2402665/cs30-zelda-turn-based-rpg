@@ -13,6 +13,10 @@ const roomObjects = [
     size: [1,1],
   },
   {
+    name: "rupee",
+    size: [1,1],
+  },
+  {
     name: "Boulder",
     size: [1,1],
   },
