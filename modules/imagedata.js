@@ -191,4 +191,12 @@ let imageData = [ // list of all sprites/spritesheets in the game
     key: "octorok-red-east",
     location: "assets/images/enemies/octorok-red-east.gif",
   },
+  {
+    key: "life-potion",
+    location: "assets/images/objects/life-potion.png",
+  },
+  {
+    key: "spikes",
+    location: "assets/images/objects/spikes.png",
+  },
 ];

@@ -17,6 +17,8 @@ class Player {
     this.roomY = roomY; // y value in relevance to room grid
     this.menuButton = 0; // current button player is on in menu
     this.submenu = null; // current submenu player is in (if on one)
+    this.submenuButton = 0; // current submenu button player is on
+    this.subsubmenuButton = null; // you can see I was running out of name ideas here
     this.battleButton = 0; // current button player is on in battle
     this.enemyButton = 0; // current enemy player is targeting
     this.enemyButtonOptions = []; // table of enemy battle positions
@@ -24,7 +26,7 @@ class Player {
     this.deathButton = 0;
     this.battleMenu = "main", // current menu the player is in during battle
     this.weaponInventory = [0]; // all weapons in inventory: values are index
-    this.itemInventory = [{id: 0, have: 3}]; // all items in inventory
+    this.itemInventory = [{id: 0, have: 0}]; // all items in inventory
     this.rupees = 0; // money player has
     this.triforceCount = 0; // triforce fragments player owns
     this.equippedWeapon1 = 0; // currently equipped weapon (index value in weapon inventory table) - link can have 2 equipped at once, hence equippedWeapon2
@@ -176,6 +178,57 @@ class Player {
       }
     }
 
+    //check for room object collisions
+    for (let i=currentRoom.objects.length-1; i>=0; i--){
+      if (this.x + currentRoom.objects[i].size[0] > currentRoom.objects[i].x && this.x - currentRoom.objects[i].size[0] < currentRoom.objects[i].x){ // check x collision
+        if (this.y + currentRoom.objects[i].size[1] > currentRoom.objects[i].y && this.y - currentRoom.objects[i].size[1] < currentRoom.objects[i].y){ // check y collision
+          // now do certain things depending on what the object is
+          if (currentRoom.objects[i].id === 0){
+            // life potion
+            for (let item of this.itemInventory){
+              if (item.id === 0){
+                item.have++;
+              }
+            }
+            sfxAssets.get("item-received").play();
+            currentRoom.objects.splice(i,1);
+          }
+          else if (currentRoom.objects[i].id === 1){
+            // heart
+            if (this.hp + 1 <= this.maxHP){
+              this.hp++;
+            }
+            sfxAssets.get("click").play();
+            currentRoom.objects.splice(i,1);
+          }
+          else if (currentRoom.objects[i].id === 2){
+            // spikes
+
+            // first move player away from spikes depending on direction facing
+            if (this.direction === "north"){
+              player.y++;
+            }
+            else if (this.direction === "south"){
+              player.y--;
+            }
+            else if (this.direction === "west"){
+              player.x++;
+            }
+            else if (this.direction === "east"){
+              player.x--;
+            }
+
+            // now take away from health without killing player
+            if (this.hp - 1 > 0){
+              this.hp--;
+            }
+
+            sfxAssets.get("hit-player").play();
+          }
+        }
+      }
+    }
+
     try{ //checking for room movement
       if (currentRoom.layout[round(this.y + addedPos.ySign)][round(this.x + addedPos.xSign)] === 0){ // if not running into something
         this.y += addedPos.y;
@@ -228,6 +281,7 @@ class Player {
       let newRoom = new Room(this.roomX, this.roomY, createEmptyRoom(), null, randomBiome("biome"), randomBiome("subbiome"), null);
       newRoom.addExits();
       newRoom.addEnemies();
+      newRoom.addObjects();
       rooms.push(newRoom);
     }
   }
@@ -277,7 +331,42 @@ class Player {
       text("x " + this.rupees, width/16 + width/2.5, height - width/16);
       text("x " + this.triforceCount, width/16 + width/1.5, height - width/16);
       textSize(cellSize/2);
-      if (this.menuButton === 0){ // stat screen
+      
+      if (this.subsubmenuButton !== null){
+        if (this.submenu === "equip"){
+          for(let i=0; i<equipButtons.length; i++){
+            text(equipButtons[i], width/7.5, height/equipButtons.length*i/2.5 + height/equipButtons.length/1.5);
+            if (i === this.subsubmenuButton){
+              image(imageAssets.get("triforce"), width/18, height/equipButtons.length*i/2.5 + height/equipButtons.length/1.5, width/25, width/25);
+            }
+          }
+        }
+        else if (this.submenu === "item"){
+          for(let i=0; i<itemButtons.length; i++){
+            text(itemButtons[i], width/7.5, height/itemButtons.length*i/2.5 + height/itemButtons.length/1.5);
+            if (i === this.subsubmenuButton){
+              image(imageAssets.get("triforce"), width/18, height/itemButtons.length*i/2.5 + height/itemButtons.length/1.5, width/25, width/25);
+            }
+          }
+        }
+      }
+      else if (this.submenu === "equip"){
+        for(let i=0; i<this.weaponInventory.length; i++){
+          text(equipment[this.weaponInventory[i]].name.toUpperCase(), width/7.5, height/this.weaponInventory.length*i + height/this.weaponInventory.length/2);
+          if (i === this.submenuButton){
+            image(imageAssets.get("triforce"), width/18, height/this.weaponInventory.length*i + height/this.weaponInventory.length/2, width/25, width/25);
+          }
+        }
+      }
+      else if (this.submenu === "item"){
+        for(let i=0; i<this.itemInventory.length; i++){
+          text(items[this.itemInventory[i].id].name+": "+this.itemInventory[i].have, width/7.5, height/this.itemInventory.length*i + height/this.itemInventory.length/2);
+          if (i === this.submenuButton){
+            image(imageAssets.get("triforce"), width/18, height/this.itemInventory.length*i + height/this.itemInventory.length/2, width/25, width/25);
+          }
+        }
+      }
+      else {
         image(imageAssets.get("link-south-moving"), width/4, height*1.15/4, width/8, width/8);
         textAlign(CENTER, CENTER);
         text(this.name, width/4, height*1.65/4);
@@ -360,10 +449,6 @@ class Player {
           text("-----", width/4, height*2.65/4);
           text("-----", width/4, height*2.9/4);
         }
-      }
-      else { // if any other button
-        textAlign(CENTER, CENTER);
-        text("NOT FINISHED", width/2, height/2);
       }
       pop();
     }
@@ -714,6 +799,7 @@ class Player {
           this.hp = this.maxHP;
         }
         this.itemInventory[this.itemButton].have--;
+        sfxAssets.get("item-used").play();
       }
       text(this.name + " used a " + items[this.itemInventory[this.itemButton].id].name + "!", width/16, height-height/7.5);
     }
@@ -1000,44 +1086,137 @@ class Player {
       }
       else if (theKey === 32){ // space bar
         // enters section of menu
-        if (menuButtons[this.menuButton] === "EQUIP"){
-          this.submenu = "equip";
+        if (this.submenu === null){
+          if (menuButtons[this.menuButton] === "EQUIP"){
+            this.submenu = "equip";
+          }
+          else if (menuButtons[this.menuButton] === "ITEMS"){
+            this.submenu = "item";
+          }
         }
-        else if (menuButtons[this.menuButton] === "ITEM"){
-          this.submenu = "item";
+        else if (this.subsubmenuButton !== null){
+          if (this.submenu === "item"){
+            if (items[this.itemInventory[this.submenuButton].id].name === "Life Potion" && this.itemInventory[this.submenuButton].have > 0){
+              this.hp = this.maxHP;
+              this.itemInventory[this.submenuButton].have--;
+              sfxAssets.get("item-used").play();
+            }
+          }
+        }
+        else if (this.submenu === "equip" || this.submenu === "item"){
+          this.subsubmenuButton = 0;
         }
         sfxAssets.get("click").play();
       }
       else if (theKey === 8 || theKey === 27){ // backspace or escape
-
+        if (this.subsubmenuButton !== null){
+          this.subsubmenuButton = null;
+        }
+        else if (this.submenu !== null){
+          this.submenu = null;
+        }
+        else{
+          // exits menu
+          state = "explore";
+          player.ableToMove = true;
+        }
+        sfxAssets.get("exit").play();
       }
       else if (theKey === 87 || theKey === 38) { // w or up arrow
         // moves cursor up in submenus only
+        if (this.submenu !== null){
+          if (this.subsubmenuButton !== null){
+            let lengthOfMenu = null;
+            if (this.submenu === "equip"){
+              lengthOfMenu = equipButtons.length;
+            }
+            else if (this.submenu === "item"){
+              lengthOfMenu = itemButtons.length;
+            }
+            if (this.subsubmenuButton === 0){
+              this.subsubmenuButton = lengthOfMenu-1;
+            }
+            else{
+              this.subsubmenuButton--;
+            }
+          }
+          else{
+            if (this.submenuButton === 0){
+              if (this.submenu === "equip"){
+                this.submenuButton = this.weaponInventory.length-1;
+              }
+              else if (this.submenu === "item"){
+                this.submenuButton = this.itemInventory.length-1;
+              }
+            }
+            else{
+              this.submenuButton--;
+            }
+          }
+          sfxAssets.get("footstep").play();
+        }
         sfxAssets.get("footstep").play();
       } 
       else if (theKey === 83 || theKey === 40) { // s or down arrow
         // moves cursor down in submenus only
+        if (this.submenu !== null){
+          if (this.subsubmenuButton !== null){
+            let lengthOfMenu = null;
+            if (this.submenu === "equip"){
+              lengthOfMenu = equipButtons.length;
+            }
+            else if (this.submenu === "item"){
+              lengthOfMenu = itemButtons.length;
+            }
+            if (this.subsubmenuButton === lengthOfMenu-1){
+              this.subsubmenuButton = 0;
+            }
+            else{
+              this.subsubmenuButton++;
+            }
+          }
+          else{
+            let lengthOfMenu = null;
+            if (this.submenu === "equip"){
+              lengthOfMenu = this.weaponInventory.length;
+            }
+            else if (this.submenu === "item"){
+              lengthOfMenu = this.itemInventory.length;
+            }
+            if (this.submenuButton === lengthOfMenu-1){
+              this.submenuButton = 0;
+            }
+            else{
+              this.submenuButton++;
+            }
+          }
+          sfxAssets.get("footstep").play();
+        }
         sfxAssets.get("footstep").play();
       } 
       else if (theKey === 65 || theKey === 37) {// a or left arrow
         // moves cursor left in main menu only
-        if (this.menuButton === 0){
-          this.menuButton = menuButtons.length-1;
+        if (this.submenu === null){
+          if (this.menuButton === 0){
+            this.menuButton = menuButtons.length-1;
+          }
+          else{
+            this.menuButton--;
+          }
+          sfxAssets.get("footstep").play();
         }
-        else{
-          this.menuButton--;
-        }
-        sfxAssets.get("footstep").play();
       } 
       else if (theKey === 68 || theKey === 39) { // d or right arrow
         // moves cursor right in main menu only
-        if (this.menuButton === menuButtons.length-1){
-          this.menuButton = 0;
+        if (this.submenu === null){
+          if (this.menuButton === menuButtons.length-1){
+            this.menuButton = 0;
+          }
+          else{
+            this.menuButton++;
+          }
+          sfxAssets.get("footstep").play();
         }
-        else{
-          this.menuButton++;
-        }
-        sfxAssets.get("footstep").play();
       }
     }
     else if (state === "battle"){

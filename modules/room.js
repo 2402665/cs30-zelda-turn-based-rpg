@@ -13,7 +13,7 @@ class Room {
       this.exits = [];
     }
     this.enemies = [];
-    this.objects = null;
+    this.objects = [];
   }
   addExits(){
     // before adding exits, add banned direction table so you can't exit into another room's wall
@@ -151,6 +151,31 @@ class Room {
         }
       }
       this.enemies.push(new Enemy(x,y,theID,1));
+    }
+  }
+  addObjects(){
+    // adds objects to room
+    let objectCount = round(random(0,1));
+    for (let i=0; i<objectCount; i++){
+      let theID = round(random(0,2));
+      let notAllowed = true;
+      let x;
+      let y;
+      while(notAllowed){
+        x = random(2, GRID_X-3);
+        y = random(2, GRID_Y-3);
+        if (this.layout[round(y)][round(x)] === 0){ // if where it has chosen to spawn is not a wall
+          notAllowed = false;
+        }
+      }
+      this.objects.push({id: theID, x: x, y: y, size: roomObjects[theID].size});
+    }
+  }
+  displayObjects(){
+    for (let object of this.objects){
+      let theObject = roomObjects[object.id];
+      let theImage = imageAssets.get(theObject.name.toLowerCase());
+      image(theImage, object.x*cellSize, object.y*cellSize, theImage.width*cellSize/16, theImage.height*cellSize/16);
     }
   }
   display(){

@@ -41,8 +41,8 @@ let startupTextTimer = 0;
 let startupTextCooldown = 800;
 
 // button lists
-let menuButtons = ["STATS", "EQUIP", "ITEMS"];
-let equipButtons = ["EQUIP", "SWAP", "SKILLS"];
+let menuButtons = ["EQUIP", "ITEMS"];
+let equipButtons = ["EQUIP", "SWAP"];
 let itemButtons = ["USE"];
 let battleButtons = ["FIGHT", "GUARD", "ITEM", "RUN"];
 let deathButtons = ["RESPAWN", "TITLE"];
@@ -169,6 +169,7 @@ function draw() {
       enemy.move();
       enemy.display();
     }
+    theRoom.displayObjects();
     player.overworldControls();
     player.displayPlayer();
   } 
