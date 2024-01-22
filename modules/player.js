@@ -514,6 +514,7 @@ class Player {
               this.damageDealt = ceil(theSkill.baseDMG / (targetedEnemy.baseStats.def * targetedEnemy.statBoosts.def*4) * (this.atk/2 * this.statBoosts.atk));
               console.log(this.damageDealt + " damage was dealt.");
               targetedEnemy.hp -= this.damageDealt;
+              sfxAssets.get("hit-enemy").play();
             }
             else if (theSkill.atkAff === "support"){
               if (theSkill.atkType === "buff"){
@@ -538,6 +539,7 @@ class Player {
                   targetedEnemy.statBoosts.spd += thetheSkill.buffMultiplier;
                 }
               }
+              sfxAssets.get("fire-buff").play();
             }
           }
         }
@@ -593,13 +595,35 @@ class Player {
           }
         }
         else if (theEnemy.behavior === "smart"){
-          let randomMove = random(0,100);
-          if (randomMove < 75){
-            // pick a random move
-            theAttack = round(random(0,theEnemy.attacks.length-1));
+          if (theEnemy.tacticMove !== undefined && theEnemy.tacticMove !== null && theEnemy.tacticMove + 1 < theEnemy.tactic.length){
+            theEnemy.tacticMove++;
+            theAttack = theEnemy.tactic[theEnemy.tacticMove];
           }
-          else{ // if hit the 25% chance
-
+          else{
+            let randomMove = random(0,100);
+            if (randomMove < 50){
+            // pick a random move that isn't part of a tactic
+              theAttack = round(random(0,theEnemy.attacks.length-1));
+              let notTactic = false;
+              while (!notTactic){
+                let alreadyTaken = false;
+                for (let aMove of theEnemy.tactic){
+                  if (aMove === theAttack){
+                    alreadyTaken = true;
+                  }
+                }
+                if (!alreadyTaken){
+                  notTactic = true;
+                }
+                else{
+                  theAttack = round(random(0,theEnemy.attacks.length-1));
+                }
+              }
+            }
+            else{ // if hit the 50% chance
+              theEnemy.tacticMove = 0;
+              theAttack = theEnemy.tactic[theEnemy.tacticMove];
+            }
           }
         }
         theAttack = theEnemy.attacks[theAttack];
@@ -625,6 +649,12 @@ class Player {
           if (this.hp < 0){
             this.hp = 0;
           }
+          if (this.guarding){
+            sfxAssets.get("guarded-hit").play();
+          }
+          else{
+            sfxAssets.get("hit-player").play();
+          }
         }
         else if (theAttack.atkAff === "support"){
           if (theAttack.atkType === "buff"){
@@ -649,6 +679,7 @@ class Player {
               this.statBoosts.spd -= theAttack.buffMultiplier;
             }
           }
+          sfxAssets.get("fire-buff").play();
         }
         this.attackUsed = true;
       }
@@ -824,6 +855,9 @@ class Player {
       this.exp += this.accumulatedEXP;
       this.rupees += this.accumulatedRupees;
       this.hp += round(this.maxHP * (this.accumulatedHearts/10));
+      if (this.hp > this.maxHP){
+        this.hp = this.maxHP;
+      }
 
       // reset variables to how they were before the battle
       this.accumulatedEXP = 0;
@@ -837,6 +871,8 @@ class Player {
       this.battleButton = 0;
       this.enemyButton = 0;
       this.deadEnemyPos = [];
+      this.lastAttack = null;
+      this.enemySkill = null;
       this.statBoosts = {
         atk: 1,
         def: 1,
@@ -932,6 +968,7 @@ class Player {
           this.menuButton = 0;
           this.isMoving = false;
           this.ableToMove = false;
+          sfxAssets.get("click").play();
         }
       }
     }
@@ -940,16 +977,20 @@ class Player {
         // exits menu
         state = "explore";
         player.ableToMove = true;
+        sfxAssets.get("click").play();
       }
       else if (theKey === 32){ // space bar
         // enters section of menu
+        sfxAssets.get("click").play();
         
       }
       else if (theKey === 87 || theKey === 38) { // w or up arrow
         // moves cursor up in submenus only
+        sfxAssets.get("footstep").play();
       } 
       else if (theKey === 83 || theKey === 40) { // s or down arrow
         // moves cursor down in submenus only
+        sfxAssets.get("footstep").play();
       } 
       else if (theKey === 65 || theKey === 37) {// a or left arrow
         // moves cursor left in main menu only
@@ -959,6 +1000,7 @@ class Player {
         else{
           this.menuButton--;
         }
+        sfxAssets.get("footstep").play();
       } 
       else if (theKey === 68 || theKey === 39) { // d or right arrow
         // moves cursor right in main menu only
@@ -968,6 +1010,7 @@ class Player {
         else{
           this.menuButton++;
         }
+        sfxAssets.get("footstep").play();
       }
     }
     else if (state === "battle"){
@@ -977,9 +1020,11 @@ class Player {
         // check dialogue first
         if (this.currentAction === "run"){
           this.currentAction = "results";
+          sfxAssets.get("click").play();
         }
         else if (this.currentAction === "results"){
           this.isFading = "out";
+          sfxAssets.get("click").play();
           this.fadeOutOfBattle();
         }
         else if (this.currentAction === "fight" || this.currentAction === "guard"){
@@ -1035,6 +1080,8 @@ class Player {
               // remove from currentlyFighting
               this.currentlyFighting.splice(i,1);
               
+              // death sound effect
+              sfxAssets.get("enemy-death").play();
             }
           }
 
@@ -1092,6 +1139,8 @@ class Player {
             this.battleButton = 0;
             this.enemyButton = 0;
             this.deadEnemyPos = [];
+            this.lastAttack = null;
+            this.enemySkill = null;
             this.statBoosts = {
               atk: 1,
               def: 1,
@@ -1179,6 +1228,7 @@ class Player {
           else if (this.battleMenu === "enemy"){
             this.currentAction = "fight";
           }
+          sfxAssets.get("click").play();
         }
       }
       else if (theKey === 8 || theKey === 27){ // backspace or escape
@@ -1191,6 +1241,7 @@ class Player {
           else if (this.battleMenu === "enemy"){
             this.battleMenu = "fight";
           }
+          sfxAssets.get("exit").play();
         }
       }
       else if (theKey === 65 || theKey === 37) {// a or left arrow
@@ -1202,6 +1253,7 @@ class Player {
           else if (this.enemyButtonOptions.length !== 1){
             this.enemyButton--;
           }
+          sfxAssets.get("footstep").play();
         }
         else if (this.currentAction === null){
           if (this.battleButton === 0){
@@ -1210,6 +1262,7 @@ class Player {
           else{
             this.battleButton--;
           }
+          sfxAssets.get("footstep").play();
         }
       } 
       else if (theKey === 68 || theKey === 39) { // d or right arrow
@@ -1221,6 +1274,7 @@ class Player {
           else if (this.enemyButtonOptions.length !== 1){
             this.enemyButton++;
           }
+          sfxAssets.get("footstep").play();
         }
         else if (this.currentAction === null){
           if (this.battleButton === battleButtons.length-1){
@@ -1229,6 +1283,7 @@ class Player {
           else{
             this.battleButton++;
           }
+          sfxAssets.get("footstep").play();
         }
       }
     }
@@ -1252,6 +1307,7 @@ class Player {
           rectMode(CENTER);
           textAlign(CENTER, CENTER);
         }
+        sfxAssets.get("click").play();
       }
       if (theKey === 65 || theKey === 37) {// a or left arrow
         // moves cursor left
@@ -1261,6 +1317,7 @@ class Player {
         else{
           this.deathButton--;
         }
+        sfxAssets.get("footstep").play();
       } 
       else if (theKey === 68 || theKey === 39) { // d or right arrow
         // moves cursor right
@@ -1270,6 +1327,7 @@ class Player {
         else{
           this.deathButton++;
         }
+        sfxAssets.get("footstep").play();
       }
     }
   }

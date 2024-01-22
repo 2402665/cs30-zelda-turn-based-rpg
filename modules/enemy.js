@@ -32,7 +32,7 @@ class Enemy {
     this.level = level;
     if (currentEnemy.tactic !== undefined){
       this.tactic = currentEnemy.tactic;
-      this.tacticMove = 0;
+      this.tacticMove = null;
     }
     this.canSeePlayer = false;
     this.canMove = true;

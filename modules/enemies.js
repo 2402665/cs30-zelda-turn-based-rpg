@@ -118,7 +118,7 @@ const enemies = [
     diffColor: true,
     movementType: "normal",
     enemyType: "normal",
-    behavior: "lazy",
+    behavior: "smart",
     tactic: [2, 1], // attack index values (should be hone and beam)
     baseStats: {
       maxHP: 25,
