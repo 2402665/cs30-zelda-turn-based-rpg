@@ -42,6 +42,8 @@ let startupTextCooldown = 800;
 
 // button lists
 let menuButtons = ["STATS", "EQUIP", "ITEMS"];
+let equipButtons = ["EQUIP", "SWAP", "SKILLS"];
+let itemButtons = ["USE"];
 let battleButtons = ["FIGHT", "GUARD", "ITEM", "RUN"];
 let deathButtons = ["RESPAWN", "TITLE"];
 

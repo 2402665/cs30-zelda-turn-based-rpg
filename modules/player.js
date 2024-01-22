@@ -1000,8 +1000,16 @@ class Player {
       }
       else if (theKey === 32){ // space bar
         // enters section of menu
+        if (menuButtons[this.menuButton] === "EQUIP"){
+          this.submenu = "equip";
+        }
+        else if (menuButtons[this.menuButton] === "ITEM"){
+          this.submenu = "item";
+        }
         sfxAssets.get("click").play();
-        
+      }
+      else if (theKey === 8 || theKey === 27){ // backspace or escape
+
       }
       else if (theKey === 87 || theKey === 38) { // w or up arrow
         // moves cursor up in submenus only
