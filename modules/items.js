@@ -54,11 +54,11 @@ const equipment = [
     },
     attacks: [
       {
-        name: "Slash",
-        atkSpeed: "normal",
+        name: "Sword Beam",
+        atkSpeed: "slow",
         atkType: "melee",
         atkAff: "hit",
-        baseDMG: 0,
+        baseDMG: 20,
         accuracy: 100,
       },
       {
@@ -66,9 +66,8 @@ const equipment = [
         atkSpeed: "fast",
         atkType: "buff",
         atkAff: "support",
-        buffType: "Attack", // skill buff Link's attack stat
+        buffType: "atk", // skill buff Link's attack stat
         buffMultiplier: 3, // how much Link's attack will be multiplied
-        buffDuration: 2, // how many of Link's turns the buff will last for
       },
     ],
   },
@@ -216,7 +215,7 @@ const equipment = [
   
 const shields = [ // shields are different from equipment as they are equipped at all times; cannot be swapped out for another weapon as guarding is always an option in battle
   {
-    name: "Wooden Shield",
+    name: "Shield",
     guard: 2.5, // how much defense is multiplied by when guarding
   },
   {
@@ -229,23 +228,11 @@ const items = [
   {
     name: "Life Potion",
     canbeUsed: true, // asks if this item is usable in combat. If false, it is limited to the player menu in the overworld
-    heals: "full", // if item has "full" as the heal value, it fully heals the player upon use
-    holding: 0, // how much is in Link's inventory
-    uses: 1, // how many times this item can be used before it disappears
-  },
-  {
-    name: "2nd Potion", // difference from Life Potion is that it can be used twice before disappearing
-    canbeUsed: true,
-    heals: "full",
-    holding: 0,
-    uses: 2,
   },
   {
     name: "Food", // can be used as an enemy distraction
-    canbeUsed: true,
+    canbeUsed: false,
     distractionTime: 20, // how many seconds enemies can eat the food before it disappears and enemies start noticing Link again
-    holding: 0,
-    uses: 1,
   },
   {
     name: "Raft", // is used to cross water

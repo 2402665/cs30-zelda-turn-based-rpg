@@ -20,18 +20,17 @@ class Player {
     this.battleButton = 0; // current button player is on in battle
     this.enemyButton = 0; // current enemy player is targeting
     this.enemyButtonOptions = []; // table of enemy battle positions
+    this.itemButton = 0;
     this.deathButton = 0;
     this.battleMenu = "main", // current menu the player is in during battle
-    this.weaponInventory = [];
-    this.shieldInventory = [];
-    this.itemInventory = [];
+    this.weaponInventory = [0]; // all weapons in inventory: values are index
+    this.itemInventory = [{id: 0, have: 3}]; // all items in inventory
     this.rupees = 0; // money player has
     this.triforceCount = 0; // triforce fragments player owns
-    this.equippedWeapon1 = 0; // currently equipped weapon (index value in equipment table) - link can have 2 equipped at once, hence equippedWeapon2
+    this.equippedWeapon1 = 0; // currently equipped weapon (index value in weapon inventory table) - link can have 2 equipped at once, hence equippedWeapon2
     this.equippedWeapon2 = null; // refer to line directly above
     this.equippedSkill1 = [0,1]; // currently equipped skills with equippedWeapon1 in weapons table; works same for equippedSkill2 and equippedWeapon2
     this.equippedSkill2 = [null, null]; // refer to line directly above
-    this.equippedShield = "Shield"; // currently equipped shield
     this.level = 1; // player's level
     this.exp = 0; // total experience points player has
     this.maxHP = 10; // highest health value player is allowed to have
@@ -39,8 +38,8 @@ class Player {
     this.atk = 1; // attack value during combat
     this.def = 1; // defense value during combat
     this.spd = 1; // speed value during combat
-    this.evasion = 10; // evasion value during combat (chance to dodge enemy attacks, is a percentage value)
-    this.luck = 5; // luck value during combat (chance to land critical hits, is a percentage value)
+    this.evasion = 10; // evasion value during combat (chance to dodge enemy attacks, is a percentage value) (UNUSED)
+    this.luck = 5; // luck value during combat (chance to land critical hits, is a percentage value) (UNUSED)
     this.statBoosts = { // stat boosts activated during battle (acts like a multiplier)
       atk: 1,
       def: 1,
@@ -55,6 +54,7 @@ class Player {
     this.turnOrder = []; // the turn order of the battle; turnOrder[0] is whoever currently has their turn
     this.attackUsed = false; // boolean for whether or not an attack has been used (can be player or enemy, depends on current turn)
     this.guarding = false; // boolean for if Link is guarding
+    this.itemUsed = false; // boolean for if Link has used an item
     this.lastSkill = null; // last used player skill, changes anytime player uses said skill
     this.damageDealt = 0; // damage last dealt to something (can be player or enemy)
     this.enemySkill = null; // last used enemy skill
@@ -706,6 +706,17 @@ class Player {
       }
       text(this.name + " started guarding!", width/16, height-height/7.5);
     }
+    else if (this.currentAction === "item"){
+      textAlign(LEFT, TOP);
+      if (!this.itemUsed){
+        this.itemUsed = true;
+        if (items[this.itemInventory[this.itemButton].id].name === "Life Potion"){
+          this.hp = this.maxHP;
+        }
+        this.itemInventory[this.itemButton].have--;
+      }
+      text(this.name + " used a " + items[this.itemInventory[this.itemButton].id].name + "!", width/16, height-height/7.5);
+    }
     else if (this.currentAction === "results"){
       if (!bgmAssets.get("victory").isPlaying() && this.currentlyFighting.length === 0){
         bgmAssets.get("battle").stop();
@@ -760,6 +771,14 @@ class Player {
           }
           textAlign(LEFT, TOP);
           text("Use on " + currentRoom.enemies[theEnemy].name + "?", width/16, height-height/7.5);
+        }
+      }
+    }
+    else if (this.turnOrder[0].id === "player" && this.battleMenu === "item"){
+      for(let i=0; i<this.itemInventory.length; i++){
+        text(items[this.itemInventory[i].id].name+": "+this.itemInventory[i].have, width/this.itemInventory.length*i + width/this.itemInventory.length/2, height-height/7.5);
+        if (i === this.itemButton){
+          image(imageAssets.get("triforce"), width/this.itemInventory.length*i + width/this.itemInventory.length/2, height-height/18, width/25, width/25);
         }
       }
     }
@@ -1027,7 +1046,7 @@ class Player {
           sfxAssets.get("click").play();
           this.fadeOutOfBattle();
         }
-        else if (this.currentAction === "fight" || this.currentAction === "guard"){
+        else if (this.currentAction === "fight" || this.currentAction === "guard" || this.currentAction === "item"){
 
           // player has moved past battle dialogue from their turn
           let currentRoom = findRoom(this);
@@ -1091,7 +1110,7 @@ class Player {
           }
 
           // change player's action value
-          if (this.currentAction === "guard"){
+          if (this.currentAction === "guard" || this.currentAction === "item"){
             this.turnOrder[0].actionVal = 10000/this.spd;
           }
           else if (this.lastSkill.atkSpeed === "fast"){
@@ -1141,6 +1160,8 @@ class Player {
             this.deadEnemyPos = [];
             this.lastAttack = null;
             this.enemySkill = null;
+            this.guarding = false;
+            this.itemUsed = false;
             this.statBoosts = {
               atk: 1,
               def: 1,
@@ -1189,6 +1210,7 @@ class Player {
                 this.guarding = false;
                 this.statBoosts.def -= 1.5;
               }
+              this.itemUsed = false;
             }
 
             // reset buttons
@@ -1210,6 +1232,10 @@ class Player {
           else if (this.battleMenu === "main" && battleButtons[this.battleButton] === "GUARD"){
             this.currentAction = "guard";
           }
+          else if (this.battleMenu === "main" && battleButtons[this.battleButton] === "ITEM"){
+            this.battleMenu = "item";
+            this.itemButton = 0;
+          }
           else if (this.battleMenu === "main" && battleButtons[this.battleButton] === "RUN"){
             this.currentAction = "run";
           }
@@ -1228,7 +1254,15 @@ class Player {
           else if (this.battleMenu === "enemy"){
             this.currentAction = "fight";
           }
-          sfxAssets.get("click").play();
+          else if (this.battleMenu === "item"){
+            if (this.itemInventory[this.itemButton].have > 0){
+              this.currentAction = "item";
+              sfxAssets.get("click").play();
+            }
+            else{
+              sfxAssets.get("exit").play();
+            }
+          }
         }
       }
       else if (theKey === 8 || theKey === 27){ // backspace or escape
@@ -1237,6 +1271,10 @@ class Player {
           if (this.battleMenu === "fight"){
             this.battleMenu = "main";
             this.battleButton = 0;
+          }
+          else if (this.battleMenu === "item"){
+            this.battleMenu = "main";
+            this.battleButton = 2;
           }
           else if (this.battleMenu === "enemy"){
             this.battleMenu = "fight";
@@ -1252,6 +1290,15 @@ class Player {
           }
           else if (this.enemyButtonOptions.length !== 1){
             this.enemyButton--;
+          }
+          sfxAssets.get("footstep").play();
+        }
+        else if (this.battleMenu === "item" && this.currentAction === null){
+          if (this.itemButton === 0){
+            this.itemButton = this.itemInventory.length-1;
+          }
+          else{
+            this.itemButton--;
           }
           sfxAssets.get("footstep").play();
         }
@@ -1273,6 +1320,15 @@ class Player {
           }
           else if (this.enemyButtonOptions.length !== 1){
             this.enemyButton++;
+          }
+          sfxAssets.get("footstep").play();
+        }
+        else if (this.battleMenu === "item" && this.currentAction === null){
+          if (this.itemButton === this.itemInventory.length-1){
+            this.itemButton = 0;
+          }
+          else{
+            this.itemButton++;
           }
           sfxAssets.get("footstep").play();
         }
